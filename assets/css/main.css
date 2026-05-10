@@ -1,0 +1,137 @@
+/* 🏛️ DESIGN SYSTEM: Modern Professional */
+:root {
+    --primary: #005cb8;
+    --primary-hover: #1275e2;
+    --on-primary: #ffffff;
+    
+    --surface: #ffffff;
+    --surface-container: #f1f3fc;
+    --background: #f9f9ff;
+    
+    --on-surface: #181c22;
+    --on-surface-variant: #414753;
+    --outline: #c1c6d5;
+    
+    --radius-s: 8px;
+    --radius-m: 16px;
+    
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--background);
+    color: var(--on-surface);
+    line-height: 1.5;
+}
+
+/* Header & Navigation */
+header {
+    background-color: var(--surface);
+    padding: 1rem 5%;
+    border-bottom: 1px solid var(--outline);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.breadcrumb {
+    font-size: 0.85rem;
+    color: var(--on-surface-variant);
+}
+
+.breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.breadcrumb span::before {
+    content: ' › ';
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Grid de Módulos (Cards) */
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.grid-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.card-module {
+    background: var(--surface);
+    border-radius: var(--radius-m);
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--outline);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+}
+
+.card-module:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 92, 184, 0.1);
+    border-color: var(--primary);
+}
+
+.card-module i {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
+
+.card-module h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.card-module p {
+    font-size: 0.9rem;
+    color: var(--on-surface-variant);
+}
+
+/* Botões e Inputs */
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-s);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}

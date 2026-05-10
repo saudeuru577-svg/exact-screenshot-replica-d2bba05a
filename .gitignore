@@ -1,0 +1,6 @@
+.stitch/
+.agents/
+node_modules/
+.env
+package-lock.json
+skills-lock.json

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulos Municipais | Cidade Presente</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Identica ao Dashboard -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div style="width: 32px; height: 32px; background: var(--primary-color); border-radius: 6px;"></div>
+                <span style="font-weight: 700; color: var(--primary-color); font-size: 20px;">Cidade Presente</span>
+            </div>
+            
+            <nav class="nav-menu" style="flex-grow: 1;">
+                <a href="index.html" class="nav-link active">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Módulos</span>
+                </a>
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notificações</span>
+                </a>
+            </nav>
+
+            <div class="user-profile" style="display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <div style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">AD</div>
+                <div class="user-info">
+                    <p style="font-size: 14px; font-weight: 700;">Administrador</p>
+                    <a href="login.html" style="font-size: 12px; color: var(--error-color); text-decoration: none;">Sair</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="header">
+                <h1>Módulos do Sistema</h1>
+                <p style="color: var(--text-secondary);">Selecione a área governamental que deseja gerenciar.</p>
+            </header>
+
+            <div class="modules-grid">
+                <!-- Saúde -->
+                <a href="modulos/saude/index.html" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <h3>Saúde</h3>
+                    <p>Gestão de exames, autorizações, farmácia básica e atendimento ao cidadão.</p>
+                </a>
+
+                <!-- Prefeito -->
+                <a href="#" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <h3>Gabinete do Prefeito</h3>
+                    <p>Acompanhamento de metas, decretos e agenda oficial do executivo.</p>
+                </a>
+
+                <!-- Administração -->
+                <a href="#" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <h3>Administração</h3>
+                    <p>Recursos humanos, folha de pagamento e gestão de patrimônio municipal.</p>
+                </a>
+
+                <!-- Infraestrutura -->
+                <a href="#" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-helmet-safety"></i>
+                    </div>
+                    <h3>Infraestrutura</h3>
+                    <p>Gestão de obras públicas, iluminação e manutenção urbana.</p>
+                </a>
+
+                <!-- Agricultura -->
+                <a href="#" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h3>Agricultura</h3>
+                    <p>Programas de fomento ao pequeno produtor e desenvolvimento rural.</p>
+                </a>
+
+                <!-- Finanças -->
+                <a href="#" class="module-card">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <h3>Finanças</h3>
+                    <p>Arrecadação, tesouraria, contabilidade e transparência pública.</p>
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
