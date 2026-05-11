@@ -51,7 +51,7 @@ const schema = z.object({
   contrato_numero: z.string().trim().optional().or(z.literal("")),
   contrato_inicio: z.string().optional().or(z.literal("")),
   contrato_fim: z.string().optional().or(z.literal("")),
-  ativa: z.boolean().default(true),
+  ativa: z.boolean(),
 }).refine(
   (d) => !d.contrato_inicio || !d.contrato_fim || d.contrato_fim >= d.contrato_inicio,
   { message: "Fim do contrato deve ser >= início", path: ["contrato_fim"] },
