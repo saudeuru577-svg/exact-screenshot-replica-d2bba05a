@@ -1,231 +1,185 @@
-# Plano de desenvolvimento — Telas de Cadastros + Autorização
+# Plano — Nova Autorização e Solicitar Acréscimo
 
-Plano organizado por ordem de dependência. Toda lógica de acesso assume RLS já configurada (perfis: `administrador`, `secretaria`, `atendente`, `financeiro`) e usa o cliente Supabase do browser (`@/integrations/supabase/client`) com sessão autenticada. Operações de mutação respeitam as políticas existentes — o frontend apenas espelha as permissões para esconder ações.
-
----
-
-## 1. Procedimentos  `/cadastros/procedimentos`
-
-**Por que primeiro:** depende apenas de `empresas`, mas o cadastro de empresas é trivial. Procedimentos são o catálogo central usado em itens de autorização e faturamento; precisam estar maduros antes de tudo.
-
-### Estrutura
-- Tabela paginada com colunas: Sigla, Nome, Grupo, Tipo (badge), Empresa, Valor unitário (R$), Status (ativo/inativo).
-- Filtros: busca textual (nome/sigla/nomes_alternativos), Empresa (select), Tipo (`exame` / `consulta`), Grupo, Status.
-- Ações: Novo, Editar, Ativar/Inativar (não há DELETE — usar `ativo=false`).
-- Form lateral (Sheet) com: `sigla`, `nome`, `nomes_alternativos` (textarea), `grupo`, `tipo`, `empresa_id` (select), `valor_unitario` (input moeda), `ativo`.
-
-### Dependências
-- `empresas` precisa estar cadastrada (FK lógica via `empresa_id`).
-- Acesso ao select de empresas via `empresas_select`.
-
-### Queries
-- List: `from('procedimentos').select('*, empresa:empresas(id,nome_fantasia)').order('nome')` + filtros `ilike` em nome/sigla.
-- Insert/Update: somente `administrador` (RLS já bloqueia outros).
-- "Delete" lógico: `update({ ativo: false })`.
-
-### Validações (Zod)
-- `sigla`: 2–20, único por empresa (validar via consulta antes de salvar).
-- `nome`: obrigatório, ≤120.
-- `valor_unitario`: number > 0, 2 casas decimais.
-- `tipo` ∈ enum `tipo_procedimento`.
-- `empresa_id`: obrigatório, empresa precisa estar `ativa=true`.
-
-### Pontos de atenção
-- Enum `tipo_procedimento` = `{exame, consulta}`.
-- Não há `atualizado_em` — não tentar atualizá-lo.
-- Sem soft-delete real: lista padrão deve filtrar `ativo=true` com toggle "mostrar inativos".
-- Mudar `valor_unitario` NÃO recalcula autorizações já emitidas (preço é congelado em `itens_autorizacao.valor_unitario`).
+Duas telas que fecham o fluxo operacional: emissão de autorização (núcleo do sistema) e o pedido de acréscimo de limite mensal (válvula de escape quando o teto de R$ 130k é atingido).
 
 ---
 
-## 2. Bairros e Povoados  `/cadastros/territorio`
+## 1. Nova Autorização — `/autorizacoes/nova`
 
-**Por que aqui:** dependência direta de `pacientes`; tabelas simples.
+### 1.1 Arquitetura
+Wizard de 4 etapas controlado por estado local (`useState` + `zod` por etapa). Sem persistência intermediária no banco — só grava ao confirmar a última etapa, em transação lógica orquestrada pelo client.
 
-### Estrutura
-- Layout em duas colunas (Tabs ou grid) — Bairros / Povoados.
-- Cada lista: nome, ativo, criado_em. Ações: Novo, Editar, Ativar/Inativar.
-- Modal simples com `nome` + `ativo`.
-
-### Dependências
-- Nenhuma além de auth.
-
-### Queries
-- `from('bairros').select('*').order('nome')` / idem `povoados`.
-- Insert/Update: somente `administrador`. Frontend deve preencher `criado_por = auth.uid()` (NOT NULL no schema).
-
-### Validações
-- `nome`: obrigatório, único (case-insensitive), 2–80.
-
-### Pontos de atenção
-- `criado_por` é NOT NULL — esquecer disso causa violação RLS/insert.
-- Sem DELETE: usar `ativo=false`.
-- Pacientes referenciam por `bairro_id` / `povoado_id` (nullable) + enum `zona_tipo` (`urbana`/`rural`) — o paciente é quem diz se mora em bairro OU povoado.
-
----
-
-## 3. Empresas  `/cadastros/empresas`
-
-### Estrutura
-- Tabela: Nome fantasia, CNPJ, Tipo (badge), Cidade/UF, Contrato (vigência), Ativa.
-- Filtros: busca (nome/CNPJ), Tipo serviço, Status, Contrato vigente.
-- Form completo (Sheet/Dialog) com seções: Dados, Endereço, Contato, Contrato.
-
-### Dependências
-- Nenhuma. Bloqueia: Procedimentos e Autorizações.
-
-### Queries
-- List/Insert/Update padrão; só `administrador` muta. SELECT exige perfil staff.
-- Ao desativar (`ativa=false`), avisar que procedimentos vinculados continuam visíveis mas devem ser ocultados na seleção de nova autorização.
-
-### Validações (Zod)
-- `cnpj`: máscara + dígito verificador, único.
-- `email`: válido se preenchido.
-- `tipo_servico` ∈ `{laboratorio, clinica, hospital, outro}`.
-- `contrato_fim >= contrato_inicio` quando ambos presentes.
-- `cep`/`telefone`: máscara BR.
-
-### Pontos de atenção
-- Não há FK declarada para `procedimentos.empresa_id` — manter integridade no app.
-- `inscricao_estadual` opcional (laboratório isento etc.).
-- Trigger `set_atualizado_em` cuida do timestamp.
-
----
-
-## 4. Profissionais  `/cadastros/profissionais`
-
-### Estrutura
-- Tabela: Nome, Cargo, Conselho (CRM/COREN UF nº), Especialidade, UBS, Contato.
-- Filtros: busca, UBS, Cargo, Conselho.
-- Form: `nome_profissional`, `cargo`, `conselho`, `numero_conselho`, `estado_conselho` (UF), `especialidade`, `ubs_id`, `contato`.
-
-### Dependências
-- `ubs` precisa existir (FK lógica `ubs_id` NOT NULL). UBS hoje é um `ComingSoon` — **bloqueador**: a tela de UBS precisa ser construída antes (ou adicionar mini-cadastro inline).
-
-### Queries
-- List: `select('*, ubs:ubs(id,nome_posto)')`.
-- Insert/Update: `administrador`. SELECT: staff.
-
-### Validações
-- `numero_conselho`: único por (`conselho`, `estado_conselho`).
-- `estado_conselho`: 2 letras UF.
-- `cargo`/`conselho`: enums (`{medico,enfermeiro}` / `{CRM,COREN}`).
-- Coerência sugerida: médico→CRM, enfermeiro→COREN (warning, não erro hard).
-
-### Pontos de atenção
-- Sem soft-delete (não existe coluna `ativo`). Decidir: adicionar via migration ou bloquear remoção.
-- `ubs_id` NOT NULL — sem UBS cadastrada, não há como criar profissional.
-
----
-
-## 5. Pacientes  `/cadastros/pacientes` (`index`, `novo`, `$id`)
-
-### Estrutura
-- **Lista** `/pacientes`: tabela com Nome, DTN/Idade, Sexo, Mãe, Cartão SUS, Zona, Bairro/Povoado. Filtros: busca (nome, mãe, SUS), Zona, Bairro, Povoado. Ações: Novo, Editar, Ver detalhes.
-- **Form** (`/pacientes/novo` e edição): seções Identificação (`nome`, `dtn`, `sexo`, `nome_da_mae`, `naturalidade`, `cartao_sus`) e Endereço (`zona`, condicional: `bairro_id` se urbana / `povoado_id` se rural, `rua`, `numero`, `ponto_referencia`).
-- **Detalhe** `/pacientes/$id`: dados + histórico de autorizações (lista resumida).
-
-### Dependências
-- `bairros`, `povoados` (selects).
-- Bloqueia: Autorizações.
-
-### Queries
-- List: `select('*, bairro:bairros(nome), povoado:povoados(nome)')`.
-- Insert: `administrador`/`atendente`. Setar `criado_por = auth.uid()` (NOT NULL).
-- Update: `administrador` ou `atendente` que criou.
-- Histórico: `from('autorizacoes').select('id,num_aut,data_autorizacao,total_autorizado,status').eq('paciente_id', id)`.
-
-### Validações
-- `dtn`: data válida, ≤ hoje.
-- `cartao_sus`: 15 dígitos (se preenchido), único quando informado.
-- `zona`: enum `{urbana, rural}`.
-- Regra condicional: `zona=urbana` ⇒ `bairro_id` obrigatório, `povoado_id` null; `rural` ⇒ inverso.
-- `nome` e `nome_da_mae`: obrigatórios, trim, ≤120.
-
-### Pontos de atenção
-- Atendente só edita o que ele criou (RLS) — UI deve refletir isso.
-- Buscas grandes: limitar a 1000 (limite Supabase) e paginar via `range()`.
-- Considerar índice em `nome` para busca `ilike` (pode ser sugerido como migration futura).
-
----
-
-## 6. Autorização  `/autorizacoes` (`index`, `nova`, `$id`)
-
-Tela mais crítica — ponto de junção de todos os cadastros + regras de negócio do PRD.
-
-### Estrutura
-- **Lista** `/autorizacoes`: colunas `num_aut`, Data, Paciente, UBS, Empresa, Profissional, Total (R$), Status (badge). Filtros: período (data_autorizacao), status, empresa, UBS, paciente (search), num_aut. Ações: Ver, Nova, (Admin) cancelar.
-- **Wizard "Nova"** `/autorizacoes/nova`: 4 etapas
-  1. Paciente (busca + criar inline)
-  2. Origem (UBS, Profissional filtrado por UBS, Sintomas, foto da requisição → upload em bucket `autorizacoes`)
-  3. Itens (Empresa → Procedimentos da empresa → quantidade, valor unitário pré-preenchido editável → calcula `valor_total`; soma `total_autorizado`)
-  4. Confirmação (assinaturas atendente + paciente em canvas → upload PNG; gera `num_aut` no servidor; renderiza PDF/QR após criação)
-- **Detalhe** `/autorizacoes/$id`: cabeçalho com num_aut, status, dados, lista de itens, anexos (req, assinaturas, PDF/QR), botões Imprimir / (Admin) Cancelar / (Admin) Editar.
-
-### Dependências
-- TODAS as anteriores: `pacientes`, `ubs`, `profissionais`, `empresas`, `procedimentos`.
-- Bucket Storage `autorizacoes` (já existe, RLS por perfil).
-- Funções: `gerar_num_aut()`, triggers `verificar_limite_mensal`, `bloquear_alteracao_data_autorizacao`, `bloquear_edicao_autorizacao_aprovada`, `atualizar_total_autorizacao`.
-- Geração de PDF/QR: server function (idealmente `createServerFn`) — biblioteca pure-JS (`@react-pdf/renderer` ou `pdf-lib` + `qrcode`).
-
-### Queries
-- Insert autorização: `administrador`/`atendente`. Campos obrigatórios: `paciente_id`, `empresa_id`, `ubs_id`, `profissional_id`, `data_autorizacao`, `criado_por=auth.uid()`, `pdf_autorizacao`, `qr_code`, `assinatura_atendente`, `assinatura_paciente` (todos NOT NULL — ordenar fluxo: upload assinaturas → gerar PDF/QR → insert).
-- `num_aut`: chamar `rpc('gerar_num_aut')` antes do insert.
-- Insert itens: `from('itens_autorizacao').insert([...])` — trigger recalcula `total_autorizado`.
-- Update: só admin, ou atendente em `status=pendente` que criou.
-- Cancelar: update `status='cancelado'` (somente admin).
-- List detalhe: `select('*, paciente:pacientes(*), empresa:empresas(*), ubs:ubs(*), profissional:profissionais(*), itens:itens_autorizacao(*, procedimento:procedimentos(*))')`.
-
-### Validações
-- Pelo menos 1 item.
-- `quantidade > 0`, `valor_unitario >= 0`, `valor_total = quantidade*valor_unitario` (calcular no client e validar no server function).
-- Procedimentos: todos da mesma `empresa_id` selecionada.
-- `data_autorizacao`: hoje (default), não permitir futura nem retroativa > N dias (regra de negócio a confirmar).
-- Antes de submeter: chamar view `vw_orcamento_mes_atual` para mostrar saldo restante; se total > saldo, avisar — trigger marcará como `bloqueado` automaticamente.
-- Assinaturas obrigatórias antes de gerar PDF.
-
-### Pontos de atenção
-- Status `bloqueado` é setado pela trigger `verificar_limite_mensal` → UI deve tratar e mostrar aviso pós-criação ("excedeu limite, autorização bloqueada — solicitar acréscimo").
-- Edição: trigger bloqueia mudança de `data_autorizacao` e qualquer edição se `status=aprovado`. UI deve desabilitar campos.
-- Storage: paths sugeridos `autorizacoes/{autorizacao_id}/req.jpg`, `/sig_atendente.png`, `/sig_paciente.png`, `/aut.pdf`, `/qr.png`. Bucket privado → usar `createSignedUrl` para exibir.
-- Atomicidade: insert da autorização + itens + uploads NÃO é transacional via SDK. Estratégia: subir arquivos primeiro com nome temporário (uuid client), inserir autorização referenciando paths, inserir itens; em falha, limpar arquivos.
-- `num_aut` gerado por função SQL: pequena chance de corrida — função já tem loop de unicidade.
-- Trigger de auditoria insere em `logs_auditoria` — não tentar inserir manualmente (RLS bloqueia).
-
----
-
-## Análise de resolutividade
-
-### Cobertura de fluxos críticos
-Cobre: catálogo de empresas/procedimentos, território, profissionais por UBS, pacientes urbanos/rurais, emissão de autorização com itens, controle de limite mensal, anexos, assinaturas, PDF/QR, auditoria. **Não cobertos neste plano** (ficam para fases seguintes do PRD): UBS, Acréscimos de gastos, Faturamentos, Glosas, Relatórios, Gestão de usuários — todos já existem como rotas placeholder.
-
-### Dependências e bloqueios
-```text
-ubs ──────────────► profissionais ─┐
-bairros/povoados ─► pacientes ─────┤
-empresas ─► procedimentos ─────────┼─► autorizações ─► itens
-                                   │
-ubs ───────────────────────────────┘
 ```
-- **Bloqueio real:** Profissionais depende de UBS (ainda placeholder). Resolver antes de chegar em Autorização — adicionar tela UBS ao escopo (estrutura é trivial: `nome_posto`, `cnes`, `id_posto`, `endereco`, `bairro`, `zona`, `contato`).
-- **Sem dependências circulares.**
+Etapa 1: Paciente   →  Etapa 2: Origem (UBS/Profissional/Requisição)
+Etapa 3: Itens      →  Etapa 4: Confirmação (assinaturas + PDF/QR)
+```
 
-### Paralelizável
-Após Empresas estar pronta, dá pra rodar em paralelo:
-- Trilha A: Procedimentos
-- Trilha B: Bairros/Povoados → Pacientes
-- Trilha C: UBS → Profissionais
+Componentes novos:
+- `src/components/autorizacoes/wizard.tsx` — shell com `Stepper`, navegação, validação por etapa, estado consolidado.
+- `src/components/autorizacoes/step-paciente.tsx`
+- `src/components/autorizacoes/step-origem.tsx`
+- `src/components/autorizacoes/step-itens.tsx`
+- `src/components/autorizacoes/step-confirmacao.tsx`
+- `src/components/autorizacoes/signature-pad.tsx` — canvas de assinatura (mouse/touch) com clear/undo, exporta PNG.
+- `src/components/autorizacoes/orcamento-banner.tsx` — saldo do mês via `vw_orcamento_mes_atual`.
+- `src/lib/autorizacao-pdf.ts` — geração de PDF (`pdf-lib`) + QR (`qrcode`) puro JS.
+- `src/lib/autorizacao-storage.ts` — upload helpers para o bucket `autorizacoes`, com cleanup em falha.
 
-Tudo converge em Autorização.
+### 1.2 Etapa 1 — Paciente
+- Combobox de busca (`ilike` em nome / nome_da_mae / cartao_sus, debounce 300ms, limit 20).
+- Card com dados do paciente selecionado (nome, DTN/idade, mãe, SUS, zona, endereço resumido).
+- Botão "Cadastrar novo paciente" abre o `PacienteForm` em Sheet (reaproveita `src/components/pacientes/paciente-form.tsx`); ao salvar, seleciona automaticamente.
+- Validação: `paciente_id` obrigatório.
 
-### Risco de retrabalho
-1. **Autorização (alto)** — regra de limite, triggers que mudam status, atomicidade de uploads, geração de PDF, assinaturas em canvas. Recomenda-se prototipar fluxo "feliz" primeiro com PDF mock e evoluir.
-2. **Pacientes (médio)** — endereço condicional (urbana/rural) e busca performática; se RLS de atendente exigir UX específica (ver só os seus), pode mudar layout.
-3. **Procedimentos (baixo-médio)** — congelamento de preço em itens precisa estar claro desde o início; auditar se valor unitário deve ser editável na autorização.
-4. **Empresas/Bairros/Povoados/UBS (baixo)** — CRUD simples.
+### 1.3 Etapa 2 — Origem
+Campos:
+- `ubs_id` (Select de `ubs` ativas, ordenado por `nome_posto`).
+- `profissional_id` (Select filtrado por `ubs_id` selecionada — query `from('profissionais').eq('ubs_id', ubsId)`).
+- `data_autorizacao` (default hoje; bloquear futura; permitir até N dias retroativos — confirmar regra, default 30).
+- `sintomas` (Textarea opcional, ≤500).
+- `foto_requisicao` (upload de imagem/PDF; preview inline; opcional no schema mas recomendado obrigatório por UX — confirmar).
 
-### Recomendações antes de codar
-- Adicionar **UBS** ao escopo (pré-requisito de Profissionais e Autorização).
-- Decidir se `procedimentos.valor_unitario` é editável na hora da autorização (impacta UX e auditoria).
-- Definir biblioteca de PDF compatível com o runtime Worker (evitar `puppeteer`/`sharp`; preferir `pdf-lib` + `qrcode`).
-- Confirmar regra de retroatividade da `data_autorizacao`.
+Validação Zod: `ubs_id`, `profissional_id`, `data_autorizacao` obrigatórios.
+
+### 1.4 Etapa 3 — Itens
+- Select de `empresa_id` (apenas `ativa=true` com contrato vigente).
+- Tabela editável de itens. Linha: Procedimento (combobox filtrado por `empresa_id` + `ativo=true`), Descrição (auto-preenche com `nome` do procedimento, editável), Quantidade (int ≥1), Valor unitário (preenche com `procedimentos.valor_unitario`, **editável** ou bloqueado — decidir; default: bloqueado para preservar tabela), Valor total (calculado `qtd * vu`), botão remover.
+- Botão "+ Adicionar item".
+- Footer com `total_autorizado` em destaque + componente `OrcamentoBanner` mostrando: limite do mês, gasto até agora, saldo, e projeção `saldo - total_autorizado` com aviso visual quando ficar negativo ("Será criada como **bloqueada** — solicite acréscimo").
+- Validação: ≥1 item; `quantidade>0`; `valor_total = quantidade*valor_unitario` (recalcular no submit, não confiar no input); todos os procedimentos da mesma `empresa_id` (garantido pelo filtro).
+- Trocar de empresa com itens preenchidos → confirm dialog (limpa itens).
+
+### 1.5 Etapa 4 — Confirmação
+- Resumo read-only de tudo.
+- Dois `SignaturePad`: assinatura do atendente, assinatura do paciente. Validação: ambos não vazios (heurística: bounding box > X px).
+- Botão "Emitir autorização" dispara o submit.
+
+### 1.6 Submit — sequência atômica (best-effort)
+A SDK do Supabase não oferece transação multi-tabela + Storage. Estratégia:
+
+```
+1.  authClient.auth.getUser() → pegar uid (criado_por).
+2.  Gerar tempId = crypto.randomUUID() para path do Storage.
+3.  Upload em paralelo:
+      autorizacoes/{tempId}/req.<ext>  (se houver foto_requisicao)
+      autorizacoes/{tempId}/sig_atendente.png
+      autorizacoes/{tempId}/sig_paciente.png
+    → guardar paths retornados.
+4.  Gerar PDF (pdf-lib) com dados + itens; gerar QR (qrcode) apontando para
+    /autorizacoes/{id futuro} — como id ainda não existe, QR aponta para
+    /a/{tempId} e depois fazemos rewrite (ver 1.7) OU geramos QR após insert.
+    Solução simples: gerar QR após o insert, em segunda etapa.
+5.  rpc('gerar_num_aut') → num_aut.
+6.  insert em autorizacoes com pdf_autorizacao=path-tmp, qr_code=path-tmp,
+    assinaturas e foto referenciando os uploads. Retornar id.
+7.  insert em itens_autorizacao (array). Trigger recalcula total_autorizado.
+8.  Gerar PDF final + QR com id real, fazer upload em
+    autorizacoes/{id}/aut.pdf e /qr.png; UPDATE autorizacoes setando paths.
+9.  Em qualquer falha após o passo 3, rodar cleanup: storage.remove dos
+    arquivos do tempId / id. Mostrar toast de erro com retry.
+10. Ler novamente a autorização (para pegar status atualizado pela trigger
+    verificar_limite_mensal — pode ter virado 'bloqueado').
+11. Redirect para /autorizacoes/$id com toast contextual (sucesso ou
+    "criada bloqueada — limite excedido, solicite acréscimo").
+```
+
+Notas:
+- Trigger `verificar_limite_mensal` roda no INSERT de autorizacoes, mas naquele momento `total_autorizado=0` (itens entram depois). **Atenção:** a trigger precisa rodar após os itens entrarem para o cálculo bater. Verificar se existe trigger de UPDATE em `autorizacoes` que recheque, ou se devemos: (a) inserir itens primeiro com `autorizacao_id` opcional — não dá, FK NOT NULL; (b) inserir autorizacao com total já preenchido manualmente baseado no client antes de inserir itens (a trigger usa `NEW.total_autorizado`); (c) criar uma trigger em `itens_autorizacao` AFTER INSERT que rechame a verificação. → **Decisão recomendada:** preencher `total_autorizado` no insert da autorizacao com o total calculado no client; a trigger valida; depois itens entram e a trigger `atualizar_total_autorizacao` mantém consistência. Validar com o usuário.
+
+### 1.7 PDF/QR
+- Lib: `pdf-lib` (puro JS, compatível com Worker) + `qrcode` (gera dataURL/PNG buffer).
+- Layout: cabeçalho com logo da prefeitura (placeholder), num_aut, data, paciente, UBS, profissional, empresa, tabela de itens, total, QR no rodapé, espaços de assinatura com as imagens embutidas.
+- Geração no client (browser tem Web Crypto + Blob); upload direto.
+- QR aponta para `${window.location.origin}/autorizacoes/${id}` (rota pública de validação futura — por ora cai no `_authenticated` e exige login; ok como v1).
+
+### 1.8 Permissões / RLS
+- Acesso à rota: perfil `administrador` ou `atendente`. Outros perfis veem `ComingSoon` ou redirect com toast "Sem permissão".
+- Insert respaldado por RLS (`autorizacoes_insert`, `itens_insert`).
+- Storage bucket `autorizacoes` já restrito a staff.
+
+### 1.9 Pontos de atenção
+- `criado_por` NOT NULL — preencher com `auth.uid()`.
+- Todas as colunas `pdf_autorizacao`, `qr_code`, `assinatura_atendente`, `assinatura_paciente` são NOT NULL → ordem de insert obrigatória (não dá pra inserir e depois preencher; o passo 6 precisa de paths válidos, mesmo que provisórios).
+- Evitar `puppeteer`/`sharp` (incompatíveis com Worker).
+- Limpeza de arquivos órfãos em falha — não deixar lixo no bucket.
+- `num_aut` único: a função tem loop de unicidade, sem ação extra.
+- Status pode virar `bloqueado` automaticamente — UI deve **sempre reler** o registro pós-insert.
+
+---
+
+## 2. Solicitar Acréscimo — `/acrescimos/novo`
+
+### 2.1 Estrutura
+Form simples (uma página, sem wizard).
+
+Campos:
+- `mes_referencia` — mês/ano (input `month`, default mês corrente, formato `YYYY-MM`).
+- `limite_atual` — readonly, calculado: 130000 + soma de acréscimos aprovados do mês.
+- `total_gasto` — readonly, da `vw_orcamento_mes_atual` ou query `sum(total_autorizado) where status in (...) and mes=...`.
+- `saldo` — readonly derivado.
+- `novo_limite` — input moeda; validação `> limite_atual`.
+- `acrescimo` — derivado (`novo_limite - limite_atual`), exibido em destaque.
+- `justificativa` — textarea obrigatória (≥20 chars, ≤1000).
+- `assinatura` — `SignaturePad` reaproveitado; upload em bucket (criar pasta `acrescimos/` no bucket `autorizacoes` ou novo bucket — usar o existente para simplificar; path `acrescimos/{userId}/{timestamp}.png`).
+
+### 2.2 Painel de contexto (cabeçalho da tela)
+Card "Situação atual do mês":
+- Limite vigente (R$)
+- Gasto até agora (R$)
+- Autorizações bloqueadas no mês (link → `/autorizacoes?status=bloqueado&mes=...`)
+- Histórico de acréscimos do mês (lista compacta: data, novo limite, status, solicitante).
+
+### 2.3 Submit
+1. Upload da assinatura → path.
+2. Insert em `acrescimos_gastos`:
+   - `mes_referencia`, `justificativa`, `assinatura` (path), `limite_atual`, `total_gasto`, `novo_limite`, `status='pendente'`.
+   - `aprovado_por` e `data_aprovacao` ficam null (preenchidos na aprovação por admin — fluxo separado, fora do escopo desta tela; sugerir tela de listagem `/acrescimos` em fase futura para aprovar/recusar).
+3. Toast "Solicitação enviada — aguardando aprovação do administrador".
+4. Redirect para `/acrescimos` (lista; se não existir, voltar para dashboard).
+
+### 2.4 Permissões
+- RLS `acrescimos_insert`: `administrador` ou `secretaria`. Atendente **não** pode solicitar — UI deve respeitar (esconder botão na origem; rota mostra `ComingSoon`/sem permissão se acessada).
+- Aprovação só por `administrador` (`acrescimos_update`) — fora desta tela.
+
+### 2.5 Validações Zod
+- `mes_referencia`: regex `^\d{4}-(0[1-9]|1[0-2])$`.
+- `novo_limite`: number, > `limite_atual`, ≤ `limite_atual * 3` (sanity check, confirmar).
+- `justificativa`: 20–1000 chars, trim.
+- `assinatura`: presente.
+
+### 2.6 Pontos de atenção
+- Não confundir `novo_limite` (limite total proposto) com "valor do acréscimo" (diferença) — UI deve deixar claro.
+- Acréscimo só tem efeito quando `status='aprovado'` (a função `verificar_limite_mensal` filtra por isso). Avisar isso na UI pós-envio.
+- Permitir múltiplas solicitações no mesmo mês? Schema permite. UI: alertar se já existir uma `pendente` para o mesmo mês ("você já tem um pedido em análise").
+- Bucket: se reusar `autorizacoes`, garantir que as policies de Storage permitem `administrador`/`secretaria` para o prefixo `acrescimos/`. Se as policies hoje só liberam para `administrador`/`atendente`, **criar migration** ajustando ou criar bucket novo `acrescimos` com policies próprias. **Provável necessidade de migration** — confirmar.
+
+---
+
+## 3. Dependências e ordem de implementação
+
+```
+Storage helpers (lib/autorizacao-storage)  ─┐
+SignaturePad (componente compartilhado)    ─┼─► Nova Autorização ─► Solicitar Acréscimo
+PDF helper (lib/autorizacao-pdf)           ─┘
+```
+
+`SignaturePad` é compartilhado entre as duas telas → construir primeiro.
+
+## 4. Riscos e decisões pendentes
+
+1. **Atomicidade insert + uploads** — risco médio. Mitigação: cleanup em catch + função de "limpar autorizações órfãs" futura.
+2. **Trigger `verificar_limite_mensal` x ordem de inserts** — risco alto. Confirmar se devo preencher `total_autorizado` no insert da autorização (em vez de zerar) para a trigger validar corretamente.
+3. **PDF no Worker vs no client** — recomendação: gerar no client (mais simples, sem cold start). Server function só se precisarmos assinar/cifrar PDF futuramente.
+4. **Edição de `valor_unitario` no item** — bloqueado por padrão (preserva tabela de preços). Confirmar.
+5. **Retroatividade de `data_autorizacao`** — default 30 dias. Confirmar regra.
+6. **Foto da requisição** — schema permite null. UX recomenda obrigatória. Confirmar.
+7. **Bucket para assinatura de acréscimo** — pode exigir migration de policies do Storage. Confirmar.
+8. **Lista de acréscimos `/acrescimos`** — fora do escopo desta entrega, mas necessária para o admin aprovar. Sinalizar como próximo passo.
+
+## 5. Perguntas para o usuário antes de codar
+
+1. `valor_unitario` na autorização: **bloqueado** (tabela manda) ou editável com auditoria?
+2. `foto_requisicao`: obrigatória ou opcional?
+3. `data_autorizacao` retroativa: até quantos dias?
+4. Posso criar migration ajustando policies do bucket `autorizacoes` para incluir o prefixo `acrescimos/` (ou prefere bucket novo)?
+5. Confirma a estratégia de preencher `total_autorizado` calculado no client no insert da autorização (para a trigger de limite validar corretamente antes dos itens entrarem)?
