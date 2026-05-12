@@ -446,7 +446,7 @@ function StepConfirmacao({
   paciente, dataAut, total, itens, sigAtendRef, sigPacRef,
 }: {
   paciente: Paciente; dataAut: string; total: number; itens: Item[];
-  sigAtendRef: React.RefObject<SignaturePadHandle>; sigPacRef: React.RefObject<SignaturePadHandle>;
+  sigAtendRef: React.RefObject<SignaturePadHandle | null>; sigPacRef: React.RefObject<SignaturePadHandle | null>;
 }) {
   return (
     <Card><CardContent className="p-6 space-y-6">
@@ -469,7 +469,7 @@ function SubmitButton(props: {
   paciente: Paciente; ubsId: string; profissionalId: string;
   dataAut: string; sintomas: string; foto: File | null;
   empresaId: string; itens: Item[]; total: number;
-  sigAtendRef: React.RefObject<SignaturePadHandle>; sigPacRef: React.RefObject<SignaturePadHandle>;
+  sigAtendRef: React.RefObject<SignaturePadHandle | null>; sigPacRef: React.RefObject<SignaturePadHandle | null>;
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
