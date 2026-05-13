@@ -199,7 +199,7 @@ function EditarAutorizacao() {
         total_autorizado: total,
       };
       const patch = isAdmin && status !== aut.status
-        ? { ...basePatch, status: status as Aut["status"] }
+        ? { ...basePatch, status: status as (typeof STATUSES)[number] }
         : basePatch;
 
       const { data: updated, error: upErr } = await supabase
