@@ -1,88 +1,159 @@
-# Plano — Módulo de Faturamento
+# Plano — Módulo de Faturamento (revisado)
 
-## 1. Banco de dados (migrations)
+## 1. Banco de dados (migration única)
 
-Não existem tabelas de faturamento ainda. Criar:
+### 1.1 Enum
+```sql
+CREATE TYPE public.status_item_faturamento AS ENUM ('pendente','confirmado','glosado');
+```
 
-**`faturamentos`** (uma sessão de conferência por empresa)
-- `id` uuid pk, `empresa_id` uuid, `mes_referencia` text (YYYY-MM)
-- `status` `status_faturamento` (enum já existe: aberto/enviado/parcialmente_glosado/fechado)
-- `iniciado_por` uuid, `iniciado_em`, `finalizado_em`, `total_bruto`, `total_glosado`, `total_liquido`
+### 1.2 Tabela `motivos_glosa`
+- `id` uuid PK, `descricao` varchar(200) UNIQUE, `ativo` bool default true
+- `criado_por` uuid, `criado_em` timestamptz default now()
+- RLS:
+  - select: administrador, secretaria, financeiro
+  - insert: administrador, financeiro
+  - update: administrador
 
-**`faturamento_itens`** (1 linha por item de autorização conferido)
-- `id`, `faturamento_id`, `autorizacao_id`, `item_autorizacao_id`
-- `status` enum novo `status_item_faturamento`: `pendente | confirmado | glosado`
-- `motivo_glosa_id` (nullable), `observacao_glosa` text, `conferido_por`, `conferido_em`
-- unique (`faturamento_id`, `item_autorizacao_id`)
+### 1.3 Tabela `faturamentos` (cabeçalho + totais)
+- `id` uuid PK
+- `empresa_id` uuid, `mes_referencia` varchar(7)
+- `status` varchar CHECK in (`aberto`,`finalizado`,`cancelado`), default `aberto`
+- Contadores:
+  - `total_itens` int default 0 — COUNT(*)
+  - `total_pendentes` int default 0 — COUNT(*) WHERE status_faturamento='pendente'
+- Valores monetários:
+  - `valor_confirmado` numeric(12,2) default 0 — SUM(valor_total) WHERE status='confirmado'
+  - `valor_glosado` numeric(12,2) default 0 — SUM(valor_total) WHERE status='glosado'
+- `iniciado_por` uuid NOT NULL, `iniciado_em` timestamptz default now()
+- `finalizado_por` uuid, `finalizado_em` timestamptz
+- Index único parcial: `(empresa_id, mes_referencia) WHERE status='aberto'` — garante apenas 1 faturamento aberto por empresa/mês.
+- RLS:
+  - select: administrador, secretaria, financeiro
+  - insert/update: administrador, financeiro
 
-**`motivos_glosa`**
-- `id`, `descricao` (unique), `ativo` bool, `criado_por`, `criado_em`
+> Status armazenado como `varchar` com CHECK para não interferir no enum existente `status_faturamento` usado por `acrescimos_gastos` / `bloquear_edicao_faturamento_fechado`.
 
-RLS: select para admin/secretaria/financeiro; insert/update para admin/financeiro. Motivos: insert por admin/financeiro.
+### 1.4 Alterações em `itens_autorizacao`
+```sql
+ALTER TABLE public.itens_autorizacao
+  ADD COLUMN status_faturamento status_item_faturamento NOT NULL DEFAULT 'pendente',
+  ADD COLUMN motivo_glosa_id   uuid REFERENCES public.motivos_glosa(id),
+  ADD COLUMN observacao_glosa  text,
+  ADD COLUMN mes_faturamento   varchar(7),
+  ADD COLUMN data_conferencia  timestamptz,
+  ADD COLUMN faturamento_id    uuid REFERENCES public.faturamentos(id) ON DELETE SET NULL,
+  ADD COLUMN conferido_por     uuid;
 
-Trigger: ao salvar/atualizar `faturamento_itens`, recalcular totais em `faturamentos`. Ao finalizar (status=fechado), marcar autorizações relacionadas como `faturado`.
+CREATE INDEX idx_itens_autorizacao_faturamento ON public.itens_autorizacao(faturamento_id);
+CREATE INDEX idx_itens_autorizacao_mes ON public.itens_autorizacao(mes_faturamento);
+```
+
+### 1.5 Função `abrir_faturamento(p_empresa uuid, p_mes varchar)` (SECURITY DEFINER, idempotente)
+
+Pseudocódigo:
+```sql
+DECLARE v_existing uuid; v_id uuid;
+BEGIN
+  -- Permissão
+  IF meu_perfil() NOT IN ('administrador','financeiro') THEN
+    RAISE EXCEPTION 'Sem permissão';
+  END IF;
+
+  -- Idempotência: se já existe aberto, retorna o existente
+  SELECT id INTO v_existing
+    FROM public.faturamentos
+   WHERE empresa_id = p_empresa
+     AND mes_referencia = p_mes
+     AND status = 'aberto';
+  IF FOUND THEN RETURN v_existing; END IF;
+
+  -- Cria o faturamento
+  INSERT INTO public.faturamentos (empresa_id, mes_referencia, iniciado_por)
+  VALUES (p_empresa, p_mes, auth.uid())
+  RETURNING id INTO v_id;
+
+  -- Vincula itens pendentes da empresa/mês ainda não atrelados
+  UPDATE public.itens_autorizacao i
+     SET faturamento_id = v_id,
+         mes_faturamento = p_mes
+    FROM public.autorizacoes a
+   WHERE i.autorizacao_id = a.id
+     AND a.empresa_id = p_empresa
+     AND to_char(a.data_autorizacao,'YYYY-MM') = p_mes
+     AND a.status IN ('pendente','aprovado')
+     AND i.status_faturamento = 'pendente'
+     AND i.faturamento_id IS NULL;
+
+  RETURN v_id;
+END;
+```
+
+### 1.6 Trigger de recálculo em `itens_autorizacao`
+
+`recalc_totais_faturamento()` AFTER INSERT/UPDATE/DELETE. Para cada `faturamento_id` afetado (NEW e/ou OLD, distinct, não nulo):
+
+```sql
+UPDATE public.faturamentos f SET
+  total_itens       = (SELECT COUNT(*) FROM itens_autorizacao WHERE faturamento_id = f.id),
+  total_pendentes   = (SELECT COUNT(*) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='pendente'),
+  valor_confirmado  = (SELECT COALESCE(SUM(valor_total),0) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='confirmado'),
+  valor_glosado     = (SELECT COALESCE(SUM(valor_total),0) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='glosado')
+WHERE f.id = <fid>;
+```
 
 ## 2. Rotas
 
 ```
 src/routes/_authenticated/faturamentos/
-  index.tsx          -> Lista de empresas (cards/tabela) com botão "Conferir"
-  $empresaId.tsx     -> Tela de conferência
+  index.tsx          -> Lista de empresas
+  $empresaId.tsx     -> Conferência
 ```
 
 ## 3. Tela 1 — Lista de Empresas
-
-- Reaproveita query `empresas` (ativas).
-- Mostra: nome fantasia, CNPJ, status do faturamento atual do mês (badge), totais pendentes (count de autorizações `aprovado` não faturadas).
-- Botão **"Conferir faturamento"** → navega para `/faturamentos/$empresaId`.
-- Filtro por mês de referência (default: mês corrente) e busca por nome.
+- Empresas ativas + filtro de mês (default mês atual) + busca por nome.
+- Por linha: badge do status (sem faturamento / aberto / finalizado) + contador de pendentes.
+- Botão **Conferir faturamento** → chama RPC `abrir_faturamento(empresa, mes)` (idempotente) → navega para `/faturamentos/$empresaId`.
 
 ## 4. Tela 2 — Conferência (`/faturamentos/$empresaId`)
 
-Layout duas colunas (grid `lg:grid-cols-[1fr_320px]`):
+Layout grid `lg:grid-cols-[1fr_320px]`.
 
-**Centro** — lista de requisições (autorizações da empresa no mês com status `aprovado`/`pendente` ainda não faturadas), agrupadas por `num_aut`. Para cada autorização:
-- Cabeçalho: `num_aut`, paciente, data
-- Lista de itens (`itens_autorizacao`): nome do exame em destaque (h3), paciente abaixo (text-sm muted), valor à direita
-- Por item: botões `Confirmar` (check verde), `Glosar` (X destrutivo)
-- No cabeçalho da requisição: botão `Confirmar todos` (check duplo)
-- Estado visual por item: badge confirmado/glosado/pendente
+**Centro** — busca itens via `itens_autorizacao` filtrando por `faturamento_id`, com join em `autorizacoes` (num_aut, paciente, data) e `procedimentos` (nome). Agrupa por `autorizacao_id`. Para cada grupo:
+- Cabeçalho: `num_aut`, paciente, data, botão `Confirmar todos`.
+- Itens: nome do exame em destaque, paciente abaixo (text-sm muted), valor à direita.
+- Botões `Confirmar` / `Glosar` por item + badge de status.
 
-**Painel direito (sticky)** — resumo:
-- Nome da empresa em conferência
-- Totais: bruto, confirmado, glosado, restante
-- Contadores: itens conferidos / total
-- Botão `Parar` (variant primary destacado) → confirma com AlertDialog → finaliza faturamento (status `fechado` ou `parcialmente_glosado` se houve glosas), marca autorizações como `faturado`, redireciona para lista.
+**Painel direito (sticky)** — resumo lido direto de `faturamentos`:
+- Empresa, mês.
+- Contadores: `total_itens`, conferidos = `total_itens − total_pendentes`, `total_pendentes`.
+- Valores: `valor_confirmado`, `valor_glosado`.
+- Botão **Parar** (default destacado) → AlertDialog → UPDATE faturamentos SET status='finalizado', finalizado_por=auth.uid(), finalizado_em=now() → redireciona.
 
-Mutations: `confirmarItem`, `glosarItem`, `confirmarTodos(autorizacaoId)`, `finalizarFaturamento`. Invalida queryKey após cada ação.
+Mutations:
+- `confirmarItem(itemId)` → status='confirmado', limpa motivo/obs, seta data_conferencia/conferido_por.
+- `glosarItem(itemId, motivo, observacao)` → idem com status='glosado'.
+- `confirmarTodos(autorizacaoId)` → WHERE autorizacao_id=X AND faturamento_id=Y AND status='pendente'.
+- `finalizarFaturamento(id)`.
 
 ## 5. Modal — Registrar Glosa
+- **Motivo**: Combobox (Command + Popover) sobre `motivos_glosa` ativos. Item "+ Adicionar novo motivo" abre input inline → INSERT e seleciona.
+- **Observação**: Textarea.
+- Footer: Cancelar / Salvar (disabled se motivo vazio).
 
-`Dialog` com:
-- **Motivo de Glosa**: `Combobox` (Command + Popover) buscando em `motivos_glosa`. Opção "+ Adicionar novo motivo" abre input inline → cria registro e seleciona automaticamente.
-- **Observação**: `Textarea`
-- Footer: `Cancelar` (ghost) / `Salvar` (default, disabled se motivo vazio)
-- Ao salvar: chama `glosarItem({ itemId, motivoId, observacao })`.
-
-## 6. Permissões
-
-- Visualizar: admin, secretaria, financeiro
-- Conferir/glosar/finalizar: admin, financeiro
-- Botões ocultos para perfis sem permissão (usar `usePerfil`).
+## 6. Permissões UI
+- Visualizar: administrador, secretaria, financeiro.
+- Conferir/glosar/finalizar: administrador, financeiro (botões ocultos via `usePerfil`).
 
 ## 7. Detalhes técnicos
+- React Query keys: `["faturamento-empresas", mes]`, `["faturamento", id]`, `["faturamento-itens", id]`, `["motivos-glosa"]`.
+- Helper `currencyBR` já existe em `src/lib/format.ts` como `brl`.
+- Navegação tipada via `<Link to="/_authenticated/faturamentos/$empresaId" params>`.
 
-- Usar `@tanstack/react-query` com chaves `["faturamento", empresaId, mes]`, `["faturamento-empresas", mes]`, `["motivos-glosa"]`.
-- Formatação monetária via `format.ts` existente (criar helper `currencyBR` se não existir).
-- Toda navegação tipada via `<Link to="/_authenticated/faturamentos/$empresaId" params>`.
-- Componentes shadcn já disponíveis: Dialog, Command, Popover, Textarea, AlertDialog, Badge, Button, Card, Table.
-
-## 8. Ordem de implementação
-
-1. Migration: enum `status_item_faturamento`, tabelas `motivos_glosa`, `faturamentos`, `faturamento_itens`, RLS, trigger de totais.
-2. `index.tsx` — lista de empresas + ação Conferir.
-3. `$empresaId.tsx` — layout, query, listagem agrupada.
-4. Mutations confirmar/glosar/confirmar-todos.
-5. Modal de glosa com combobox de motivos + criação inline.
-6. Botão Parar + finalização.
-7. QA visual nos breakpoints.
+## 8. Ordem de execução
+1. Migration (enum, motivos_glosa, faturamentos com valores monetários, ALTER itens_autorizacao, função idempotente `abrir_faturamento`, trigger de totais, RLS).
+2. `index.tsx` — lista + ação Conferir.
+3. `$empresaId.tsx` — layout + query agrupada.
+4. Mutations confirmar/glosar/confirmar-todos + finalizar.
+5. Modal de glosa com combobox + criação inline.
+6. QA visual.
