@@ -8,7 +8,7 @@ export type SignaturePadHandle = {
   clear: () => void;
 };
 
-export const SignaturePad = forwardRef<SignaturePadHandle, { label: string }>(
+export const SignaturePad = forwardRef<SignaturePadHandle | null, { label: string }>(
   function SignaturePad({ label }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const drawing = useRef(false);
