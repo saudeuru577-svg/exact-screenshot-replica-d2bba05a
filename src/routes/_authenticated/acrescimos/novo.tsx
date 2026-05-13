@@ -157,7 +157,7 @@ function NovoAcrescimo() {
                       <p className="text-xs text-muted-foreground">{new Date(h.criado_em).toLocaleString("pt-BR")}</p>
                       <p>Novo limite: <span className="tabular-nums font-medium">{brl(Number(h.novo_limite ?? 0))}</span></p>
                     </div>
-                    <Badge variant={h.status === "aprovado" ? "default" : h.status === "rejeitado" ? "destructive" : "secondary"} className="capitalize">{h.status}</Badge>
+                    <Badge variant={h.status === "aprovado" ? "default" : h.status === "recusado" ? "destructive" : "secondary"} className="capitalize">{h.status}</Badge>
                   </li>
                 ))}
               </ul>
