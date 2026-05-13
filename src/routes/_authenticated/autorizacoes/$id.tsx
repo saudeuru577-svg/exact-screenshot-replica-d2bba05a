@@ -245,6 +245,16 @@ function VisualizarAutorizacao() {
             </CardContent>
           </Card>
 
+          {/* PDF Preview */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Pré-visualização do PDF
+              </p>
+              <PdfPreview path={aut.pdf_autorizacao} />
+            </CardContent>
+          </Card>
+
           {/* Anexos */}
           <Card>
             <CardContent className="p-4 grid sm:grid-cols-3 gap-3">
