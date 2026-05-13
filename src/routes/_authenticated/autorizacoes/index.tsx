@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Loader2, Eye } from "lucide-react";
+import QRCode from "qrcode";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -9,13 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR } from "@/lib/format";
+
+function QrThumb({ value }: { value: string }) {
+  const [src, setSrc] = useState<string>("");
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(value, { width: 96, margin: 0 }).then((d) => { if (alive) setSrc(d); });
+    return () => { alive = false; };
+  }, [value]);
+  return src
+    ? <img src={src} alt={`QR ${value}`} className="size-14 rounded-sm border bg-white p-0.5" />
+    : <div className="size-14 rounded-sm border bg-muted animate-pulse" />;
+}
 
 export const Route = createFileRoute("/_authenticated/autorizacoes/")({
   component: AutorizacoesList,
@@ -85,37 +95,56 @@ function AutorizacoesList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg bg-card overflow-hidden">
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead>Nº</TableHead><TableHead>Data</TableHead><TableHead>Paciente</TableHead>
-              <TableHead>Empresa</TableHead><TableHead>UBS</TableHead>
-              <TableHead className="text-right">Total</TableHead><TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={8} className="text-center py-10"><Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>}
-              {!isLoading && filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">Nenhuma autorização encontrada.</TableCell></TableRow>
-              )}
-              {filtered.map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-mono text-xs">{a.num_aut}</TableCell>
-                  <TableCell>{dateBR(a.data_autorizacao)}</TableCell>
-                  <TableCell className="font-medium">{a.paciente?.nome ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{a.empresa?.nome_fantasia ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{a.ubs?.nome_posto ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{brl(Number(a.total_autorizado))}</TableCell>
-                  <TableCell><Badge variant={VARIANTS[a.status] ?? "secondary"} className="capitalize">{a.status}</Badge></TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to="/autorizacoes/$id" params={{ id: a.id }}><Eye className="size-4" /></Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="space-y-2">
+          {isLoading && (
+            <div className="border rounded-lg bg-card py-10 text-center">
+              <Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" />
+            </div>
+          )}
+          {!isLoading && filtered.length === 0 && (
+            <div className="border rounded-lg bg-card py-10 text-center text-muted-foreground">
+              Nenhuma autorização encontrada.
+            </div>
+          )}
+          {filtered.map((a) => (
+            <div
+              key={a.id}
+              className="border rounded-lg bg-card px-4 py-3 flex items-center gap-4 hover:bg-accent/40 transition-colors"
+            >
+              <QrThumb value={a.num_aut} />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-sm truncate uppercase">
+                  {a.paciente?.nome ?? "—"}
+                </div>
+                <div className="font-mono text-xs text-muted-foreground mt-0.5">
+                  {a.num_aut}
+                </div>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <Badge variant={VARIANTS[a.status] ?? "secondary"} className="capitalize text-[10px]">
+                    {a.status}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {brl(Number(a.total_autorizado))}
+                  </span>
+                  {a.empresa?.nome_fantasia && (
+                    <span className="text-xs text-muted-foreground truncate hidden sm:inline">
+                      • {a.empresa.nome_fantasia}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className="text-sm font-medium text-destructive tabular-nums">
+                  {dateBR(a.data_autorizacao)}
+                </span>
+                <Button variant="ghost" size="icon" asChild className="size-8">
+                  <Link to="/autorizacoes/$id" params={{ id: a.id }} aria-label="Visualizar">
+                    <Eye className="size-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </PageBody>
     </>
