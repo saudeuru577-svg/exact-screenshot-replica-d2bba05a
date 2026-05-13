@@ -193,12 +193,14 @@ function EditarAutorizacao() {
       }
 
       // Update autorizacao
-      const patch: Record<string, unknown> = {
+      const basePatch = {
         data_autorizacao: dataAut,
         sintomas: sintomas.trim() || null,
         total_autorizado: total,
       };
-      if (isAdmin && status !== aut.status) patch.status = status;
+      const patch = isAdmin && status !== aut.status
+        ? { ...basePatch, status: status as Aut["status"] }
+        : basePatch;
 
       const { data: updated, error: upErr } = await supabase
         .from("autorizacoes").update(patch).eq("id", aut.id)

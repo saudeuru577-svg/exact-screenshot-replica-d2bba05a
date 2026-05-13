@@ -29,6 +29,7 @@ import { Route as AuthenticatedAutorizacoesIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin/logs'
 import { Route as AuthenticatedAcrescimosNovoRouteImport } from './routes/_authenticated/acrescimos/novo'
+import { Route as AuthenticatedAutorizacoesIdEditarRouteImport } from './routes/_authenticated/autorizacoes/$id.editar'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -144,6 +145,12 @@ const AuthenticatedAcrescimosNovoRoute =
     path: '/acrescimos/novo',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAutorizacoesIdEditarRoute =
+  AuthenticatedAutorizacoesIdEditarRouteImport.update({
+    id: '/editar',
+    path: '/editar',
+    getParentRoute: () => AuthenticatedAutorizacoesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,7 +159,7 @@ export interface FileRoutesByFullPath {
   '/acrescimos/novo': typeof AuthenticatedAcrescimosNovoRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRoute
+  '/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRouteWithChildren
   '/autorizacoes/nova': typeof AuthenticatedAutorizacoesNovaRoute
   '/cadastros/empresas': typeof AuthenticatedCadastrosEmpresasRoute
   '/cadastros/procedimentos': typeof AuthenticatedCadastrosProcedimentosRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/faturamentos/': typeof AuthenticatedFaturamentosIndexRoute
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
   '/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
+  '/autorizacoes/$id/editar': typeof AuthenticatedAutorizacoesIdEditarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,7 +181,7 @@ export interface FileRoutesByTo {
   '/acrescimos/novo': typeof AuthenticatedAcrescimosNovoRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRoute
+  '/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRouteWithChildren
   '/autorizacoes/nova': typeof AuthenticatedAutorizacoesNovaRoute
   '/cadastros/empresas': typeof AuthenticatedCadastrosEmpresasRoute
   '/cadastros/procedimentos': typeof AuthenticatedCadastrosProcedimentosRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/faturamentos': typeof AuthenticatedFaturamentosIndexRoute
   '/pacientes': typeof AuthenticatedPacientesIndexRoute
   '/relatorios': typeof AuthenticatedRelatoriosIndexRoute
+  '/autorizacoes/$id/editar': typeof AuthenticatedAutorizacoesIdEditarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,7 +205,7 @@ export interface FileRoutesById {
   '/_authenticated/acrescimos/novo': typeof AuthenticatedAcrescimosNovoRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/_authenticated/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRoute
+  '/_authenticated/autorizacoes/$id': typeof AuthenticatedAutorizacoesIdRouteWithChildren
   '/_authenticated/autorizacoes/nova': typeof AuthenticatedAutorizacoesNovaRoute
   '/_authenticated/cadastros/empresas': typeof AuthenticatedCadastrosEmpresasRoute
   '/_authenticated/cadastros/procedimentos': typeof AuthenticatedCadastrosProcedimentosRoute
@@ -209,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/faturamentos/': typeof AuthenticatedFaturamentosIndexRoute
   '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
   '/_authenticated/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
+  '/_authenticated/autorizacoes/$id/editar': typeof AuthenticatedAutorizacoesIdEditarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/faturamentos/'
     | '/pacientes/'
     | '/relatorios/'
+    | '/autorizacoes/$id/editar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/faturamentos'
     | '/pacientes'
     | '/relatorios'
+    | '/autorizacoes/$id/editar'
   id:
     | '__root__'
     | '/'
@@ -275,6 +287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/faturamentos/'
     | '/_authenticated/pacientes/'
     | '/_authenticated/relatorios/'
+    | '/_authenticated/autorizacoes/$id/editar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -425,15 +438,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcrescimosNovoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/autorizacoes/$id/editar': {
+      id: '/_authenticated/autorizacoes/$id/editar'
+      path: '/editar'
+      fullPath: '/autorizacoes/$id/editar'
+      preLoaderRoute: typeof AuthenticatedAutorizacoesIdEditarRouteImport
+      parentRoute: typeof AuthenticatedAutorizacoesIdRoute
+    }
   }
 }
+
+interface AuthenticatedAutorizacoesIdRouteChildren {
+  AuthenticatedAutorizacoesIdEditarRoute: typeof AuthenticatedAutorizacoesIdEditarRoute
+}
+
+const AuthenticatedAutorizacoesIdRouteChildren: AuthenticatedAutorizacoesIdRouteChildren =
+  {
+    AuthenticatedAutorizacoesIdEditarRoute:
+      AuthenticatedAutorizacoesIdEditarRoute,
+  }
+
+const AuthenticatedAutorizacoesIdRouteWithChildren =
+  AuthenticatedAutorizacoesIdRoute._addFileChildren(
+    AuthenticatedAutorizacoesIdRouteChildren,
+  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedAcrescimosNovoRoute: typeof AuthenticatedAcrescimosNovoRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
-  AuthenticatedAutorizacoesIdRoute: typeof AuthenticatedAutorizacoesIdRoute
+  AuthenticatedAutorizacoesIdRoute: typeof AuthenticatedAutorizacoesIdRouteWithChildren
   AuthenticatedAutorizacoesNovaRoute: typeof AuthenticatedAutorizacoesNovaRoute
   AuthenticatedCadastrosEmpresasRoute: typeof AuthenticatedCadastrosEmpresasRoute
   AuthenticatedCadastrosProcedimentosRoute: typeof AuthenticatedCadastrosProcedimentosRoute
@@ -453,7 +488,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcrescimosNovoRoute: AuthenticatedAcrescimosNovoRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
-  AuthenticatedAutorizacoesIdRoute: AuthenticatedAutorizacoesIdRoute,
+  AuthenticatedAutorizacoesIdRoute:
+    AuthenticatedAutorizacoesIdRouteWithChildren,
   AuthenticatedAutorizacoesNovaRoute: AuthenticatedAutorizacoesNovaRoute,
   AuthenticatedCadastrosEmpresasRoute: AuthenticatedCadastrosEmpresasRoute,
   AuthenticatedCadastrosProcedimentosRoute:
