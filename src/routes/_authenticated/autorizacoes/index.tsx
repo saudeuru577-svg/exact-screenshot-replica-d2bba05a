@@ -184,7 +184,7 @@ function AutorizacoesList() {
                   </Button>
                   {(isAdmin || (a.status === "pendente" && has(["atendente"]))) && (
                     <Button variant="ghost" size="icon" asChild className="size-8" title="Editar">
-                      <Link to="/autorizacoes/$id" params={{ id: a.id }} aria-label="Editar">
+                      <Link to="/autorizacoes/$id/editar" params={{ id: a.id }} aria-label="Editar">
                         <Pencil className="size-4" />
                       </Link>
                     </Button>
