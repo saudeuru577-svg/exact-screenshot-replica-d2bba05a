@@ -1,159 +1,52 @@
-# Plano — Módulo de Faturamento (revisado)
+## Causa raiz
 
-## 1. Banco de dados (migration única)
+As queries da tela de conferência (`src/routes/_authenticated/faturamentos/$empresaId.tsx`) usam embeds do PostgREST (`empresa:empresas(...)`, `autorizacoes(..., pacientes(nome))`) que exigem foreign keys declaradas no banco. Hoje, `faturamentos`, `autorizacoes` e `pacientes` **não têm FKs declaradas** para as tabelas relacionadas — só `itens_autorizacao` tem. O embed falha, a query entra em erro, `data` fica `undefined` e a tela renderiza "Nenhum faturamento encontrado" em vez dos 4 itens pendentes que existem no banco.
 
-### 1.1 Enum
-```sql
-CREATE TYPE public.status_item_faturamento AS ENUM ('pendente','confirmado','glosado');
-```
+## Solução
 
-### 1.2 Tabela `motivos_glosa`
-- `id` uuid PK, `descricao` varchar(200) UNIQUE, `ativo` bool default true
-- `criado_por` uuid, `criado_em` timestamptz default now()
-- RLS:
-  - select: administrador, secretaria, financeiro
-  - insert: administrador, financeiro
-  - update: administrador
+Adicionar as foreign keys faltantes (correção definitiva — destrava todos os embeds do PostgREST em todo o app, não só este módulo) e tratar erros de query na tela para que falhas futuras não fiquem mais escondidas atrás do estado vazio.
 
-### 1.3 Tabela `faturamentos` (cabeçalho + totais)
-- `id` uuid PK
-- `empresa_id` uuid, `mes_referencia` varchar(7)
-- `status` varchar CHECK in (`aberto`,`finalizado`,`cancelado`), default `aberto`
-- Contadores:
-  - `total_itens` int default 0 — COUNT(*)
-  - `total_pendentes` int default 0 — COUNT(*) WHERE status_faturamento='pendente'
-- Valores monetários:
-  - `valor_confirmado` numeric(12,2) default 0 — SUM(valor_total) WHERE status='confirmado'
-  - `valor_glosado` numeric(12,2) default 0 — SUM(valor_total) WHERE status='glosado'
-- `iniciado_por` uuid NOT NULL, `iniciado_em` timestamptz default now()
-- `finalizado_por` uuid, `finalizado_em` timestamptz
-- Index único parcial: `(empresa_id, mes_referencia) WHERE status='aberto'` — garante apenas 1 faturamento aberto por empresa/mês.
-- RLS:
-  - select: administrador, secretaria, financeiro
-  - insert/update: administrador, financeiro
+### 1. Migration: adicionar FKs faltantes
 
-> Status armazenado como `varchar` com CHECK para não interferir no enum existente `status_faturamento` usado por `acrescimos_gastos` / `bloquear_edicao_faturamento_fechado`.
+Criar uma migration adicionando as constraints abaixo (todas como `ON DELETE RESTRICT` exceto onde indicado, sem alterar dados existentes):
 
-### 1.4 Alterações em `itens_autorizacao`
-```sql
-ALTER TABLE public.itens_autorizacao
-  ADD COLUMN status_faturamento status_item_faturamento NOT NULL DEFAULT 'pendente',
-  ADD COLUMN motivo_glosa_id   uuid REFERENCES public.motivos_glosa(id),
-  ADD COLUMN observacao_glosa  text,
-  ADD COLUMN mes_faturamento   varchar(7),
-  ADD COLUMN data_conferencia  timestamptz,
-  ADD COLUMN faturamento_id    uuid REFERENCES public.faturamentos(id) ON DELETE SET NULL,
-  ADD COLUMN conferido_por     uuid;
+- `faturamentos.empresa_id` → `empresas(id)`
+- `faturamentos.iniciado_por` → `usuarios(id)`
+- `faturamentos.finalizado_por` → `usuarios(id)`
+- `autorizacoes.empresa_id` → `empresas(id)`
+- `autorizacoes.ubs_id` → `ubs(id)`
+- `autorizacoes.profissional_id` → `profissionais(id)`
+- `autorizacoes.paciente_id` → `pacientes(id)`
+- `autorizacoes.criado_por` → `usuarios(id)`
+- `pacientes.bairro_id` → `bairros(id)`
+- `pacientes.povoado_id` → `povoados(id)`
+- `pacientes.criado_por` → `usuarios(id)`
+- `procedimentos.empresa_id` → `empresas(id)`
+- `profissionais.ubs_id` → `ubs(id)`
+- `acrescimos_gastos.aprovado_por` → `usuarios(id)`
+- `itens_autorizacao.conferido_por` → `usuarios(id)`
 
-CREATE INDEX idx_itens_autorizacao_faturamento ON public.itens_autorizacao(faturamento_id);
-CREATE INDEX idx_itens_autorizacao_mes ON public.itens_autorizacao(mes_faturamento);
-```
+Antes de aplicar, validar que não há linhas órfãs (`SELECT … WHERE x_id NOT IN (SELECT id FROM …)`); se houver, a migration aborta com mensagem clara.
 
-### 1.5 Função `abrir_faturamento(p_empresa uuid, p_mes varchar)` (SECURITY DEFINER, idempotente)
+### 2. Tornar erros de query visíveis em `$empresaId.tsx`
 
-Pseudocódigo:
-```sql
-DECLARE v_existing uuid; v_id uuid;
-BEGIN
-  -- Permissão
-  IF meu_perfil() NOT IN ('administrador','financeiro') THEN
-    RAISE EXCEPTION 'Sem permissão';
-  END IF;
+Hoje o componente trata `data === null` e `data === undefined` da mesma forma. Ajustar para:
 
-  -- Idempotência: se já existe aberto, retorna o existente
-  SELECT id INTO v_existing
-    FROM public.faturamentos
-   WHERE empresa_id = p_empresa
-     AND mes_referencia = p_mes
-     AND status = 'aberto';
-  IF FOUND THEN RETURN v_existing; END IF;
+- Mostrar uma `Card` de erro com `error.message` quando `query.error` existir, em vez do texto genérico "Nenhum faturamento encontrado".
+- Aplicar o mesmo padrão à query de `itens_autorizacao`.
 
-  -- Cria o faturamento
-  INSERT INTO public.faturamentos (empresa_id, mes_referencia, iniciado_por)
-  VALUES (p_empresa, p_mes, auth.uid())
-  RETURNING id INTO v_id;
+Isso evita que regressões futuras (RLS, embeds quebrados, etc.) voltem a se disfarçar de "lista vazia".
 
-  -- Vincula itens pendentes da empresa/mês ainda não atrelados
-  UPDATE public.itens_autorizacao i
-     SET faturamento_id = v_id,
-         mes_faturamento = p_mes
-    FROM public.autorizacoes a
-   WHERE i.autorizacao_id = a.id
-     AND a.empresa_id = p_empresa
-     AND to_char(a.data_autorizacao,'YYYY-MM') = p_mes
-     AND a.status IN ('pendente','aprovado')
-     AND i.status_faturamento = 'pendente'
-     AND i.faturamento_id IS NULL;
+### 3. Verificação
 
-  RETURN v_id;
-END;
-```
+Após a migration e o ajuste de UI:
 
-### 1.6 Trigger de recálculo em `itens_autorizacao`
+1. Recarregar `/faturamentos/f667b8d7…?mes=2026-05` — devem aparecer 2 grupos de autorização com 2 itens cada, totais 4 itens / 4 pendentes no painel lateral.
+2. Confirmar 1 item → contador de pendentes cai para 3, `valor_confirmado` aumenta.
+3. Glosar 1 item com motivo → `valor_glosado` aumenta, badge "Glosado" aparece.
 
-`recalc_totais_faturamento()` AFTER INSERT/UPDATE/DELETE. Para cada `faturamento_id` afetado (NEW e/ou OLD, distinct, não nulo):
+## Detalhes técnicos
 
-```sql
-UPDATE public.faturamentos f SET
-  total_itens       = (SELECT COUNT(*) FROM itens_autorizacao WHERE faturamento_id = f.id),
-  total_pendentes   = (SELECT COUNT(*) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='pendente'),
-  valor_confirmado  = (SELECT COALESCE(SUM(valor_total),0) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='confirmado'),
-  valor_glosado     = (SELECT COALESCE(SUM(valor_total),0) FROM itens_autorizacao WHERE faturamento_id = f.id AND status_faturamento='glosado')
-WHERE f.id = <fid>;
-```
-
-## 2. Rotas
-
-```
-src/routes/_authenticated/faturamentos/
-  index.tsx          -> Lista de empresas
-  $empresaId.tsx     -> Conferência
-```
-
-## 3. Tela 1 — Lista de Empresas
-- Empresas ativas + filtro de mês (default mês atual) + busca por nome.
-- Por linha: badge do status (sem faturamento / aberto / finalizado) + contador de pendentes.
-- Botão **Conferir faturamento** → chama RPC `abrir_faturamento(empresa, mes)` (idempotente) → navega para `/faturamentos/$empresaId`.
-
-## 4. Tela 2 — Conferência (`/faturamentos/$empresaId`)
-
-Layout grid `lg:grid-cols-[1fr_320px]`.
-
-**Centro** — busca itens via `itens_autorizacao` filtrando por `faturamento_id`, com join em `autorizacoes` (num_aut, paciente, data) e `procedimentos` (nome). Agrupa por `autorizacao_id`. Para cada grupo:
-- Cabeçalho: `num_aut`, paciente, data, botão `Confirmar todos`.
-- Itens: nome do exame em destaque, paciente abaixo (text-sm muted), valor à direita.
-- Botões `Confirmar` / `Glosar` por item + badge de status.
-
-**Painel direito (sticky)** — resumo lido direto de `faturamentos`:
-- Empresa, mês.
-- Contadores: `total_itens`, conferidos = `total_itens − total_pendentes`, `total_pendentes`.
-- Valores: `valor_confirmado`, `valor_glosado`.
-- Botão **Parar** (default destacado) → AlertDialog → UPDATE faturamentos SET status='finalizado', finalizado_por=auth.uid(), finalizado_em=now() → redireciona.
-
-Mutations:
-- `confirmarItem(itemId)` → status='confirmado', limpa motivo/obs, seta data_conferencia/conferido_por.
-- `glosarItem(itemId, motivo, observacao)` → idem com status='glosado'.
-- `confirmarTodos(autorizacaoId)` → WHERE autorizacao_id=X AND faturamento_id=Y AND status='pendente'.
-- `finalizarFaturamento(id)`.
-
-## 5. Modal — Registrar Glosa
-- **Motivo**: Combobox (Command + Popover) sobre `motivos_glosa` ativos. Item "+ Adicionar novo motivo" abre input inline → INSERT e seleciona.
-- **Observação**: Textarea.
-- Footer: Cancelar / Salvar (disabled se motivo vazio).
-
-## 6. Permissões UI
-- Visualizar: administrador, secretaria, financeiro.
-- Conferir/glosar/finalizar: administrador, financeiro (botões ocultos via `usePerfil`).
-
-## 7. Detalhes técnicos
-- React Query keys: `["faturamento-empresas", mes]`, `["faturamento", id]`, `["faturamento-itens", id]`, `["motivos-glosa"]`.
-- Helper `currencyBR` já existe em `src/lib/format.ts` como `brl`.
-- Navegação tipada via `<Link to="/_authenticated/faturamentos/$empresaId" params>`.
-
-## 8. Ordem de execução
-1. Migration (enum, motivos_glosa, faturamentos com valores monetários, ALTER itens_autorizacao, função idempotente `abrir_faturamento`, trigger de totais, RLS).
-2. `index.tsx` — lista + ação Conferir.
-3. `$empresaId.tsx` — layout + query agrupada.
-4. Mutations confirmar/glosar/confirmar-todos + finalizar.
-5. Modal de glosa com combobox + criação inline.
-6. QA visual.
+- A migration usa `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY … REFERENCES … NOT VALID` seguido de `VALIDATE CONSTRAINT` apenas se a verificação prévia de órfãos passar — assim a operação é segura mesmo com tabelas grandes.
+- Nenhuma alteração em RLS, triggers, enum ou na função `abrir_faturamento` é necessária.
+- Os tipos gerados em `src/integrations/supabase/types.ts` serão regenerados automaticamente após a migration; nenhum código de aplicação precisa mudar além do tratamento de erro descrito.
