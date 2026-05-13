@@ -5,7 +5,7 @@ import { ArrowLeft, Pencil, FileText, Loader2, ExternalLink } from "lucide-react
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { signedUrl } from "@/lib/autorizacao-storage";
+import { signedUrl, downloadBlobUrl } from "@/lib/autorizacao-storage";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
