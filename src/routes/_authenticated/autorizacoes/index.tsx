@@ -95,8 +95,10 @@ function AutorizacoesList() {
       return;
     }
     try {
-      const url = await signedUrl(a.pdf_autorizacao);
-      window.open(url, "_blank", "noopener,noreferrer");
+      const url = await downloadBlobUrl(a.pdf_autorizacao);
+      const w = window.open(url, "_blank", "noopener,noreferrer");
+      if (!w) toast.error("Permita pop-ups para abrir o PDF");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
       toast.error((e as Error).message);
     }
