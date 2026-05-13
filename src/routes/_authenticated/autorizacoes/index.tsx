@@ -42,29 +42,65 @@ const VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outlin
 
 type Aut = {
   id: string; num_aut: string; data_autorizacao: string;
-  total_autorizado: number; status: string;
+  total_autorizado: number; status: string; pdf_autorizacao: string | null;
   paciente: { nome: string } | null;
   empresa: { nome_fantasia: string } | null;
   ubs: { nome_posto: string } | null;
 };
 
 function AutorizacoesList() {
-  const { has } = usePerfil();
+  const { has, isAdmin } = usePerfil();
   const podeCriar = has(["administrador", "atendente"]);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("todos");
+  const qc = useQueryClient();
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["autorizacoes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("autorizacoes")
-        .select("id, num_aut, data_autorizacao, total_autorizado, status, paciente:pacientes(nome), empresa:empresas(nome_fantasia), ubs:ubs(nome_posto)")
+        .select("id, num_aut, data_autorizacao, total_autorizado, status, pdf_autorizacao, paciente:pacientes(nome), empresa:empresas(nome_fantasia), ubs:ubs(nome_posto)")
         .order("data_autorizacao", { ascending: false }).limit(500);
       if (error) throw error;
       return data as unknown as Aut[];
     },
   });
+
+  const removeMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("autorizacoes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Autorização excluída");
+      qc.invalidateQueries({ queryKey: ["autorizacoes"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDelete = async (a: Aut) => {
+    const ok = await confirm({
+      title: "Excluir autorização?",
+      description: `Esta ação não pode ser desfeita. ${a.num_aut} será removida permanentemente.`,
+      variant: "destructive",
+      confirmLabel: "Excluir",
+    });
+    if (ok) removeMut.mutate(a.id);
+  };
+
+  const handlePdf = async (a: Aut) => {
+    if (!a.pdf_autorizacao) {
+      toast.error("PDF indisponível para esta autorização");
+      return;
+    }
+    try {
+      const url = await signedUrl(a.pdf_autorizacao);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
