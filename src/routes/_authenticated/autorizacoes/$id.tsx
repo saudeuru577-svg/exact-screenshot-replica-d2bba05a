@@ -5,7 +5,7 @@ import { ArrowLeft, Pencil, FileText, Loader2, ExternalLink } from "lucide-react
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { signedUrl } from "@/lib/autorizacao-storage";
+import { signedUrl, downloadBlobUrl } from "@/lib/autorizacao-storage";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -245,6 +245,16 @@ function VisualizarAutorizacao() {
             </CardContent>
           </Card>
 
+          {/* PDF Preview */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Pré-visualização do PDF
+              </p>
+              <PdfPreview path={aut.pdf_autorizacao} />
+            </CardContent>
+          </Card>
+
           {/* Anexos */}
           <Card>
             <CardContent className="p-4 grid sm:grid-cols-3 gap-3">
@@ -296,4 +306,52 @@ function QrPreview({ path, fallback }: { path: string | null; fallback: string }
   return src
     ? <img src={src} alt={`QR ${fallback}`} className="size-16 rounded-sm border bg-white p-1" />
     : <div className="size-16 rounded-sm border bg-muted grid place-items-center text-[10px] text-muted-foreground font-mono">{fallback}</div>;
+}
+
+function PdfPreview({ path }: { path: string | null }) {
+  const [src, setSrc] = useState<string>("");
+  const [err, setErr] = useState<string>("");
+  useEffect(() => {
+    let alive = true;
+    let url = "";
+    setSrc(""); setErr("");
+    if (!path) { setErr("PDF indisponível para esta autorização."); return; }
+    downloadBlobUrl(path)
+      .then((u) => { if (!alive) { URL.revokeObjectURL(u); return; } url = u; setSrc(u); })
+      .catch((e: Error) => { if (alive) setErr(e.message || "Não foi possível carregar o PDF."); });
+    return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+  }, [path]);
+
+  if (err) {
+    return (
+      <div className="grid place-items-center text-center text-sm text-muted-foreground border rounded-md bg-muted/30 h-[60vh]">
+        <div className="space-y-1 px-4">
+          <FileText className="size-6 mx-auto opacity-60" />
+          <p>{err}</p>
+        </div>
+      </div>
+    );
+  }
+  if (!src) {
+    return (
+      <div className="grid place-items-center border rounded-md bg-muted/30 h-[60vh]">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <iframe
+        src={src} title="PDF da autorização"
+        className="w-full h-[75vh] border rounded-md bg-white"
+      />
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" asChild>
+          <a href={src} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="size-4" /> Abrir em nova aba
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
 }
