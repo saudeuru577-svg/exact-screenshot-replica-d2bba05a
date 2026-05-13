@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Loader2, Eye } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, Loader2, Eye, Pencil, FileText, Trash2 } from "lucide-react";
 import QRCode from "qrcode";
+import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -12,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { confirm } from "@/components/ui/confirm";
+import { signedUrl } from "@/lib/autorizacao-storage";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR } from "@/lib/format";
 
