@@ -104,7 +104,7 @@ export async function buildAutorizacaoPdf(d: PdfData): Promise<Uint8Array> {
   text("Paciente", width - margin - sigW, sigY - 16, { size: 9 });
 
   // QR
-  const qrPng = await QRCode.toBuffer(d.qrTargetUrl, { width: 160, margin: 0 });
+  const qrPng = await qrToPng(d.qrTargetUrl, 160, 0);
   const qrImg = await pdf.embedPng(qrPng);
   page.drawImage(qrImg, { x: width / 2 - 40, y: 30, width: 80, height: 80 });
   text("Validação", width / 2 - 22, 22, { size: 8 });
@@ -113,7 +113,16 @@ export async function buildAutorizacaoPdf(d: PdfData): Promise<Uint8Array> {
 }
 
 export async function buildQrPng(url: string): Promise<Uint8Array> {
-  return QRCode.toBuffer(url, { width: 256, margin: 1 });
+  return qrToPng(url, 256, 1);
+}
+
+async function qrToPng(url: string, width: number, margin: number): Promise<Uint8Array> {
+  const dataUrl = await QRCode.toDataURL(url, { width, margin, type: "image/png" });
+  const base64 = dataUrl.split(",")[1] ?? "";
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
 function wrap(s: string, n: number): string[] {
