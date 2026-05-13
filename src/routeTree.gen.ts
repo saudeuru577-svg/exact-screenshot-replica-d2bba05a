@@ -19,6 +19,7 @@ import { Route as AuthenticatedFaturamentosIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedAutorizacoesIndexRouteImport } from './routes/_authenticated/autorizacoes/index'
 import { Route as AuthenticatedPacientesNovoRouteImport } from './routes/_authenticated/pacientes/novo'
 import { Route as AuthenticatedPacientesIdRouteImport } from './routes/_authenticated/pacientes/$id'
+import { Route as AuthenticatedFaturamentosEmpresaIdRouteImport } from './routes/_authenticated/faturamentos/$empresaId'
 import { Route as AuthenticatedCadastrosUbsRouteImport } from './routes/_authenticated/cadastros/ubs'
 import { Route as AuthenticatedCadastrosTerritorioRouteImport } from './routes/_authenticated/cadastros/territorio'
 import { Route as AuthenticatedCadastrosProfissionaisRouteImport } from './routes/_authenticated/cadastros/profissionais'
@@ -84,6 +85,12 @@ const AuthenticatedPacientesIdRoute =
   AuthenticatedPacientesIdRouteImport.update({
     id: '/pacientes/$id',
     path: '/pacientes/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFaturamentosEmpresaIdRoute =
+  AuthenticatedFaturamentosEmpresaIdRouteImport.update({
+    id: '/faturamentos/$empresaId',
+    path: '/faturamentos/$empresaId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedCadastrosUbsRoute =
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/cadastros/profissionais': typeof AuthenticatedCadastrosProfissionaisRoute
   '/cadastros/territorio': typeof AuthenticatedCadastrosTerritorioRoute
   '/cadastros/ubs': typeof AuthenticatedCadastrosUbsRoute
+  '/faturamentos/$empresaId': typeof AuthenticatedFaturamentosEmpresaIdRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes/novo': typeof AuthenticatedPacientesNovoRoute
   '/autorizacoes/': typeof AuthenticatedAutorizacoesIndexRoute
@@ -188,6 +196,7 @@ export interface FileRoutesByTo {
   '/cadastros/profissionais': typeof AuthenticatedCadastrosProfissionaisRoute
   '/cadastros/territorio': typeof AuthenticatedCadastrosTerritorioRoute
   '/cadastros/ubs': typeof AuthenticatedCadastrosUbsRoute
+  '/faturamentos/$empresaId': typeof AuthenticatedFaturamentosEmpresaIdRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes/novo': typeof AuthenticatedPacientesNovoRoute
   '/autorizacoes': typeof AuthenticatedAutorizacoesIndexRoute
@@ -212,6 +221,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros/profissionais': typeof AuthenticatedCadastrosProfissionaisRoute
   '/_authenticated/cadastros/territorio': typeof AuthenticatedCadastrosTerritorioRoute
   '/_authenticated/cadastros/ubs': typeof AuthenticatedCadastrosUbsRoute
+  '/_authenticated/faturamentos/$empresaId': typeof AuthenticatedFaturamentosEmpresaIdRoute
   '/_authenticated/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/_authenticated/pacientes/novo': typeof AuthenticatedPacientesNovoRoute
   '/_authenticated/autorizacoes/': typeof AuthenticatedAutorizacoesIndexRoute
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/cadastros/profissionais'
     | '/cadastros/territorio'
     | '/cadastros/ubs'
+    | '/faturamentos/$empresaId'
     | '/pacientes/$id'
     | '/pacientes/novo'
     | '/autorizacoes/'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/cadastros/profissionais'
     | '/cadastros/territorio'
     | '/cadastros/ubs'
+    | '/faturamentos/$empresaId'
     | '/pacientes/$id'
     | '/pacientes/novo'
     | '/autorizacoes'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros/profissionais'
     | '/_authenticated/cadastros/territorio'
     | '/_authenticated/cadastros/ubs'
+    | '/_authenticated/faturamentos/$empresaId'
     | '/_authenticated/pacientes/$id'
     | '/_authenticated/pacientes/novo'
     | '/_authenticated/autorizacoes/'
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/pacientes/$id'
       fullPath: '/pacientes/$id'
       preLoaderRoute: typeof AuthenticatedPacientesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/faturamentos/$empresaId': {
+      id: '/_authenticated/faturamentos/$empresaId'
+      path: '/faturamentos/$empresaId'
+      fullPath: '/faturamentos/$empresaId'
+      preLoaderRoute: typeof AuthenticatedFaturamentosEmpresaIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/cadastros/ubs': {
@@ -475,6 +495,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCadastrosProfissionaisRoute: typeof AuthenticatedCadastrosProfissionaisRoute
   AuthenticatedCadastrosTerritorioRoute: typeof AuthenticatedCadastrosTerritorioRoute
   AuthenticatedCadastrosUbsRoute: typeof AuthenticatedCadastrosUbsRoute
+  AuthenticatedFaturamentosEmpresaIdRoute: typeof AuthenticatedFaturamentosEmpresaIdRoute
   AuthenticatedPacientesIdRoute: typeof AuthenticatedPacientesIdRoute
   AuthenticatedPacientesNovoRoute: typeof AuthenticatedPacientesNovoRoute
   AuthenticatedAutorizacoesIndexRoute: typeof AuthenticatedAutorizacoesIndexRoute
@@ -498,6 +519,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedCadastrosProfissionaisRoute,
   AuthenticatedCadastrosTerritorioRoute: AuthenticatedCadastrosTerritorioRoute,
   AuthenticatedCadastrosUbsRoute: AuthenticatedCadastrosUbsRoute,
+  AuthenticatedFaturamentosEmpresaIdRoute:
+    AuthenticatedFaturamentosEmpresaIdRoute,
   AuthenticatedPacientesIdRoute: AuthenticatedPacientesIdRoute,
   AuthenticatedPacientesNovoRoute: AuthenticatedPacientesNovoRoute,
   AuthenticatedAutorizacoesIndexRoute: AuthenticatedAutorizacoesIndexRoute,

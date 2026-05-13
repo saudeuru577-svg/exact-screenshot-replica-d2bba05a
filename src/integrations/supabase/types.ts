@@ -264,34 +264,100 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamentos: {
+        Row: {
+          empresa_id: string
+          finalizado_em: string | null
+          finalizado_por: string | null
+          id: string
+          iniciado_em: string
+          iniciado_por: string
+          mes_referencia: string
+          status: string
+          total_itens: number
+          total_pendentes: number
+          valor_confirmado: number
+          valor_glosado: number
+        }
+        Insert: {
+          empresa_id: string
+          finalizado_em?: string | null
+          finalizado_por?: string | null
+          id?: string
+          iniciado_em?: string
+          iniciado_por: string
+          mes_referencia: string
+          status?: string
+          total_itens?: number
+          total_pendentes?: number
+          valor_confirmado?: number
+          valor_glosado?: number
+        }
+        Update: {
+          empresa_id?: string
+          finalizado_em?: string | null
+          finalizado_por?: string | null
+          id?: string
+          iniciado_em?: string
+          iniciado_por?: string
+          mes_referencia?: string
+          status?: string
+          total_itens?: number
+          total_pendentes?: number
+          valor_confirmado?: number
+          valor_glosado?: number
+        }
+        Relationships: []
+      }
       itens_autorizacao: {
         Row: {
           autorizacao_id: string
+          conferido_por: string | null
           criado_em: string
+          data_conferencia: string | null
           descricao: string
+          faturamento_id: string | null
           id: string
+          mes_faturamento: string | null
+          motivo_glosa_id: string | null
+          observacao_glosa: string | null
           procedimento_id: string
           quantidade: number
+          status_faturamento: Database["public"]["Enums"]["status_item_faturamento"]
           valor_total: number
           valor_unitario: number
         }
         Insert: {
           autorizacao_id: string
+          conferido_por?: string | null
           criado_em?: string
+          data_conferencia?: string | null
           descricao: string
+          faturamento_id?: string | null
           id?: string
+          mes_faturamento?: string | null
+          motivo_glosa_id?: string | null
+          observacao_glosa?: string | null
           procedimento_id: string
           quantidade: number
+          status_faturamento?: Database["public"]["Enums"]["status_item_faturamento"]
           valor_total: number
           valor_unitario: number
         }
         Update: {
           autorizacao_id?: string
+          conferido_por?: string | null
           criado_em?: string
+          data_conferencia?: string | null
           descricao?: string
+          faturamento_id?: string | null
           id?: string
+          mes_faturamento?: string | null
+          motivo_glosa_id?: string | null
+          observacao_glosa?: string | null
           procedimento_id?: string
           quantidade?: number
+          status_faturamento?: Database["public"]["Enums"]["status_item_faturamento"]
           valor_total?: number
           valor_unitario?: number
         }
@@ -301,6 +367,20 @@ export type Database = {
             columns: ["autorizacao_id"]
             isOneToOne: false
             referencedRelation: "autorizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_autorizacao_faturamento_id_fkey"
+            columns: ["faturamento_id"]
+            isOneToOne: false
+            referencedRelation: "faturamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_autorizacao_motivo_glosa_id_fkey"
+            columns: ["motivo_glosa_id"]
+            isOneToOne: false
+            referencedRelation: "motivos_glosa"
             referencedColumns: ["id"]
           },
           {
@@ -355,6 +435,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      motivos_glosa: {
+        Row: {
+          ativo: boolean
+          criado_em: string
+          criado_por: string | null
+          descricao: string
+          id: string
+        }
+        Insert: {
+          ativo?: boolean
+          criado_em?: string
+          criado_por?: string | null
+          descricao: string
+          id?: string
+        }
+        Update: {
+          ativo?: boolean
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string
+          id?: string
+        }
+        Relationships: []
       }
       pacientes: {
         Row: {
@@ -650,6 +754,10 @@ export type Database = {
       }
     }
     Functions: {
+      abrir_faturamento: {
+        Args: { p_empresa: string; p_mes: string }
+        Returns: string
+      }
       gerar_num_aut: { Args: never; Returns: string }
       meu_perfil: {
         Args: never
@@ -678,6 +786,7 @@ export type Database = {
         | "enviado"
         | "parcialmente_glosado"
         | "fechado"
+      status_item_faturamento: "pendente" | "confirmado" | "glosado"
       tipo_procedimento: "exame" | "consulta"
       tipo_servico_emp: "laboratorio" | "clinica" | "hospital" | "outro"
       zona_tipo: "urbana" | "rural"
@@ -832,6 +941,7 @@ export const Constants = {
         "parcialmente_glosado",
         "fechado",
       ],
+      status_item_faturamento: ["pendente", "confirmado", "glosado"],
       tipo_procedimento: ["exame", "consulta"],
       tipo_servico_emp: ["laboratorio", "clinica", "hospital", "outro"],
       zona_tipo: ["urbana", "rural"],
