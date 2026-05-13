@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Loader2, Eye } from "lucide-react";
+import QRCode from "qrcode";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -9,13 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR } from "@/lib/format";
+
+function QrThumb({ value }: { value: string }) {
+  const [src, setSrc] = useState<string>("");
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(value, { width: 96, margin: 0 }).then((d) => { if (alive) setSrc(d); });
+    return () => { alive = false; };
+  }, [value]);
+  return src
+    ? <img src={src} alt={`QR ${value}`} className="size-14 rounded-sm border bg-white p-0.5" />
+    : <div className="size-14 rounded-sm border bg-muted animate-pulse" />;
+}
 
 export const Route = createFileRoute("/_authenticated/autorizacoes/")({
   component: AutorizacoesList,
