@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { confirm } from "@/components/ui/confirm";
-import { signedUrl } from "@/lib/autorizacao-storage";
+import { downloadBlobUrl } from "@/lib/autorizacao-storage";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR } from "@/lib/format";
 
