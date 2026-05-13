@@ -21,3 +21,9 @@ export async function signedUrl(path: string, expiresIn = 60 * 60) {
   if (error) throw error;
   return data.signedUrl;
 }
+
+export async function downloadBlobUrl(path: string) {
+  const { data, error } = await supabase.storage.from(BUCKET).download(path);
+  if (error) throw error;
+  return URL.createObjectURL(data);
+}
