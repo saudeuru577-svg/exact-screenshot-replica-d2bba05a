@@ -307,7 +307,29 @@ export type Database = {
           valor_confirmado?: number
           valor_glosado?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "faturamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faturamentos_finalizado_por_fkey"
+            columns: ["finalizado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faturamentos_iniciado_por_fkey"
+            columns: ["iniciado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       itens_autorizacao: {
         Row: {
@@ -367,6 +389,13 @@ export type Database = {
             columns: ["autorizacao_id"]
             isOneToOne: false
             referencedRelation: "autorizacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_autorizacao_conferido_por_fkey"
+            columns: ["conferido_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
           {

@@ -69,7 +69,7 @@ function ConferenciaFaturamento() {
   const { has } = usePerfil();
   const podeEditar = has(["administrador", "financeiro"]);
 
-  const { data: faturamento, isLoading: loadingFat } = useQuery({
+  const { data: faturamento, isLoading: loadingFat, error: errorFat } = useQuery({
     queryKey: ["faturamento", empresaId, mes],
     queryFn: async () => {
       let q = supabase
@@ -87,7 +87,7 @@ function ConferenciaFaturamento() {
 
   const fatId = faturamento?.id;
 
-  const { data: itens = [], isLoading: loadingItens } = useQuery({
+  const { data: itens = [], isLoading: loadingItens, error: errorItens } = useQuery({
     enabled: !!fatId,
     queryKey: ["faturamento-itens", fatId],
     queryFn: async () => {
@@ -184,13 +184,20 @@ function ConferenciaFaturamento() {
     );
   }
 
-  if (!faturamento) {
+  if (errorFat || !faturamento) {
     return (
       <>
         <PageHeader title="Conferência" actions={<Link to="/faturamentos"><Button variant="outline"><ArrowLeft className="size-4" /> Voltar</Button></Link>} />
         <PageBody>
-          <Card className="p-8 text-center text-muted-foreground">
-            Nenhum faturamento encontrado para esta empresa.
+          <Card className="p-8 text-center">
+            {errorFat ? (
+              <div className="text-destructive">
+                <div className="font-medium mb-1">Erro ao carregar faturamento</div>
+                <div className="text-sm">{errorFat.message}</div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">Nenhum faturamento encontrado para esta empresa.</div>
+            )}
           </Card>
         </PageBody>
       </>
@@ -219,6 +226,11 @@ function ConferenciaFaturamento() {
               <div className="flex items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="size-5 animate-spin mr-2" /> Carregando itens…
               </div>
+            ) : errorItens ? (
+              <Card className="p-8 text-center text-destructive">
+                <div className="font-medium mb-1">Erro ao carregar itens</div>
+                <div className="text-sm">{errorItens.message}</div>
+              </Card>
             ) : grupos.length === 0 ? (
               <Card className="p-8 text-center text-muted-foreground">
                 Nenhum item vinculado a este faturamento.
