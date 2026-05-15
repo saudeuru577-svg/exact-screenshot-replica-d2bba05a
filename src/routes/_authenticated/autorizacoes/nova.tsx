@@ -89,12 +89,16 @@ function NovaAutorizacao() {
             />
           )}
           {step === 2 && (
-            <StepItens
-              empresaId={empresaId} setEmpresaId={setEmpresaId}
-              itens={itens} setItens={setItens} total={total} dataAut={dataAut}
-            />
+            <StepExames selecao={selecao} setSelecao={(s) => { setSelecao(s); setEmpresaId(""); setItens([]); }} />
           )}
           {step === 3 && (
+            <StepEmpresa
+              selecao={selecao}
+              empresaId={empresaId} setEmpresaId={setEmpresaId}
+              itens={itens} setItens={setItens} dataAut={dataAut}
+            />
+          )}
+          {step === 4 && (
             <StepConfirmacao
               paciente={paciente!} dataAut={dataAut} total={total} itens={itens}
               sigAtendRef={sigAtendRef} sigPacRef={sigPacRef}
