@@ -89,7 +89,15 @@ function UsuariosPage() {
               <tbody>
                 {(usuarios ?? []).map((u) => (
                   <tr key={u.id} className="border-t">
-                    <td className="px-4 py-3 font-medium">{u.nome}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setPermUser({ id: u.id, nome: u.nome, perfil: u.perfil })}
+                        className="text-left hover:text-primary hover:underline underline-offset-2 transition-colors"
+                      >
+                        {u.nome}
+                      </button>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3">
                       <Badge variant="secondary" className="uppercase text-[10px]">
@@ -106,12 +114,20 @@ function UsuariosPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Ativo</span>
-                        <Switch
-                          checked={u.ativo}
-                          onCheckedChange={(v) => toggleAtivo.mutate({ id: u.id, ativo: v })}
-                        />
+                      <div className="inline-flex items-center gap-3">
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => setPermUser({ id: u.id, nome: u.nome, perfil: u.perfil })}
+                        >
+                          Permissões
+                        </Button>
+                        <div className="inline-flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Ativo</span>
+                          <Switch
+                            checked={u.ativo}
+                            onCheckedChange={(v) => toggleAtivo.mutate({ id: u.id, ativo: v })}
+                          />
+                        </div>
                       </div>
                     </td>
                   </tr>
