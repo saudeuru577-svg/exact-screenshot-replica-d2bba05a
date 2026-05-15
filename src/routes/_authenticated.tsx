@@ -6,6 +6,8 @@ import {
   LogOut, ShieldCheck, Loader2, UserCog,
 } from "lucide-react";
 import { useAuth, type PerfilUsuario } from "@/hooks/use-auth";
+import { useMinhasPermissoes } from "@/hooks/use-permissoes";
+import { temAcessoFinal } from "@/lib/telas";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
