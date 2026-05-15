@@ -124,9 +124,10 @@ function AuthenticatedLayout() {
     );
   }
 
+  const ov = overrides ?? {};
   const sections = NAV.map((s) => ({
     ...s,
-    items: s.items.filter((i) => !i.perfis || i.perfis.includes(usuario.perfil)),
+    items: s.items.filter((i) => temAcessoFinal(i.to, usuario.perfil, ov)),
   })).filter((s) => s.items.length > 0);
 
   return (
