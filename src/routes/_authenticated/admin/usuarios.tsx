@@ -145,6 +145,11 @@ function UsuariosPage() {
           </div>
         )}
       </PageBody>
+      <PermissoesDialog
+        open={!!permUser}
+        usuario={permUser}
+        onClose={() => setPermUser(null)}
+      />
     </>
   );
 }
