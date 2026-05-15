@@ -568,6 +568,41 @@ export type Database = {
           },
         ]
       }
+      permissoes_usuario: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          permitido: boolean
+          tela: string
+          usuario_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          permitido: boolean
+          tela: string
+          usuario_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          permitido?: boolean
+          tela?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permissoes_usuario_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       povoados: {
         Row: {
           ativo: boolean
