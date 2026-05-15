@@ -30,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/autorizacoes/nova")({
 
 type Paciente = { id: string; nome: string; nome_da_mae: string; dtn: string; cartao_sus: string | null };
 type Item = { procedimento_id: string; descricao: string; quantidade: number; valor_unitario: number };
+type ExameSel = { key: string; sigla: string; nome: string; quantidade: number };
 
 function NovaAutorizacao() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ function NovaAutorizacao() {
   const [dataAut, setDataAut] = useState(new Date().toISOString().slice(0, 10));
   const [sintomas, setSintomas] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
+  const [selecao, setSelecao] = useState<ExameSel[]>([]);
   const [empresaId, setEmpresaId] = useState<string>("");
   const [itens, setItens] = useState<Item[]>([]);
   const sigAtendRef = useRef<SignaturePadHandle>(null);
@@ -59,12 +61,13 @@ function NovaAutorizacao() {
     );
   }
 
-  const steps = ["Paciente", "Origem", "Itens", "Confirmação"];
+  const steps = ["Paciente", "Origem", "Exames", "Empresa", "Confirmação"];
 
   const canNext = () => {
     if (step === 0) return !!paciente;
     if (step === 1) return !!ubsId && !!profissionalId && !!dataAut && dataAut <= new Date().toISOString().slice(0, 10);
-    if (step === 2) return !!empresaId && itens.length > 0 && itens.every((i) => i.quantidade > 0 && i.valor_unitario >= 0);
+    if (step === 2) return selecao.length > 0 && selecao.every((s) => s.quantidade > 0);
+    if (step === 3) return !!empresaId && itens.length > 0 && itens.length === selecao.length;
     return false;
   };
 
