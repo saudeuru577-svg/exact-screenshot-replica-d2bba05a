@@ -109,7 +109,7 @@ function NovaAutorizacao() {
             <Button variant="outline" onClick={() => (step === 0 ? navigate({ to: "/autorizacoes" }) : setStep(step - 1))}>
               <ArrowLeft className="size-4" /> {step === 0 ? "Cancelar" : "Voltar"}
             </Button>
-            {step < 3 ? (
+            {step < 4 ? (
               <Button onClick={() => setStep(step + 1)} disabled={!canNext()}>
                 Continuar <ArrowRight className="size-4" />
               </Button>
