@@ -29,6 +29,7 @@ const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "fi
 function UsuariosPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [permUser, setPermUser] = useState<{ id: string; nome: string; perfil: PerfilUsuario } | null>(null);
 
   const { data: usuarios, isLoading } = useQuery({
     queryKey: ["usuarios"],
