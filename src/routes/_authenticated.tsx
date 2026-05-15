@@ -6,6 +6,8 @@ import {
   LogOut, ShieldCheck, Loader2, UserCog,
 } from "lucide-react";
 import { useAuth, type PerfilUsuario } from "@/hooks/use-auth";
+import { useMinhasPermissoes } from "@/hooks/use-permissoes";
+import { temAcessoFinal } from "@/lib/telas";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -74,6 +76,7 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const { user, usuario, loading, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: overrides } = useMinhasPermissoes();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -121,9 +124,10 @@ function AuthenticatedLayout() {
     );
   }
 
+  const ov = overrides ?? {};
   const sections = NAV.map((s) => ({
     ...s,
-    items: s.items.filter((i) => !i.perfis || i.perfis.includes(usuario.perfil)),
+    items: s.items.filter((i) => temAcessoFinal(i.to, usuario.perfil, ov)),
   })).filter((s) => s.items.length > 0);
 
   return (
