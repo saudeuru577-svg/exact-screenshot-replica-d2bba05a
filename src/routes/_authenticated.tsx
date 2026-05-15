@@ -76,6 +76,7 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const { user, usuario, loading, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data: overrides } = useMinhasPermissoes();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
