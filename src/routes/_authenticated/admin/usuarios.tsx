@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { PerfilUsuario } from "@/hooks/use-auth";
+import { PermissoesDialog } from "@/components/admin/permissoes-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
   component: UsuariosPage,
