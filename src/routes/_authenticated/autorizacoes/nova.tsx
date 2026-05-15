@@ -311,51 +311,191 @@ function StepOrigem({
   );
 }
 
-/* ---------------- Step 3 — Itens ---------------- */
-function StepItens({
-  empresaId, setEmpresaId, itens, setItens, total, dataAut,
+/* ---------------- Step 3 — Exames (busca agrupada por sigla) ---------------- */
+function StepExames({
+  selecao, setSelecao,
 }: {
-  empresaId: string; setEmpresaId: (v: string) => void;
-  itens: Item[]; setItens: (v: Item[]) => void; total: number; dataAut: string;
+  selecao: ExameSel[]; setSelecao: (v: ExameSel[]) => void;
 }) {
-  const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas-ativas"],
+  const [q, setQ] = useState("");
+
+  const { data: procs = [], isLoading } = useQuery({
+    queryKey: ["procs-todos-ativos"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("empresas")
-        .select("id, nome_fantasia").eq("ativa", true).order("nome_fantasia");
-      if (error) throw error; return data;
+      const { data, error } = await supabase
+        .from("procedimentos")
+        .select("id, sigla, nome")
+        .eq("ativo", true)
+        .order("sigla");
+      if (error) throw error;
+      return data as { id: string; sigla: string; nome: string }[];
     },
   });
+
+  const grupos = useMemo(() => {
+    const map = new Map<string, { key: string; sigla: string; nome: string }>();
+    for (const p of procs) {
+      const key = p.sigla.toUpperCase();
+      if (!map.has(key)) map.set(key, { key, sigla: p.sigla, nome: p.nome });
+    }
+    return [...map.values()];
+  }, [procs]);
+
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return grupos;
+    return grupos.filter((g) => `${g.sigla} ${g.nome}`.toLowerCase().includes(t));
+  }, [grupos, q]);
+
+  const toggle = (g: { key: string; sigla: string; nome: string }) => {
+    if (selecao.some((s) => s.key === g.key)) {
+      setSelecao(selecao.filter((s) => s.key !== g.key));
+    } else {
+      setSelecao([...selecao, { ...g, quantidade: 1 }]);
+    }
+  };
+
+  const updateQtd = (key: string, qtd: number) =>
+    setSelecao(selecao.map((s) => (s.key === key ? { ...s, quantidade: qtd } : s)));
+
+  return (
+    <Card><CardContent className="p-6 space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar exame por sigla ou nome" className="pl-9"
+        />
+      </div>
+
+      <div className="border rounded-md divide-y max-h-72 overflow-auto">
+        {isLoading && (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin mx-auto" />
+          </div>
+        )}
+        {!isLoading && filtered.length === 0 && (
+          <div className="p-4 text-center text-sm text-muted-foreground">Nenhum exame encontrado.</div>
+        )}
+        {filtered.map((g) => {
+          const sel = selecao.some((s) => s.key === g.key);
+          return (
+            <button
+              key={g.key} type="button" onClick={() => toggle(g)}
+              className={`w-full text-left p-3 hover:bg-muted/50 transition flex items-center justify-between gap-3 ${sel ? "bg-primary/5" : ""}`}
+            >
+              <div className="min-w-0">
+                <p className="font-medium text-sm">{g.sigla}</p>
+                <p className="text-xs text-muted-foreground truncate">{g.nome}</p>
+              </div>
+              {sel && <Badge variant="default" className="shrink-0">Selecionado</Badge>}
+            </button>
+          );
+        })}
+      </div>
+
+      {selecao.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="p-2">Exame selecionado</th>
+                <th className="p-2 w-24">Qtd</th>
+                <th className="p-2 w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {selecao.map((s) => (
+                <tr key={s.key} className="border-t">
+                  <td className="p-2">
+                    <span className="font-medium">{s.sigla}</span>
+                    <span className="text-muted-foreground"> — {s.nome}</span>
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      type="number" min={1} value={s.quantidade} className="h-8"
+                      onChange={(e) => updateQtd(s.key, Math.max(1, parseInt(e.target.value) || 1))}
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Button size="icon" variant="ghost" onClick={() => toggle(s)}>
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </CardContent></Card>
+  );
+}
+
+/* ---------------- Step 4 — Empresa executora ---------------- */
+type ProcEmp = {
+  id: string; sigla: string; nome: string; valor_unitario: number; empresa_id: string;
+  empresa: { id: string; nome_fantasia: string; ativa: boolean } | null;
+};
+
+function StepEmpresa({
+  selecao, empresaId, setEmpresaId, itens, setItens, dataAut,
+}: {
+  selecao: ExameSel[];
+  empresaId: string; setEmpresaId: (v: string) => void;
+  itens: Item[]; setItens: (v: Item[]) => void; dataAut: string;
+}) {
+  const siglas = useMemo(() => selecao.map((s) => s.sigla), [selecao]);
+
   const { data: procs = [] } = useQuery({
-    queryKey: ["procs-empresa", empresaId],
+    queryKey: ["procs-by-siglas", siglas.join("|")],
     queryFn: async () => {
-      if (!empresaId) return [];
-      const { data, error } = await supabase.from("procedimentos")
-        .select("id, sigla, nome, valor_unitario").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
-      if (error) throw error; return data;
+      if (siglas.length === 0) return [];
+      const { data, error } = await supabase
+        .from("procedimentos")
+        .select("id, sigla, nome, valor_unitario, empresa_id, empresa:empresas(id, nome_fantasia, ativa)")
+        .in("sigla", siglas).eq("ativo", true);
+      if (error) throw error;
+      return (data ?? []) as unknown as ProcEmp[];
     },
-    enabled: !!empresaId,
+    enabled: siglas.length > 0,
   });
 
-  const orcamento = useOrcamento(dataAut);
-
-  const addItem = () => {
-    setItens([...itens, { procedimento_id: "", descricao: "", quantidade: 1, valor_unitario: 0 }]);
-  };
-  const updateItem = (idx: number, patch: Partial<Item>) => {
-    setItens(itens.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
-  };
-  const removeItem = (idx: number) => setItens(itens.filter((_, i) => i !== idx));
-
-  const onProcedimento = (idx: number, procId: string) => {
-    const p = procs.find((x) => x.id === procId);
-    updateItem(idx, {
-      procedimento_id: procId,
-      descricao: p?.nome ?? "",
-      valor_unitario: p ? Number(p.valor_unitario) : 0,
+  const empresasDisponiveis = useMemo(() => {
+    const want = new Set(selecao.map((s) => s.sigla.toUpperCase()));
+    const byEmp = new Map<string, { id: string; nome: string; procs: ProcEmp[] }>();
+    for (const p of procs) {
+      if (!p.empresa?.ativa) continue;
+      const e = byEmp.get(p.empresa_id) ?? { id: p.empresa_id, nome: p.empresa.nome_fantasia, procs: [] };
+      e.procs.push(p);
+      byEmp.set(p.empresa_id, e);
+    }
+    return [...byEmp.values()].filter((e) => {
+      const have = new Set(e.procs.map((x) => x.sigla.toUpperCase()));
+      for (const w of want) if (!have.has(w)) return false;
+      return true;
     });
-  };
+  }, [procs, selecao]);
 
+  useEffect(() => {
+    if (!empresaId) { setItens([]); return; }
+    const emp = empresasDisponiveis.find((e) => e.id === empresaId);
+    if (!emp) { setItens([]); return; }
+    const computed: Item[] = selecao.map((s) => {
+      const p = emp.procs.find((x) => x.sigla.toUpperCase() === s.sigla.toUpperCase())!;
+      return {
+        procedimento_id: p.id,
+        descricao: p.nome,
+        quantidade: s.quantidade,
+        valor_unitario: Number(p.valor_unitario),
+      };
+    });
+    setItens(computed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresaId, empresasDisponiveis]);
+
+  const total = itens.reduce((s, i) => s + i.quantidade * i.valor_unitario, 0);
+  const orcamento = useOrcamento(dataAut);
   const saldoApos = orcamento ? orcamento.saldo_disponivel - total : 0;
 
   return (
@@ -363,10 +503,19 @@ function StepItens({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Empresa executora</Label>
-          <Select value={empresaId} onValueChange={(v) => { setEmpresaId(v); setItens([]); }}>
-            <SelectTrigger><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
-            <SelectContent>{empresas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome_fantasia}</SelectItem>)}</SelectContent>
+          <Select value={empresaId} onValueChange={setEmpresaId}>
+            <SelectTrigger>
+              <SelectValue placeholder={empresasDisponiveis.length ? "Selecione" : "Nenhuma empresa oferece todos os exames"} />
+            </SelectTrigger>
+            <SelectContent>
+              {empresasDisponiveis.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+            </SelectContent>
           </Select>
+          {empresasDisponiveis.length === 0 && procs.length > 0 && (
+            <p className="text-xs text-destructive">
+              Nenhuma empresa ativa oferece todos os exames selecionados. Volte e ajuste a seleção.
+            </p>
+          )}
         </div>
         {orcamento && (
           <div className="rounded-md border p-3 text-xs space-y-1">
@@ -377,59 +526,44 @@ function StepItens({
         )}
       </div>
 
-      {empresaId ? (
-        <>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr className="text-left">
-                  <th className="p-2">Procedimento</th>
-                  <th className="p-2 w-20">Qtd</th>
-                  <th className="p-2 w-32">V. Unit.</th>
-                  <th className="p-2 w-32 text-right">Total</th>
-                  <th className="p-2 w-10"></th>
+      {itens.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="p-2">Procedimento</th>
+                <th className="p-2 w-20">Qtd</th>
+                <th className="p-2 w-32">V. Unit.</th>
+                <th className="p-2 w-32 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {itens.map((it, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="p-2">{it.descricao}</td>
+                  <td className="p-2 tabular-nums">{it.quantidade}</td>
+                  <td className="p-2 tabular-nums">{brl(it.valor_unitario)}</td>
+                  <td className="p-2 text-right tabular-nums">{brl(it.quantidade * it.valor_unitario)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {itens.map((it, idx) => (
-                  <tr key={idx} className="border-t">
-                    <td className="p-2">
-                      <Select value={it.procedimento_id} onValueChange={(v) => onProcedimento(idx, v)}>
-                        <SelectTrigger className="h-8"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>{procs.map((p) => <SelectItem key={p.id} value={p.id}>{p.sigla} — {p.nome}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </td>
-                    <td className="p-2">
-                      <Input type="number" min={1} value={it.quantidade} className="h-8"
-                        onChange={(e) => updateItem(idx, { quantidade: Math.max(1, parseInt(e.target.value) || 1) })} />
-                    </td>
-                    <td className="p-2">
-                      <Input type="number" min={0} step="0.01" value={it.valor_unitario} className="h-8"
-                        onChange={(e) => updateItem(idx, { valor_unitario: Math.max(0, parseFloat(e.target.value) || 0) })} />
-                    </td>
-                    <td className="p-2 text-right tabular-nums">{brl(it.quantidade * it.valor_unitario)}</td>
-                    <td className="p-2"><Button size="icon" variant="ghost" onClick={() => removeItem(idx)}><Trash2 className="size-4" /></Button></td>
-                  </tr>
-                ))}
-                {itens.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground text-sm">Nenhum item — adicione abaixo.</td></tr>}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {itens.length > 0 && (
+        <div className="flex items-center justify-end">
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Total autorizado</p>
+            <p className="text-2xl font-bold tabular-nums">{brl(total)}</p>
           </div>
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={addItem}><Plus className="size-4" /> Adicionar item</Button>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Total autorizado</p>
-              <p className="text-2xl font-bold tabular-nums">{brl(total)}</p>
-            </div>
-          </div>
-          {saldoApos < 0 && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm">
-              ⚠️ Total excede o saldo mensal — a autorização será criada como <b>bloqueada</b>. Solicite um acréscimo de gastos.
-            </div>
-          )}
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground p-4 border rounded-md">Selecione a empresa para listar procedimentos.</p>
+        </div>
+      )}
+
+      {saldoApos < 0 && (
+        <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm">
+          ⚠️ Total excede o saldo mensal — a autorização será criada como <b>bloqueada</b>. Solicite um acréscimo de gastos.
+        </div>
       )}
     </CardContent></Card>
   );
