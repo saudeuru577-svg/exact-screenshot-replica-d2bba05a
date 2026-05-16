@@ -4,8 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Search, Pencil, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+
+import { GrupoCombobox } from "@/components/ui/grupo-combobox";
+import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -60,9 +63,11 @@ function ProcedimentosPage() {
   const [busca, setBusca] = useState("");
   const [empFiltro, setEmpFiltro] = useState("todas");
   const [tipoFiltro, setTipoFiltro] = useState("todos");
+  const [grupoFiltro, setGrupoFiltro] = useState("");
   const [showInativos, setShowInativos] = useState(false);
   const [editing, setEditing] = useState<Procedimento | null>(null);
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-ativas"],
@@ -86,16 +91,22 @@ function ProcedimentosPage() {
     },
   });
 
+  const grupos = useMemo(
+    () => Array.from(new Set(data.map((p) => p.grupo).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [data],
+  );
+
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
     return data.filter((p) => {
       if (!showInativos && !p.ativo) return false;
       if (empFiltro !== "todas" && p.empresa_id !== empFiltro) return false;
       if (tipoFiltro !== "todos" && p.tipo !== tipoFiltro) return false;
+      if (grupoFiltro && p.grupo !== grupoFiltro) return false;
       if (t && !`${p.nome} ${p.sigla} ${p.nomes_alternativos ?? ""}`.toLowerCase().includes(t)) return false;
       return true;
     });
-  }, [data, busca, empFiltro, tipoFiltro, showInativos]);
+  }, [data, busca, empFiltro, tipoFiltro, grupoFiltro, showInativos]);
 
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -135,9 +146,14 @@ function ProcedimentosPage() {
         title="Procedimentos"
         description="Exames e consultas vinculados a empresas conveniadas."
         actions={isAdmin && (
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="size-4" /> Novo procedimento
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="size-4" /> Importar Excel
+            </Button>
+            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="size-4" /> Novo procedimento
+            </Button>
+          </div>
         )}
       />
       <PageBody>
@@ -160,6 +176,12 @@ function ProcedimentosPage() {
               {TIPOS.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
             </SelectContent>
           </Select>
+          <div className="w-[200px]">
+            <GrupoCombobox value={grupoFiltro} onChange={setGrupoFiltro} options={grupos} allowCreate={false} placeholder="Todos os grupos" />
+          </div>
+          {grupoFiltro && (
+            <Button variant="ghost" size="sm" onClick={() => setGrupoFiltro("")}>Limpar grupo</Button>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={showInativos} onCheckedChange={setShowInativos} /> Mostrar inativos
           </label>
@@ -216,18 +238,21 @@ function ProcedimentosPage() {
       <ProcForm
         open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
         proc={editing} empresas={empresas.filter((e) => e.ativa || e.id === editing?.empresa_id)}
+        grupos={grupos}
         onSubmit={(v) => save.mutate(v)} saving={save.isPending}
       />
+      <ImportProcedimentosDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
 }
 
 function ProcForm({
-  open, onOpenChange, proc, empresas, onSubmit, saving,
+  open, onOpenChange, proc, empresas, grupos, onSubmit, saving,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void;
   proc: Procedimento | null;
   empresas: { id: string; nome_fantasia: string }[];
+  grupos: string[];
   onSubmit: (v: FormValues) => void; saving: boolean;
 }) {
   const form = useForm<FormValues>({
@@ -266,7 +291,12 @@ function ProcForm({
                 <FormItem className="col-span-2"><FormLabel>Nomes alternativos</FormLabel><FormControl><Textarea rows={2} {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField name="grupo" control={form.control} render={({ field }) => (
-                <FormItem><FormLabel>Grupo</FormLabel><FormControl><Input {...field} placeholder="Ex.: Hematologia" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Grupo</FormLabel>
+                  <FormControl>
+                    <GrupoCombobox value={field.value} onChange={field.onChange} options={grupos} placeholder="Selecione ou crie" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )} />
               <FormField name="valor_unitario" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Valor unitário (R$)</FormLabel><FormControl>
