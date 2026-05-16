@@ -291,7 +291,12 @@ function ProcForm({
                 <FormItem className="col-span-2"><FormLabel>Nomes alternativos</FormLabel><FormControl><Textarea rows={2} {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField name="grupo" control={form.control} render={({ field }) => (
-                <FormItem><FormLabel>Grupo</FormLabel><FormControl><Input {...field} placeholder="Ex.: Hematologia" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Grupo</FormLabel>
+                  <FormControl>
+                    <GrupoCombobox value={field.value} onChange={field.onChange} options={grupos} placeholder="Selecione ou crie" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )} />
               <FormField name="valor_unitario" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Valor unitário (R$)</FormLabel><FormControl>
