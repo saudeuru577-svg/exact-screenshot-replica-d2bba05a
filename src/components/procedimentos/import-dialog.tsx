@@ -141,7 +141,7 @@ export function ImportProcedimentosDialog({
         sigla: r.sigla,
         nome: r.nome,
         grupo: r.grupo,
-        tipo: r.tipo,
+        tipo: r.tipo as "exame" | "consulta",
         empresa_id: r.empresa!.id,
         valor_unitario: r.valor,
         nomes_alternativos: r.nomes_alternativos || null,
