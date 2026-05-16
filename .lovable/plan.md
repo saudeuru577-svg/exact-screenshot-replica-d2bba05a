@@ -1,72 +1,57 @@
-## Tela de Relatórios
+# Importação de Procedimentos via Excel + Grupo selecionável
 
-Substituir o placeholder de `/relatorios` por uma tela com 4 relatórios em abas, filtros, tabelas paginadas e exportação para `.xlsx` e `.pdf`.
+## 1. Campo "Grupo" como combobox (selecionável e adicionável)
 
-### Estrutura
+Na tela `src/routes/_authenticated/cadastros/procedimentos.tsx`, substituir o `Input` simples do campo **Grupo** (no formulário `ProcForm`) por um combobox baseado em `Command` + `Popover`:
 
-- Rota: `src/routes/_authenticated/relatorios/index.tsx` (substitui o `ComingSoon`).
-- Layout: `PageHeader` + `PageBody` com `Tabs` horizontais (4 abas) — padrão já usado no resto do app.
-- Cada aba é um componente isolado em `src/components/relatorios/`:
-  - `aut-por-procedimento.tsx` (R1)
-  - `fat-por-procedimento.tsx` (R2)
-  - `aut-nominal.tsx` (R3)
-  - `fat-nominal.tsx` (R4)
-- Subcomponentes compartilhados:
-  - `filtros-bar.tsx` — barra superior colapsável com inputs de filtro + botões "Aplicar" / "Limpar".
-  - `export-buttons.tsx` — botões "Exportar XLSX" e "Exportar PDF".
-  - `paciente-combobox.tsx` — busca server-side em `pacientes` (nome/CPF/cartão SUS).
-  - `empresa-select.tsx` — lista empresas ativas.
-  - `procedimento-combobox.tsx` — busca em `procedimentos` por código/descrição.
+- Lista os grupos já existentes (consulta `distinct grupo from procedimentos`, cacheada via React Query).
+- Permite digitar livremente; se o texto não corresponder a nenhum grupo, mostra opção **"Criar grupo: …"** que seta o valor digitado.
+- Mesma UX também no filtro do topo da página (filtro por grupo passa a usar o combobox).
 
-### Filtros por relatório
+Não é necessária mudança de schema — `grupo` continua sendo `text` livre; o combobox apenas reaproveita valores já cadastrados.
 
-| Relatório | Período | Mês/Ano | Paciente | Empresa | Procedimento |
-|---|---|---|---|---|---|
-| R1 Aut. por proced. | ✓ | — | ✓ | ✓ | — |
-| R2 Fat. por proced. | — | ✓ | ✓ | ✓ | ✓ |
-| R3 Aut. nominal | ✓ | — | ✓ | ✓ | — |
-| R4 Fat. nominal | — | ✓ | ✓ | ✓ | ✓ |
+## 2. Botão "Importar Excel" na tela de Procedimentos
 
-Estado dos filtros: `useState` local em cada aba, aplicado só ao clicar em "Aplicar" (evita refetch a cada digitação). "Limpar" zera o formulário.
+Botão extra ao lado de **Novo procedimento** (apenas para admin), que abre um `Sheet` lateral com:
 
-### Queries (Supabase client direto, com RLS)
+**Etapa 1 — Modelo**
+- Botão **"Baixar modelo .xlsx"** que gera planilha com cabeçalho fixo e 1 linha de exemplo.
+- Colunas obrigatórias:
+  `sigla | nome | grupo | tipo | cnpj_empresa | valor_unitario | nomes_alternativos`
+  - `tipo`: `exame` ou `consulta`
+  - `cnpj_empresa`: apenas dígitos ou formatado — o sistema normaliza
+  - `nomes_alternativos`: opcional
 
-- **R1**: `itens_autorizacao` join `autorizacoes!inner` + `procedimentos`, filtrado por `data_autorizacao` (período), `paciente_id`, `empresa_id`. Agregação client-side por `procedimento_id` → `{ proced, código, total, % }`.
-- **R2**: `itens_autorizacao` filtrado por `mes_faturamento` + `status_faturamento='confirmado'`, join `procedimentos`, filtros opcionais. Agregação client-side por procedimento → `{ proced, código, qtd, valor }`.
-- **R3**: `autorizacoes` + embed `pacientes(nome, cartao_sus)` + `itens_autorizacao(*, procedimentos(nome, sigla))`, filtros de período/paciente/empresa. Renderiza como `Accordion` agrupado por autorização.
-- **R4**: igual R3 mas filtrado por `itens_autorizacao.mes_faturamento` (= competência) e `status_faturamento='confirmado'`; mostra valores unitário/total.
+**Etapa 2 — Upload + pré-visualização**
+- Input de arquivo `.xlsx`.
+- Parsing client-side com a lib `xlsx` (SheetJS).
+- Tabela de pré-visualização mostrando, por linha:
+  - status (✓ válida / ✗ erro com motivo)
+  - empresa resolvida (nome fantasia) ou "não encontrada"
+  - indicação se será **importada** ou **ignorada (duplicada)**
 
-Cada query usa `useQuery` com `queryKey` = `[relatorio, filtrosAplicados]`. Limite 1000 linhas (limite Supabase) — já cobre o caso de uso; adicionar nota se ultrapassar.
+**Regras de validação (definidas pelo usuário)**:
+- Empresa identificada **somente por CNPJ** (busca exata por dígitos).
+- Linhas inválidas (CNPJ não encontrado, tipo inválido, valor ≤ 0, sigla/nome vazios) são **listadas como erro e puladas** — as válidas seguem.
+- **Duplicado** = mesma `sigla` + `empresa_id` já existe → linha é **ignorada** (mantém cadastro atual, não sobrescreve).
+- Grupos novos vindos da planilha são aceitos automaticamente (campo livre).
 
-### Tabelas
+**Etapa 3 — Confirmação**
+- Resumo: `X linhas válidas a importar · Y ignoradas (duplicadas) · Z com erro`.
+- Botão **Importar** → `supabase.from("procedimentos").insert([...])` em lote único.
+- Após sucesso: toast, invalidação das queries `procedimentos` e `procedimentos-grupos`, e fechamento do Sheet.
 
-- Componente `Table` shadcn já existente.
-- Ordenação client-side por coluna (clique no `TableHead` alterna asc/desc).
-- Paginação client-side (50/página) com `Pagination` shadcn. Total de registros visível no rodapé.
-- Estados: `<Loader2 />` para loading, mensagem para vazio, `Card` destrutivo para erro (mesmo padrão de `$empresaId.tsx`).
+## 3. Detalhes técnicos
 
-### Exportação
+- Lib nova: `xlsx` (SheetJS) — usada tanto para baixar modelo quanto para parsear upload.
+- Novo arquivo: `src/components/procedimentos/import-dialog.tsx` (toda a lógica do Sheet de import).
+- Novo arquivo: `src/components/ui/grupo-combobox.tsx` (combobox reaproveitável para o campo grupo, baseado em Command/Popover já existentes).
+- Edição: `src/routes/_authenticated/cadastros/procedimentos.tsx` — botão "Importar", uso do combobox no `ProcForm` e no filtro.
+- Permissão: import e combobox de criação ficam visíveis apenas quando `isAdmin` (mesma regra do "Novo procedimento"), respeitando as RLS de `procedimentos`.
+- Nenhuma migração de banco necessária.
 
-- `xlsx` via `xlsx` (SheetJS) — adicionar dep `bun add xlsx`.
-- `pdf` via `jspdf` + `jspdf-autotable` — `bun add jspdf jspdf-autotable`.
-- Funções utilitárias em `src/lib/relatorio-export.ts`: `exportarXlsx(nome, headers, rows)` e `exportarPdf(titulo, headers, rows, metadata)`.
-- Para R3/R4 (agrupado): exportar como tabela achatada com colunas extras (Nº Aut., Paciente, Data).
+## 4. Fora do escopo
 
-### Permissões
-
-Todos os perfis com acesso a `autorizacoes`/`faturamentos` veem a tela. Sem mudanças de RLS necessárias.
-
-### Detalhes técnicos
-
-- Sem mudanças de banco — todas as queries usam tabelas/embeds existentes (FKs já foram adicionadas em migration anterior).
-- Formato de moeda/datas via `src/lib/format.ts` (já existente).
-- Responsivo: filtros viram coluna em `< md`, tabelas com `overflow-auto`.
-- Sem alterações em `routeTree.gen.ts` (apenas substituição do componente da rota existente).
-
-### Verificação
-
-1. Abrir `/relatorios` → 4 abas visíveis.
-2. R1: aplicar período do mês corrente → tabela com totais por procedimento bate com soma manual no banco.
-3. R2: selecionar competência atual → linhas só de itens confirmados.
-4. R3/R4: accordion expande mostrando itens da autorização.
-5. Exportar XLSX e PDF de cada relatório e abrir os arquivos.
+- Importar empresas inexistentes (a planilha precisa referenciar CNPJs já cadastrados).
+- Atualizar procedimentos existentes via Excel (duplicados são sempre ignorados).
+- Importar via servidor / edge function — todo o parsing roda no browser para feedback imediato; o insert vai direto ao Supabase usando a sessão do usuário.
