@@ -146,9 +146,14 @@ function ProcedimentosPage() {
         title="Procedimentos"
         description="Exames e consultas vinculados a empresas conveniadas."
         actions={isAdmin && (
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="size-4" /> Novo procedimento
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="size-4" /> Importar Excel
+            </Button>
+            <Button onClick={() => { setEditing(null); setOpen(true); }}>
+              <Plus className="size-4" /> Novo procedimento
+            </Button>
+          </div>
         )}
       />
       <PageBody>
