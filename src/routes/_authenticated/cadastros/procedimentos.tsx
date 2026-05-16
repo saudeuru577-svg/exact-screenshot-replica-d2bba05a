@@ -176,6 +176,12 @@ function ProcedimentosPage() {
               {TIPOS.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
             </SelectContent>
           </Select>
+          <div className="w-[200px]">
+            <GrupoCombobox value={grupoFiltro} onChange={setGrupoFiltro} options={grupos} allowCreate={false} placeholder="Todos os grupos" />
+          </div>
+          {grupoFiltro && (
+            <Button variant="ghost" size="sm" onClick={() => setGrupoFiltro("")}>Limpar grupo</Button>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={showInativos} onCheckedChange={setShowInativos} /> Mostrar inativos
           </label>
