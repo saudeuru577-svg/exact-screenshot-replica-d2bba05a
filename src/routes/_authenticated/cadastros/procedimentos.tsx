@@ -91,16 +91,22 @@ function ProcedimentosPage() {
     },
   });
 
+  const grupos = useMemo(
+    () => Array.from(new Set(data.map((p) => p.grupo).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [data],
+  );
+
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
     return data.filter((p) => {
       if (!showInativos && !p.ativo) return false;
       if (empFiltro !== "todas" && p.empresa_id !== empFiltro) return false;
       if (tipoFiltro !== "todos" && p.tipo !== tipoFiltro) return false;
+      if (grupoFiltro && p.grupo !== grupoFiltro) return false;
       if (t && !`${p.nome} ${p.sigla} ${p.nomes_alternativos ?? ""}`.toLowerCase().includes(t)) return false;
       return true;
     });
-  }, [data, busca, empFiltro, tipoFiltro, showInativos]);
+  }, [data, busca, empFiltro, tipoFiltro, grupoFiltro, showInativos]);
 
   const save = useMutation({
     mutationFn: async (values: FormValues) => {
