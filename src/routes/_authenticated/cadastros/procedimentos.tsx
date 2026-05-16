@@ -247,11 +247,12 @@ function ProcedimentosPage() {
 }
 
 function ProcForm({
-  open, onOpenChange, proc, empresas, onSubmit, saving,
+  open, onOpenChange, proc, empresas, grupos, onSubmit, saving,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void;
   proc: Procedimento | null;
   empresas: { id: string; nome_fantasia: string }[];
+  grupos: string[];
   onSubmit: (v: FormValues) => void; saving: boolean;
 }) {
   const form = useForm<FormValues>({
