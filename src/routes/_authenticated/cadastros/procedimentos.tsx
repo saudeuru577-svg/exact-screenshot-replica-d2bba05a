@@ -63,9 +63,11 @@ function ProcedimentosPage() {
   const [busca, setBusca] = useState("");
   const [empFiltro, setEmpFiltro] = useState("todas");
   const [tipoFiltro, setTipoFiltro] = useState("todos");
+  const [grupoFiltro, setGrupoFiltro] = useState("");
   const [showInativos, setShowInativos] = useState(false);
   const [editing, setEditing] = useState<Procedimento | null>(null);
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: empresas = [] } = useQuery({
     queryKey: ["empresas-ativas"],
