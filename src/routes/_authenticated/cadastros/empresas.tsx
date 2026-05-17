@@ -230,6 +230,15 @@ function EmpresasPage() {
         onSubmit={(v) => save.mutate(v)}
         saving={save.isPending}
       />
+
+      {limitesEmp && (
+        <LimitesEmpresaDialog
+          open={!!limitesEmp}
+          onOpenChange={(o) => !o && setLimitesEmp(null)}
+          empresaId={limitesEmp.id}
+          empresaNome={limitesEmp.nome_fantasia}
+        />
+      )}
     </>
   );
 }
