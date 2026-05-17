@@ -76,6 +76,7 @@ function EmpresasPage() {
   const [showInativas, setShowInativas] = useState(false);
   const [editing, setEditing] = useState<Empresa | null>(null);
   const [open, setOpen] = useState(false);
+  const [limitesEmp, setLimitesEmp] = useState<Empresa | null>(null);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["empresas"],
