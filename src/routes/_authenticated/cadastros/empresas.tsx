@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Search, Pencil, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Loader2, Wallet } from "lucide-react";
+import { LimitesEmpresaDialog } from "@/components/empresas/limites-dialog";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
