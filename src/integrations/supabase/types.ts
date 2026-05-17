@@ -20,6 +20,8 @@ export type Database = {
           assinatura: string
           criado_em: string
           data_aprovacao: string | null
+          empresa_id: string | null
+          escopo: Database["public"]["Enums"]["escopo_acrescimo"]
           id: string
           justificativa: string
           limite_atual: number
@@ -33,6 +35,8 @@ export type Database = {
           assinatura: string
           criado_em?: string
           data_aprovacao?: string | null
+          empresa_id?: string | null
+          escopo?: Database["public"]["Enums"]["escopo_acrescimo"]
           id?: string
           justificativa: string
           limite_atual: number
@@ -46,6 +50,8 @@ export type Database = {
           assinatura?: string
           criado_em?: string
           data_aprovacao?: string | null
+          empresa_id?: string | null
+          escopo?: Database["public"]["Enums"]["escopo_acrescimo"]
           id?: string
           justificativa?: string
           limite_atual?: number
@@ -420,6 +426,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      limites_empresa: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          empresa_id: string
+          id: string
+          mes_referencia: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          empresa_id: string
+          id?: string
+          mes_referencia: string
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          empresa_id?: string
+          id?: string
+          mes_referencia?: string
+          valor?: number
+        }
+        Relationships: []
       }
       logs_auditoria: {
         Row: {
@@ -832,6 +868,7 @@ export type Database = {
       acao_log: "INSERT" | "UPDATE" | "DELETE" | "TENTATIVA_VIOLACAO"
       cargo_profissional: "medico" | "enfermeiro"
       conselho_tipo: "CRM" | "COREN"
+      escopo_acrescimo: "total" | "empresa"
       perfil_usuario:
         | "administrador"
         | "secretaria"
@@ -984,6 +1021,7 @@ export const Constants = {
       acao_log: ["INSERT", "UPDATE", "DELETE", "TENTATIVA_VIOLACAO"],
       cargo_profissional: ["medico", "enfermeiro"],
       conselho_tipo: ["CRM", "COREN"],
+      escopo_acrescimo: ["total", "empresa"],
       perfil_usuario: [
         "administrador",
         "secretaria",
