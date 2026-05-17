@@ -207,9 +207,14 @@ function EmpresasPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     {isAdmin && (
-                      <Button variant="ghost" size="sm" onClick={() => { setEditing(e); setOpen(true); }}>
-                        <Pencil className="size-4" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="sm" title="Limites mensais" onClick={() => setLimitesEmp(e)}>
+                          <Wallet className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(e); setOpen(true); }}>
+                          <Pencil className="size-4" />
+                        </Button>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
