@@ -1,57 +1,56 @@
-# Importação de Procedimentos via Excel + Grupo selecionável
+# Acréscimo automático + limite por empresa
 
-## 1. Campo "Grupo" como combobox (selecionável e adicionável)
+## 1. Banco
 
-Na tela `src/routes/_authenticated/cadastros/procedimentos.tsx`, substituir o `Input` simples do campo **Grupo** (no formulário `ProcForm`) por um combobox baseado em `Command` + `Popover`:
+**Nova tabela `limites_empresa`** (definida por mês, admin gerencia):
+- `empresa_id uuid`, `mes_referencia varchar(7)`, `valor numeric`
+- unique (`empresa_id`, `mes_referencia`)
+- RLS: select para todos perfis autorizados; insert/update só admin
 
-- Lista os grupos já existentes (consulta `distinct grupo from procedimentos`, cacheada via React Query).
-- Permite digitar livremente; se o texto não corresponder a nenhum grupo, mostra opção **"Criar grupo: …"** que seta o valor digitado.
-- Mesma UX também no filtro do topo da página (filtro por grupo passa a usar o combobox).
+**Tabela `acrescimos_gastos`** — ajustes:
+- Nova coluna `escopo` (`total` | `empresa`)
+- Nova coluna `empresa_id uuid` (nullable, obrigatória quando escopo=`empresa`)
+- Default de `status` muda para `aprovado` (sem aprovação manual)
+- Colunas `aprovado_por` / `data_aprovacao` passam a ser preenchidas automaticamente com o próprio solicitante no insert (trigger) — mantém auditoria
+- RLS de insert continua para admin/secretaria; update admin (apenas correção)
 
-Não é necessária mudança de schema — `grupo` continua sendo `text` livre; o combobox apenas reaproveita valores já cadastrados.
+**Trigger `verificar_limite_mensal`** — reescrever:
+- Calcular `limite_total = 130000 + Σ acrescimos(escopo=total, aprovado)` do mês
+- Calcular `limite_empresa = (limites_empresa do mês para essa empresa, fallback 0/∞ — ver decisão abaixo) + Σ acrescimos(escopo=empresa, aprovado) daquela empresa no mês`
+- Calcular `gasto_total_mes` e `gasto_empresa_mes`
+- Bloquear (`status='bloqueado'`) se `(gasto+novo) > limite_total` **OU** `(gasto_empresa+novo) > limite_empresa`
 
-## 2. Botão "Importar Excel" na tela de Procedimentos
+> Fallback do limite por empresa quando não há registro no mês: tratar como **0** (bloqueia até admin cadastrar). Caso prefira "sem limite", ajusto.
 
-Botão extra ao lado de **Novo procedimento** (apenas para admin), que abre um `Sheet` lateral com:
+**View `vw_orcamento_mes_atual`** — adicionar campos por empresa (lista) ou criar `vw_orcamento_empresa_mes`.
 
-**Etapa 1 — Modelo**
-- Botão **"Baixar modelo .xlsx"** que gera planilha com cabeçalho fixo e 1 linha de exemplo.
-- Colunas obrigatórias:
-  `sigla | nome | grupo | tipo | cnpj_empresa | valor_unitario | nomes_alternativos`
-  - `tipo`: `exame` ou `consulta`
-  - `cnpj_empresa`: apenas dígitos ou formatado — o sistema normaliza
-  - `nomes_alternativos`: opcional
+## 2. Frontend
 
-**Etapa 2 — Upload + pré-visualização**
-- Input de arquivo `.xlsx`.
-- Parsing client-side com a lib `xlsx` (SheetJS).
-- Tabela de pré-visualização mostrando, por linha:
-  - status (✓ válida / ✗ erro com motivo)
-  - empresa resolvida (nome fantasia) ou "não encontrada"
-  - indicação se será **importada** ou **ignorada (duplicada)**
+### `acrescimos/novo.tsx` (reescrita)
+- Remove "Solicitar / Enviar solicitação", "pendente", aprovação.
+- Título: **"Registrar acréscimo de limite"**.
+- Campo **Escopo**: radio `Total geral` / `Empresa específica`.
+- Se `Empresa`: combobox de empresas ativas + mostra limite atual da empresa no mês.
+- Se `Total`: mostra limite total atual do mês.
+- Campo **Novo limite** + **Justificativa** + **Assinatura** (mantidos).
+- Botão único **Registrar acréscimo** → insert com `status='aprovado'`, efeito imediato.
+- Histórico do mês passa a listar acréscimos de total e por empresa, com badge do escopo.
 
-**Regras de validação (definidas pelo usuário)**:
-- Empresa identificada **somente por CNPJ** (busca exata por dígitos).
-- Linhas inválidas (CNPJ não encontrado, tipo inválido, valor ≤ 0, sigla/nome vazios) são **listadas como erro e puladas** — as válidas seguem.
-- **Duplicado** = mesma `sigla` + `empresa_id` já existe → linha é **ignorada** (mantém cadastro atual, não sobrescreve).
-- Grupos novos vindos da planilha são aceitos automaticamente (campo livre).
+### `cadastros/empresas.tsx`
+- Nova seção/diálogo **"Limite mensal"** por empresa: tabela `mes / valor / editar` apoiada em `limites_empresa`. Admin cria/edita o valor de cada mês.
 
-**Etapa 3 — Confirmação**
-- Resumo: `X linhas válidas a importar · Y ignoradas (duplicadas) · Z com erro`.
-- Botão **Importar** → `supabase.from("procedimentos").insert([...])` em lote único.
-- Após sucesso: toast, invalidação das queries `procedimentos` e `procedimentos-grupos`, e fechamento do Sheet.
+### `dashboard.tsx`
+- KPI "Limite atual" continua (limite total).
+- Nova seção **"Limites por empresa (mês atual)"**: lista cada empresa com `limite · gasto · saldo` (vermelho se saldo ≤ 10%).
 
-## 3. Detalhes técnicos
+### `autorizacoes/nova.tsx` (passo Confirmação)
+- Mostra os dois saldos: total geral e da empresa selecionada.
+- Aviso quando a autorização vai ser criada bloqueada por qualquer um dos limites.
 
-- Lib nova: `xlsx` (SheetJS) — usada tanto para baixar modelo quanto para parsear upload.
-- Novo arquivo: `src/components/procedimentos/import-dialog.tsx` (toda a lógica do Sheet de import).
-- Novo arquivo: `src/components/ui/grupo-combobox.tsx` (combobox reaproveitável para o campo grupo, baseado em Command/Popover já existentes).
-- Edição: `src/routes/_authenticated/cadastros/procedimentos.tsx` — botão "Importar", uso do combobox no `ProcForm` e no filtro.
-- Permissão: import e combobox de criação ficam visíveis apenas quando `isAdmin` (mesma regra do "Novo procedimento"), respeitando as RLS de `procedimentos`.
-- Nenhuma migração de banco necessária.
+## 3. Permissões / telas
+- Mantém `acrescimos` em `src/lib/telas.ts`.
+- Adiciona `cadastros.empresas.limites` se quiser controle fino — opcional, posso pular.
 
 ## 4. Fora do escopo
-
-- Importar empresas inexistentes (a planilha precisa referenciar CNPJs já cadastrados).
-- Atualizar procedimentos existentes via Excel (duplicados são sempre ignorados).
-- Importar via servidor / edge function — todo o parsing roda no browser para feedback imediato; o insert vai direto ao Supabase usando a sessão do usuário.
+- Migração de dados de acréscimos existentes (todos ficam como `aprovado` retroativamente — sem destrutivo).
+- Notificações/relatório dedicado de limites estourados.
