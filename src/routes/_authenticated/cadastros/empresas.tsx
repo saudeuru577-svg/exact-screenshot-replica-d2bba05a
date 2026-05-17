@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Search, Pencil, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Loader2, Wallet } from "lucide-react";
+import { LimitesEmpresaDialog } from "@/components/empresas/limites-dialog";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +76,7 @@ function EmpresasPage() {
   const [showInativas, setShowInativas] = useState(false);
   const [editing, setEditing] = useState<Empresa | null>(null);
   const [open, setOpen] = useState(false);
+  const [limitesEmp, setLimitesEmp] = useState<Empresa | null>(null);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["empresas"],
@@ -205,9 +207,14 @@ function EmpresasPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     {isAdmin && (
-                      <Button variant="ghost" size="sm" onClick={() => { setEditing(e); setOpen(true); }}>
-                        <Pencil className="size-4" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="sm" title="Limites mensais" onClick={() => setLimitesEmp(e)}>
+                          <Wallet className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditing(e); setOpen(true); }}>
+                          <Pencil className="size-4" />
+                        </Button>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -223,6 +230,15 @@ function EmpresasPage() {
         onSubmit={(v) => save.mutate(v)}
         saving={save.isPending}
       />
+
+      {limitesEmp && (
+        <LimitesEmpresaDialog
+          open={!!limitesEmp}
+          onOpenChange={(o) => !o && setLimitesEmp(null)}
+          empresaId={limitesEmp.id}
+          empresaNome={limitesEmp.nome_fantasia}
+        />
+      )}
     </>
   );
 }
