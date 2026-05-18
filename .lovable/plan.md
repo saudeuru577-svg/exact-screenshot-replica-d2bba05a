@@ -1,56 +1,76 @@
-# Acréscimo automático + limite por empresa
+## PRD: Consultas e Organização do Banco de Dados
 
-## 1. Banco
+Vou gerar um documento Markdown em `/mnt/documents/prd-banco-de-dados.md` e disponibilizá-lo como artefato para download.
 
-**Nova tabela `limites_empresa`** (definida por mês, admin gerencia):
-- `empresa_id uuid`, `mes_referencia varchar(7)`, `valor numeric`
-- unique (`empresa_id`, `mes_referencia`)
-- RLS: select para todos perfis autorizados; insert/update só admin
+### Estrutura do documento
 
-**Tabela `acrescimos_gastos`** — ajustes:
-- Nova coluna `escopo` (`total` | `empresa`)
-- Nova coluna `empresa_id uuid` (nullable, obrigatória quando escopo=`empresa`)
-- Default de `status` muda para `aprovado` (sem aprovação manual)
-- Colunas `aprovado_por` / `data_aprovacao` passam a ser preenchidas automaticamente com o próprio solicitante no insert (trigger) — mantém auditoria
-- RLS de insert continua para admin/secretaria; update admin (apenas correção)
+1. **Sumário Executivo**
+   - Visão geral do sistema (SAS — autorizações, faturamento, cadastros)
+   - Stack: Supabase (Postgres + Auth + Storage) acessado via cliente JS no frontend TanStack Start
+   - Princípios: RLS por perfil, triggers de negócio no Postgres, RPCs para operações sensíveis
 
-**Trigger `verificar_limite_mensal`** — reescrever:
-- Calcular `limite_total = 130000 + Σ acrescimos(escopo=total, aprovado)` do mês
-- Calcular `limite_empresa = (limites_empresa do mês para essa empresa, fallback 0/∞ — ver decisão abaixo) + Σ acrescimos(escopo=empresa, aprovado) daquela empresa no mês`
-- Calcular `gasto_total_mes` e `gasto_empresa_mes`
-- Bloquear (`status='bloqueado'`) se `(gasto+novo) > limite_total` **OU** `(gasto_empresa+novo) > limite_empresa`
+2. **Arquitetura de Acesso a Dados**
+   - Como o frontend conversa com o banco: `supabase.from(...).select/insert/update/delete` e `supabase.rpc(...)`
+   - Cliente: `src/integrations/supabase/client.ts` (publishable key, sessão no localStorage)
+   - Autenticação: `useAuth` com `onAuthStateChange` + `getSession`
+   - Segurança: toda autorização é decidida pelo Postgres via RLS — o frontend não filtra por perfil
+   - Função-chave `public.meu_perfil()` usada em todas as policies
+   - Server functions (TanStack) — quando usar vs chamada direta
 
-> Fallback do limite por empresa quando não há registro no mês: tratar como **0** (bloqueia até admin cadastrar). Caso prefira "sem limite", ajusto.
+3. **Organização do Banco**
+   - **Diagrama lógico** (ASCII) com agrupamentos:
+     - Identidade & Permissões: `usuarios`, `permissoes_usuario`, `logs_auditoria`
+     - Cadastros base: `empresas`, `ubs`, `profissionais`, `procedimentos`, `bairros`, `povoados`, `motivos_glosa`
+     - Pacientes: `pacientes`
+     - Operação: `autorizacoes`, `itens_autorizacao`
+     - Financeiro: `faturamentos`, `limites_empresa`, `acrescimos_gastos`
+   - Para cada tabela: finalidade, campos-chave, RLS resumida em linguagem natural (quem vê / cria / edita / apaga)
+   - Enums usados (`perfil_usuario`, `status_autorizacao`, `status_acrescimo`, `escopo_acrescimo`, `status_item_faturamento`, etc.)
 
-**View `vw_orcamento_mes_atual`** — adicionar campos por empresa (lista) ou criar `vw_orcamento_empresa_mes`.
+4. **Regras de Negócio no Banco (Funções e Triggers)**
+   - `meu_perfil()` — base das RLS
+   - `handle_new_auth_user()` — provisiona linha em `usuarios` ao criar conta
+   - `gerar_num_aut()` — gera número sequencial AUTYYYY####
+   - `atualizar_total_autorizacao()` — recalcula `total_autorizado`
+   - `verificar_limite_mensal()` — bloqueia autorização que estoura limite total ou da empresa, considerando `limites_empresa` + `acrescimos_gastos`
+   - `acrescimo_auto_aprovar()` — aprovação automática
+   - `recalc_totais_faturamento()` — totais por faturamento
+   - `abrir_faturamento(empresa, mes)` — RPC `SECURITY DEFINER` que cria/recupera faturamento e vincula itens
+   - `bloquear_edicao_autorizacao_aprovada`, `bloquear_alteracao_data_autorizacao`, `bloquear_edicao_faturamento_fechado` — guardas + logs
+   - `rls_auto_enable` — event trigger que liga RLS em novas tabelas
+   - `set_atualizado_em` — timestamp
 
-## 2. Frontend
+5. **Mapa de Consultas por Tela**
+   Tabela com: Tela / Rota / Tabelas e RPCs usadas / Tipo de operação. Cobertura:
+   - Dashboard (`/dashboard`)
+   - Autorizações: lista, nova, detalhe, editar (`autorizacoes`, `itens_autorizacao`, `vw_orcamento_mes_atual`, `gerar_num_aut`, Storage `autorizacoes`)
+   - Pacientes: lista, novo, detalhe
+   - Cadastros: empresas (+ `limites_empresa` via diálogo), UBS, profissionais, procedimentos (+ import), território (bairros/povoados)
+   - Acréscimos: novo (consulta de limites e gastos, insert em `acrescimos_gastos`)
+   - Faturamentos: index + por empresa (RPC `abrir_faturamento`, leitura de `faturamentos` e `itens_autorizacao`)
+   - Relatórios (pacientes/procedimentos)
+   - Admin: usuários, logs
 
-### `acrescimos/novo.tsx` (reescrita)
-- Remove "Solicitar / Enviar solicitação", "pendente", aprovação.
-- Título: **"Registrar acréscimo de limite"**.
-- Campo **Escopo**: radio `Total geral` / `Empresa específica`.
-- Se `Empresa`: combobox de empresas ativas + mostra limite atual da empresa no mês.
-- Se `Total`: mostra limite total atual do mês.
-- Campo **Novo limite** + **Justificativa** + **Assinatura** (mantidos).
-- Botão único **Registrar acréscimo** → insert com `status='aprovado'`, efeito imediato.
-- Histórico do mês passa a listar acréscimos de total e por empresa, com badge do escopo.
+6. **Padrões de Consulta**
+   - Listagens: `select("*").order(...)` com filtros via `.eq/.ilike/.in`
+   - Joins implícitos via select embed (`itens_autorizacao(*, procedimento:procedimentos(...))`)
+   - Storage: bucket privado `autorizacoes` para PDFs/QRs
+   - Tratamento de erro padrão (toast + early return)
+   - Quando usar `.maybeSingle()` vs `.single()`
 
-### `cadastros/empresas.tsx`
-- Nova seção/diálogo **"Limite mensal"** por empresa: tabela `mes / valor / editar` apoiada em `limites_empresa`. Admin cria/edita o valor de cada mês.
+7. **Segurança e Auditoria**
+   - RLS em todas as tabelas de `public`
+   - Política especial em `logs_auditoria` (insert `false`, leitura só admin) — escrita só por triggers `SECURITY DEFINER`
+   - Storage privado, URLs assinadas
+   - RPCs `SECURITY DEFINER` revogadas de `anon`/`public`
 
-### `dashboard.tsx`
-- KPI "Limite atual" continua (limite total).
-- Nova seção **"Limites por empresa (mês atual)"**: lista cada empresa com `limite · gasto · saldo` (vermelho se saldo ≤ 10%).
+8. **Apêndices**
+   - Glossário de enums e seus valores
+   - Lista completa de RLS por tabela (já em linguagem natural)
+   - Convenções de nomenclatura (snake_case, `criado_em`/`atualizado_em`, `criado_por` = `auth.uid()`)
 
-### `autorizacoes/nova.tsx` (passo Confirmação)
-- Mostra os dois saldos: total geral e da empresa selecionada.
-- Aviso quando a autorização vai ser criada bloqueada por qualquer um dos limites.
+### Entrega
 
-## 3. Permissões / telas
-- Mantém `acrescimos` em `src/lib/telas.ts`.
-- Adiciona `cadastros.empresas.limites` se quiser controle fino — opcional, posso pular.
-
-## 4. Fora do escopo
-- Migração de dados de acréscimos existentes (todos ficam como `aprovado` retroativamente — sem destrutivo).
-- Notificações/relatório dedicado de limites estourados.
+- Arquivo: `/mnt/documents/prd-banco-de-dados.md`
+- Tag `<presentation-artifact>` ao final para download.
+- Sem alterações de código no projeto.
