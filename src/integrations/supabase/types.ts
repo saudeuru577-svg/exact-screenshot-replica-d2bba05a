@@ -863,8 +863,6 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["perfil_usuario"]
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       acao_log: "INSERT" | "UPDATE" | "DELETE" | "TENTATIVA_VIOLACAO"
