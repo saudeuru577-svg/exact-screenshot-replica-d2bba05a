@@ -1,76 +1,100 @@
-## PRD: Consultas e Organização do Banco de Dados
 
-Vou gerar um documento Markdown em `/mnt/documents/prd-banco-de-dados.md` e disponibilizá-lo como artefato para download.
+# Plano: Índices faltantes (add_indexes.sql)
 
-### Estrutura do documento
+## 1. Diagnóstico — índices que JÁ existem
 
-1. **Sumário Executivo**
-   - Visão geral do sistema (SAS — autorizações, faturamento, cadastros)
-   - Stack: Supabase (Postgres + Auth + Storage) acessado via cliente JS no frontend TanStack Start
-   - Princípios: RLS por perfil, triggers de negócio no Postgres, RPCs para operações sensíveis
+```text
+autorizacoes       : pk(id), UNIQUE(num_aut), (data_autorizacao), (empresa_id), (paciente_id), (status)
+itens_autorizacao  : pk(id), (autorizacao_id), (faturamento_id), (mes_faturamento)
+faturamentos       : pk(id), UNIQUE(empresa_id, mes_referencia) WHERE status='aberto'
+pacientes          : pk(id), UNIQUE(cartao_sus), UNIQUE(nome,dtn), (nome), (criado_por)
+```
 
-2. **Arquitetura de Acesso a Dados**
-   - Como o frontend conversa com o banco: `supabase.from(...).select/insert/update/delete` e `supabase.rpc(...)`
-   - Cliente: `src/integrations/supabase/client.ts` (publishable key, sessão no localStorage)
-   - Autenticação: `useAuth` com `onAuthStateChange` + `getSession`
-   - Segurança: toda autorização é decidida pelo Postgres via RLS — o frontend não filtra por perfil
-   - Função-chave `public.meu_perfil()` usada em todas as policies
-   - Server functions (TanStack) — quando usar vs chamada direta
+Não vou recriar nada disso.
 
-3. **Organização do Banco**
-   - **Diagrama lógico** (ASCII) com agrupamentos:
-     - Identidade & Permissões: `usuarios`, `permissoes_usuario`, `logs_auditoria`
-     - Cadastros base: `empresas`, `ubs`, `profissionais`, `procedimentos`, `bairros`, `povoados`, `motivos_glosa`
-     - Pacientes: `pacientes`
-     - Operação: `autorizacoes`, `itens_autorizacao`
-     - Financeiro: `faturamentos`, `limites_empresa`, `acrescimos_gastos`
-   - Para cada tabela: finalidade, campos-chave, RLS resumida em linguagem natural (quem vê / cria / edita / apaga)
-   - Enums usados (`perfil_usuario`, `status_autorizacao`, `status_acrescimo`, `escopo_acrescimo`, `status_item_faturamento`, etc.)
+## 2. Queries quentes encontradas no código
 
-4. **Regras de Negócio no Banco (Funções e Triggers)**
-   - `meu_perfil()` — base das RLS
-   - `handle_new_auth_user()` — provisiona linha em `usuarios` ao criar conta
-   - `gerar_num_aut()` — gera número sequencial AUTYYYY####
-   - `atualizar_total_autorizacao()` — recalcula `total_autorizado`
-   - `verificar_limite_mensal()` — bloqueia autorização que estoura limite total ou da empresa, considerando `limites_empresa` + `acrescimos_gastos`
-   - `acrescimo_auto_aprovar()` — aprovação automática
-   - `recalc_totais_faturamento()` — totais por faturamento
-   - `abrir_faturamento(empresa, mes)` — RPC `SECURITY DEFINER` que cria/recupera faturamento e vincula itens
-   - `bloquear_edicao_autorizacao_aprovada`, `bloquear_alteracao_data_autorizacao`, `bloquear_edicao_faturamento_fechado` — guardas + logs
-   - `rls_auto_enable` — event trigger que liga RLS em novas tabelas
-   - `set_atualizado_em` — timestamp
+| Tela / arquivo | Tabela | Filtro / ordenação |
+|---|---|---|
+| `acrescimos/novo.tsx` (cálculo de gasto) | autorizacoes | `empresa_id = ? AND data_autorizacao BETWEEN ? AND ? AND status IN (...)` |
+| `pacientes/$id.tsx` (histórico) | autorizacoes | `paciente_id = ? ORDER BY data_autorizacao DESC` |
+| `autorizacoes/$id.tsx`, `$id.editar.tsx`, `faturamentos/$empresaId.tsx` | itens_autorizacao | `autorizacao_id = ? ORDER BY criado_em` |
+| `relatorios/fat-por-procedimento.tsx` | itens_autorizacao | `mes_faturamento = ? AND status_faturamento = 'confirmado'` |
+| `relatorios/*` | itens_autorizacao | `procedimento_id = ?` |
+| `faturamentos/index.tsx` | faturamentos | `mes_referencia = ?` |
+| `faturamentos/$empresaId.tsx` | faturamentos | `empresa_id = ? ORDER BY iniciado_em DESC` |
+| `relatorios/shared.tsx`, autocomplete | pacientes | `nome ILIKE '%x%' OR cartao_sus ILIKE '%x%'` |
 
-5. **Mapa de Consultas por Tela**
-   Tabela com: Tela / Rota / Tabelas e RPCs usadas / Tipo de operação. Cobertura:
-   - Dashboard (`/dashboard`)
-   - Autorizações: lista, nova, detalhe, editar (`autorizacoes`, `itens_autorizacao`, `vw_orcamento_mes_atual`, `gerar_num_aut`, Storage `autorizacoes`)
-   - Pacientes: lista, novo, detalhe
-   - Cadastros: empresas (+ `limites_empresa` via diálogo), UBS, profissionais, procedimentos (+ import), território (bairros/povoados)
-   - Acréscimos: novo (consulta de limites e gastos, insert em `acrescimos_gastos`)
-   - Faturamentos: index + por empresa (RPC `abrir_faturamento`, leitura de `faturamentos` e `itens_autorizacao`)
-   - Relatórios (pacientes/procedimentos)
-   - Admin: usuários, logs
+## 3. Índices propostos
 
-6. **Padrões de Consulta**
-   - Listagens: `select("*").order(...)` com filtros via `.eq/.ilike/.in`
-   - Joins implícitos via select embed (`itens_autorizacao(*, procedimento:procedimentos(...))`)
-   - Storage: bucket privado `autorizacoes` para PDFs/QRs
-   - Tratamento de erro padrão (toast + early return)
-   - Quando usar `.maybeSingle()` vs `.single()`
+| # | Tabela | Colunas | Tipo | Por quê |
+|---|---|---|---|---|
+| 1 | autorizacoes | (empresa_id, data_autorizacao) | composto | Filtro empresa+período no cálculo de acréscimos e relatórios. Cobre também filtros apenas por empresa_id (substitui idx existente — mantenho para não recriar). |
+| 2 | autorizacoes | (paciente_id, data_autorizacao DESC) | composto | Histórico do paciente — `WHERE paciente_id=? ORDER BY data DESC`. Elimina o sort. |
+| 3 | itens_autorizacao | (mes_faturamento, status_faturamento) | composto | Relatório fat-por-procedimento filtra exatamente por esses dois campos. |
+| 4 | itens_autorizacao | (procedimento_id) | simples | Relatórios e agregações por procedimento; hoje faz seq scan. |
+| 5 | faturamentos | (mes_referencia) | simples | Lista mensal filtra por essa coluna sozinha (o índice único existente exige `status='aberto'` e não cobre). |
+| 6 | faturamentos | (empresa_id, iniciado_em DESC) | composto | Tela de faturamento da empresa pega o mais recente por empresa. |
+| 7 | pacientes | (nome gin_trgm_ops, cartao_sus gin_trgm_ops) | GIN trigram | Busca `ILIKE '%x%'` hoje sempre faz seq scan. Requer `CREATE EXTENSION pg_trgm` (gratuito no Supabase). |
 
-7. **Segurança e Auditoria**
-   - RLS em todas as tabelas de `public`
-   - Política especial em `logs_auditoria` (insert `false`, leitura só admin) — escrita só por triggers `SECURITY DEFINER`
-   - Storage privado, URLs assinadas
-   - RPCs `SECURITY DEFINER` revogadas de `anon`/`public`
+Tudo é não-bloqueante (`CREATE INDEX CONCURRENTLY` + `IF NOT EXISTS`). Custo: zero — todos os índices entram nos 500 MB do Free Tier (estimativa < 5 MB total no tamanho atual).
 
-8. **Apêndices**
-   - Glossário de enums e seus valores
-   - Lista completa de RLS por tabela (já em linguagem natural)
-   - Convenções de nomenclatura (snake_case, `criado_em`/`atualizado_em`, `criado_por` = `auth.uid()`)
+## 4. Entregável — `add_indexes.sql`
 
-### Entrega
+Arquivo único comentado, agrupado por tabela, pronto para colar no **SQL Editor → Run**. Como `CONCURRENTLY` não roda dentro de transação, o script desativa a transação implícita do editor com um comentário de instrução no topo (Supabase SQL Editor já roda statements sem BEGIN automático quando há múltiplos statements separados — vou usar `-- supabase: no-transaction` e cada `CREATE INDEX` como statement independente).
 
-- Arquivo: `/mnt/documents/prd-banco-de-dados.md`
-- Tag `<presentation-artifact>` ao final para download.
-- Sem alterações de código no projeto.
+Salvar em: `/mnt/documents/add_indexes.sql`
+
+### Esboço do conteúdo
+
+```sql
+-- add_indexes.sql — Otimização de leitura SAS
+-- Rodar no Supabase SQL Editor. NÃO envolver em BEGIN/COMMIT.
+-- Todos os índices usam CONCURRENTLY (sem lock de escrita) e IF NOT EXISTS.
+
+-- =========================================================
+-- 1. autorizacoes
+-- =========================================================
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aut_empresa_data
+  ON public.autorizacoes (empresa_id, data_autorizacao);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aut_paciente_data
+  ON public.autorizacoes (paciente_id, data_autorizacao DESC);
+
+-- =========================================================
+-- 2. itens_autorizacao
+-- =========================================================
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_itens_mes_status
+  ON public.itens_autorizacao (mes_faturamento, status_faturamento);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_itens_procedimento
+  ON public.itens_autorizacao (procedimento_id);
+
+-- =========================================================
+-- 3. faturamentos
+-- =========================================================
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_fat_mes
+  ON public.faturamentos (mes_referencia);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_fat_empresa_iniciado
+  ON public.faturamentos (empresa_id, iniciado_em DESC);
+
+-- =========================================================
+-- 4. pacientes  (busca ILIKE '%termo%')
+-- =========================================================
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pacientes_nome_trgm
+  ON public.pacientes USING gin (nome gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pacientes_sus_trgm
+  ON public.pacientes USING gin (cartao_sus gin_trgm_ops);
+```
+
+## 5. Observações
+
+- **Não usei índices parciais** salvo o já existente em `faturamentos`. Os filtros de status em `autorizacoes` variam (`IN ('pendente','aprovado','faturado')`), então um parcial atrapalharia outras telas.
+- **Por que substitui ler `idx_autorizacoes_empresa`?** Não substitui — Postgres usa o composto também para queries só com `empresa_id`. Posso opcionalmente dropar o simples depois, mas deixo fora desta entrega para zero risco.
+- **Aplicação**: cole o arquivo inteiro no SQL Editor e clique Run. Tempo total estimado < 30 s para o volume atual; sem bloqueio de leitura/escrita.
+
+Confirma que eu gere o arquivo `/mnt/documents/add_indexes.sql` ao aprovar?
