@@ -1,100 +1,95 @@
+# Plano de endurecimento — 5 falhas identificadas
 
-# Plano: Índices faltantes (add_indexes.sql)
+Trataremos as 5 falhas em ordem de risco. Cada item tem causa, correção e impacto.
 
-## 1. Diagnóstico — índices que JÁ existem
+---
 
-```text
-autorizacoes       : pk(id), UNIQUE(num_aut), (data_autorizacao), (empresa_id), (paciente_id), (status)
-itens_autorizacao  : pk(id), (autorizacao_id), (faturamento_id), (mes_faturamento)
-faturamentos       : pk(id), UNIQUE(empresa_id, mes_referencia) WHERE status='aberto'
-pacientes          : pk(id), UNIQUE(cartao_sus), UNIQUE(nome,dtn), (nome), (criado_por)
-```
+## 1. Limite de R$130.000 hardcoded no trigger (risco operacional alto)
 
-Não vou recriar nada disso.
+**Onde:** `verificar_limite_mensal()` (variável `v_limite_base`) e também no frontend (`src/routes/_authenticated/dashboard.tsx`, constante `LIMITE_BASE`).
 
-## 2. Queries quentes encontradas no código
+**Correção:**
+- Criar tabela `configuracoes_sistema` (chave/valor) ou `limites_globais (mes_referencia, valor_base)` com RLS: SELECT para todos os perfis logados, INSERT/UPDATE só administrador.
+- Migrar o valor atual (130000) como linha-base "default".
+- Reescrever `verificar_limite_mensal()` para ler o limite via `SELECT valor FROM limites_globais` (com fallback para o default mais recente).
+- Dashboard passa a buscar o limite da tabela em vez de usar a constante.
+- Bônus: tela admin simples para editar o limite (fora do escopo deste plano se preferir).
 
-| Tela / arquivo | Tabela | Filtro / ordenação |
-|---|---|---|
-| `acrescimos/novo.tsx` (cálculo de gasto) | autorizacoes | `empresa_id = ? AND data_autorizacao BETWEEN ? AND ? AND status IN (...)` |
-| `pacientes/$id.tsx` (histórico) | autorizacoes | `paciente_id = ? ORDER BY data_autorizacao DESC` |
-| `autorizacoes/$id.tsx`, `$id.editar.tsx`, `faturamentos/$empresaId.tsx` | itens_autorizacao | `autorizacao_id = ? ORDER BY criado_em` |
-| `relatorios/fat-por-procedimento.tsx` | itens_autorizacao | `mes_faturamento = ? AND status_faturamento = 'confirmado'` |
-| `relatorios/*` | itens_autorizacao | `procedimento_id = ?` |
-| `faturamentos/index.tsx` | faturamentos | `mes_referencia = ?` |
-| `faturamentos/$empresaId.tsx` | faturamentos | `empresa_id = ? ORDER BY iniciado_em DESC` |
-| `relatorios/shared.tsx`, autocomplete | pacientes | `nome ILIKE '%x%' OR cartao_sus ILIKE '%x%'` |
+---
 
-## 3. Índices propostos
+## 2. Status "bloqueado" silencioso (risco UX/dados)
 
-| # | Tabela | Colunas | Tipo | Por quê |
-|---|---|---|---|---|
-| 1 | autorizacoes | (empresa_id, data_autorizacao) | composto | Filtro empresa+período no cálculo de acréscimos e relatórios. Cobre também filtros apenas por empresa_id (substitui idx existente — mantenho para não recriar). |
-| 2 | autorizacoes | (paciente_id, data_autorizacao DESC) | composto | Histórico do paciente — `WHERE paciente_id=? ORDER BY data DESC`. Elimina o sort. |
-| 3 | itens_autorizacao | (mes_faturamento, status_faturamento) | composto | Relatório fat-por-procedimento filtra exatamente por esses dois campos. |
-| 4 | itens_autorizacao | (procedimento_id) | simples | Relatórios e agregações por procedimento; hoje faz seq scan. |
-| 5 | faturamentos | (mes_referencia) | simples | Lista mensal filtra por essa coluna sozinha (o índice único existente exige `status='aberto'` e não cobre). |
-| 6 | faturamentos | (empresa_id, iniciado_em DESC) | composto | Tela de faturamento da empresa pega o mais recente por empresa. |
-| 7 | pacientes | (nome gin_trgm_ops, cartao_sus gin_trgm_ops) | GIN trigram | Busca `ILIKE '%x%'` hoje sempre faz seq scan. Requer `CREATE EXTENSION pg_trgm` (gratuito no Supabase). |
+**Onde:** `verificar_limite_mensal()` faz `NEW.status := 'bloqueado'` em vez de `RAISE EXCEPTION`. O insert "sucede" e o frontend mostra toast de sucesso.
 
-Tudo é não-bloqueante (`CREATE INDEX CONCURRENTLY` + `IF NOT EXISTS`). Custo: zero — todos os índices entram nos 500 MB do Free Tier (estimativa < 5 MB total no tamanho atual).
+**Correção (duas camadas):**
+- **Backend:** manter o comportamento de gravar como `bloqueado` (útil para auditoria) **mas** sinalizar claramente — adicionar uma coluna `motivo_bloqueio TEXT` preenchida pelo trigger ("Limite mensal total excedido" / "Limite da empresa excedido").
+- **Frontend:** após cada `insert/update` em `autorizacoes`, checar `data.status === 'bloqueado'` e exibir `toast.warning("Autorização registrada como BLOQUEADA: " + motivo_bloqueio)` em vez do toast de sucesso. Locais: `autorizacoes/nova.tsx` e `autorizacoes/$id.editar.tsx`.
 
-## 4. Entregável — `add_indexes.sql`
+---
 
-Arquivo único comentado, agrupado por tabela, pronto para colar no **SQL Editor → Run**. Como `CONCURRENTLY` não roda dentro de transação, o script desativa a transação implícita do editor com um comentário de instrução no topo (Supabase SQL Editor já roda statements sem BEGIN automático quando há múltiplos statements separados — vou usar `-- supabase: no-transaction` e cada `CREATE INDEX` como statement independente).
+## 3. Perfil arbitrário via `raw_user_meta_data` (risco de privilege escalation)
 
-Salvar em: `/mnt/documents/add_indexes.sql`
+**Onde:** `handle_new_auth_user()` faz `COALESCE((NEW.raw_user_meta_data->>'perfil')::perfil_usuario, 'atendente')`. Qualquer signup direto via API pode injetar `perfil: "administrador"`.
 
-### Esboço do conteúdo
+**Correção:**
+- Reescrever o trigger para **ignorar** o campo `perfil` do metadata e sempre criar com `'atendente'` + `ativo = false`.
+- A única forma legítima de definir perfil/ativo passa a ser pela edge function `admin-create-user` (que já valida que o caller é administrador) — ela faz `INSERT` direto na tabela `usuarios` com service role, OU faz `UPDATE` após o trigger (já é o caso atualmente).
+- Garantir que signup público esteja desabilitado no Supabase Auth, ou que a UI de login não exponha cadastro.
+
+---
+
+## 4. Sessão em `localStorage` (risco XSS)
+
+**Onde:** `src/integrations/supabase/client.ts` usa `storage: localStorage`.
+
+**Trade-off honesto:** o Supabase JS SDK não suporta cookies httpOnly diretamente no client browser (precisaria de SSR auth helpers). Opções realistas:
+- **A (mínimo):** manter `localStorage` mas reduzir TTL do refresh token no painel Supabase + endurecer CSP no `__root.tsx` (`Content-Security-Policy` restritivo bloqueando inline scripts de terceiros) para mitigar XSS.
+- **B (mais robusto):** migrar para auth via cookies usando `@supabase/ssr` + middleware TanStack — refactor maior, ~1 dia de trabalho.
+
+Recomendo **A agora** + ticket para B. Esta fase do plano implementa CSP + revisão de `dangerouslySetInnerHTML` (não há uso atualmente — verificado).
+
+---
+
+## 5. Mensagens de erro do banco expostas via `toast.error(e.message)` (vazamento de info)
+
+**Onde:** ~30 ocorrências de `toast.error(e.message)` / `toast.error((e as Error).message)` em todas as rotas autenticadas. Mensagens cruas tipo `new row violates row-level security policy for table "x"` ou `duplicate key value violates unique constraint` chegam ao usuário.
+
+**Correção:**
+- Criar helper `src/lib/format-error.ts` com `formatSupabaseError(e: unknown): string` que:
+  - Mapeia códigos PostgREST/Postgres conhecidos (`23505` → "Registro duplicado", `23503` → "Referência inválida", `42501`/`PGRST301` → "Sem permissão para esta ação", `P0001` → extrai só a parte após `:` para regras de negócio CA1/CA2/etc).
+  - Para erros desconhecidos: retorna "Não foi possível concluir a operação. Tente novamente." e faz `console.error(e)` para diagnóstico.
+- Substituir todos os `toast.error(e.message)` por `toast.error(formatSupabaseError(e))`.
+
+---
+
+## Ordem de execução proposta
+
+1. Migração SQL única (itens 1, 2, 3): tabela `limites_globais`, coluna `motivo_bloqueio`, novo `handle_new_auth_user`, novo `verificar_limite_mensal`.
+2. Helper `format-error.ts` + substituição em massa (item 5).
+3. Frontend: dashboard lê `limites_globais`, telas de autorização checam status bloqueado (itens 1, 2).
+4. CSP no `__root.tsx` (item 4-A).
+
+## Detalhes técnicos
 
 ```sql
--- add_indexes.sql — Otimização de leitura SAS
--- Rodar no Supabase SQL Editor. NÃO envolver em BEGIN/COMMIT.
--- Todos os índices usam CONCURRENTLY (sem lock de escrita) e IF NOT EXISTS.
+-- Item 1
+CREATE TABLE limites_globais (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  mes_referencia text NOT NULL UNIQUE, -- 'default' ou 'YYYY-MM'
+  valor numeric(12,2) NOT NULL,
+  criado_em timestamptz DEFAULT now()
+);
+INSERT INTO limites_globais (mes_referencia, valor) VALUES ('default', 130000);
 
--- =========================================================
--- 1. autorizacoes
--- =========================================================
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aut_empresa_data
-  ON public.autorizacoes (empresa_id, data_autorizacao);
+-- Item 2
+ALTER TABLE autorizacoes ADD COLUMN motivo_bloqueio text;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_aut_paciente_data
-  ON public.autorizacoes (paciente_id, data_autorizacao DESC);
-
--- =========================================================
--- 2. itens_autorizacao
--- =========================================================
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_itens_mes_status
-  ON public.itens_autorizacao (mes_faturamento, status_faturamento);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_itens_procedimento
-  ON public.itens_autorizacao (procedimento_id);
-
--- =========================================================
--- 3. faturamentos
--- =========================================================
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_fat_mes
-  ON public.faturamentos (mes_referencia);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_fat_empresa_iniciado
-  ON public.faturamentos (empresa_id, iniciado_em DESC);
-
--- =========================================================
--- 4. pacientes  (busca ILIKE '%termo%')
--- =========================================================
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pacientes_nome_trgm
-  ON public.pacientes USING gin (nome gin_trgm_ops);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pacientes_sus_trgm
-  ON public.pacientes USING gin (cartao_sus gin_trgm_ops);
+-- Item 3 — substitui handle_new_auth_user para sempre 'atendente' + ativo=false
 ```
 
-## 5. Observações
+## Itens explicitamente fora do escopo
 
-- **Não usei índices parciais** salvo o já existente em `faturamentos`. Os filtros de status em `autorizacoes` variam (`IN ('pendente','aprovado','faturado')`), então um parcial atrapalharia outras telas.
-- **Por que substitui ler `idx_autorizacoes_empresa`?** Não substitui — Postgres usa o composto também para queries só com `empresa_id`. Posso opcionalmente dropar o simples depois, mas deixo fora desta entrega para zero risco.
-- **Aplicação**: cole o arquivo inteiro no SQL Editor e clique Run. Tempo total estimado < 30 s para o volume atual; sem bloqueio de leitura/escrita.
+- Migração completa para auth por cookie httpOnly (fica como ticket separado).
+- UI administrativa para editar `limites_globais` (pode ser feita depois — por ora se edita via SQL).
 
-Confirma que eu gere o arquivo `/mnt/documents/add_indexes.sql` ao aprovar?
+Confirma que sigo com a implementação nesta ordem?
