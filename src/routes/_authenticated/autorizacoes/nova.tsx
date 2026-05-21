@@ -703,7 +703,7 @@ function SubmitButton(props: {
         if (upErr) throw upErr;
 
         // Re-read for status (trigger may have set 'bloqueado')
-        const { data: final } = await supabase.from("autorizacoes").select("id, status, num_aut").eq("id", autId).single();
+        const { data: final } = await supabase.from("autorizacoes").select("id, status, num_aut, motivo_bloqueio").eq("id", autId).single();
         return final!;
       } catch (e) {
         await removeFiles(uploaded).catch(() => {});
@@ -713,7 +713,9 @@ function SubmitButton(props: {
     onSuccess: (a) => {
       qc.invalidateQueries({ queryKey: ["autorizacoes"] });
       if (a.status === "bloqueado") {
-        toast.warning(`${a.num_aut} criada como BLOQUEADA — limite mensal excedido.`);
+        toast.warning(`${a.num_aut} criada como BLOQUEADA`, {
+          description: a.motivo_bloqueio ?? "Limite mensal excedido.",
+        });
       } else {
         toast.success(`Autorização ${a.num_aut} emitida`);
       }
