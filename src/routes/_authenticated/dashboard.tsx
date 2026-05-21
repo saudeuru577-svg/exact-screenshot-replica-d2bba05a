@@ -44,13 +44,14 @@ async function fetchDashboard() {
       .limit(8),
     supabase
       .from("limites_globais")
-      .select("valor")
+      .select("valor, mes_referencia")
       .in("mes_referencia", [mesRef, "default"]),
   ]);
 
-  const limiteRows = (limiteRow.data ?? []) as Array<{ valor: number | string; mes_referencia?: string }>;
-  // The query selects only `valor`; fetch both to prefer month-specific.
-  const limiteBaseFinal = Number(limiteRows[0]?.valor ?? LIMITE_FALLBACK);
+  const limiteRows = (limiteRow.data ?? []) as Array<{ valor: number | string; mes_referencia: string }>;
+  const mesEspecifico = limiteRows.find((r) => r.mes_referencia === mesRef);
+  const padrao = limiteRows.find((r) => r.mes_referencia === "default");
+  const limiteBaseFinal = Number(mesEspecifico?.valor ?? padrao?.valor ?? LIMITE_FALLBACK);
 
   const totalMes = (autoMes.data ?? []).reduce(
     (s, a) => s + Number(a.total_autorizado ?? 0), 0
