@@ -205,7 +205,7 @@ function EditarAutorizacao() {
 
       const { data: updated, error: upErr } = await supabase
         .from("autorizacoes").update(patch).eq("id", aut.id)
-        .select("id, status, num_aut").single();
+        .select("id, status, num_aut, motivo_bloqueio").single();
       if (upErr) throw upErr;
       return updated;
     },
@@ -214,7 +214,9 @@ function EditarAutorizacao() {
       qc.invalidateQueries({ queryKey: ["autorizacao", id] });
       qc.invalidateQueries({ queryKey: ["autorizacao-itens", id] });
       if (a.status === "bloqueado") {
-        toast.warning(`${a.num_aut} agora está BLOQUEADA — limite mensal excedido.`);
+        toast.warning(`${a.num_aut} agora está BLOQUEADA`, {
+          description: a.motivo_bloqueio ?? "Limite mensal excedido.",
+        });
       } else {
         toast.success("Alterações salvas");
       }
