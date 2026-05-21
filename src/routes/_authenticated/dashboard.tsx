@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const LIMITE_BASE = 130000;
+const LIMITE_FALLBACK = 130000;
 const fmtMoney = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
