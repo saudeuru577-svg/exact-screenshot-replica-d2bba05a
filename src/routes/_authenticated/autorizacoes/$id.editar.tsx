@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -219,7 +220,7 @@ function EditarAutorizacao() {
       }
       navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const handleSalvar = async () => {

@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -184,7 +185,7 @@ function NovoAcrescimo() {
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       navigate({ to: "/dashboard" });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   if (!podeCriar) {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, FileText, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { signedUrl, downloadBlobUrl } from "@/lib/autorizacao-storage";
@@ -90,7 +91,7 @@ function VisualizarAutorizacao() {
       const url = await signedUrl(path);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(formatSupabaseError(e));
     }
   };
 

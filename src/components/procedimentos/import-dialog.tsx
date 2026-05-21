@@ -3,6 +3,7 @@ import * as XLSX from "xlsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Upload, Download, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
@@ -158,7 +159,7 @@ export function ImportProcedimentosDialog({
       setRows([]); setFileName("");
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const reset = () => { setRows([]); setFileName(""); };

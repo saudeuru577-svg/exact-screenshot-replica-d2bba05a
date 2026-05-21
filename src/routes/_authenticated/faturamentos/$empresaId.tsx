@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, Check, XCircle, StopCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -130,7 +131,7 @@ function ConferenciaFaturamento() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const glosarMut = useMutation({
@@ -150,7 +151,7 @@ function ConferenciaFaturamento() {
       invalidate();
       toast.success("Glosa registrada");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const finalizarMut = useMutation({
@@ -169,7 +170,7 @@ function ConferenciaFaturamento() {
       toast.success("Faturamento finalizado");
       navigate({ to: "/faturamentos" });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const [glosaItem, setGlosaItem] = useState<Item | null>(null);
@@ -444,7 +445,7 @@ function GlosaDialog({
       setPopOpen(false);
       toast.success("Motivo cadastrado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const motivoLabel = motivos.find((m) => m.id === motivoId)?.descricao;

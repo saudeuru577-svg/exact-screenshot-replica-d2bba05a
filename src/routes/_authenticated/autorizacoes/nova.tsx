@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -235,7 +236,7 @@ function NewPacienteSheet({ open, onOpenChange, onCreated }: {
       qc.invalidateQueries({ queryKey: ["paciente-search"] });
       onCreated(p);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -718,7 +719,7 @@ function SubmitButton(props: {
       }
       navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

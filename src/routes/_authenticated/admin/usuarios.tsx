@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 import type { PerfilUsuario } from "@/hooks/use-auth";
 import { PermissoesDialog } from "@/components/admin/permissoes-dialog";
 
@@ -52,7 +53,7 @@ function UsuariosPage() {
       toast.success("Usuário atualizado");
       qc.invalidateQueries({ queryKey: ["usuarios"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (
@@ -175,7 +176,7 @@ function NovoUsuarioDialog({ onClose }: { onClose: () => void }) {
       onClose();
       setNome(""); setEmail(""); setPassword(""); setPerfil("atendente");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

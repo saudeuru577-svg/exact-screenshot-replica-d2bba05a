@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -89,7 +90,7 @@ function PacienteDetalhe() {
       qc.invalidateQueries({ queryKey: ["pacientes"] });
       setEditMode(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   if (isLoading) return <div className="p-10 text-center"><Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" /></div>;

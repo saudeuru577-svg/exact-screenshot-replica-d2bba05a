@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Search, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -91,7 +92,7 @@ function UbsPage() {
       qc.invalidateQueries({ queryKey: ["ubs"] });
       setOpen(false); setEditing(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

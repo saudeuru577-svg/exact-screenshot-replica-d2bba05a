@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Loader2, Eye, Pencil, FileText, Trash2 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -76,7 +77,7 @@ function AutorizacoesList() {
       toast.success("Autorização excluída");
       qc.invalidateQueries({ queryKey: ["autorizacoes"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const handleDelete = async (a: Aut) => {
@@ -100,7 +101,7 @@ function AutorizacoesList() {
       if (!w) toast.error("Permita pop-ups para abrir o PDF");
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(formatSupabaseError(e));
     }
   };
 
