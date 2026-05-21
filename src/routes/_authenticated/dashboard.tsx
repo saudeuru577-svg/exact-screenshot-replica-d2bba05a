@@ -99,7 +99,7 @@ function DashboardPage() {
               <KpiCard
                 label="Limite atual"
                 value={fmtMoney(data.limiteAtual)}
-                hint={`Base ${fmtMoney(LIMITE_BASE)} + acréscimos`}
+                hint={`Base ${fmtMoney(data.limiteBase)} + acréscimos`}
                 icon={Wallet}
               />
               <KpiCard
