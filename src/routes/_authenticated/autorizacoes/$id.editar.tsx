@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -204,7 +205,7 @@ function EditarAutorizacao() {
 
       const { data: updated, error: upErr } = await supabase
         .from("autorizacoes").update(patch).eq("id", aut.id)
-        .select("id, status, num_aut").single();
+        .select("id, status, num_aut, motivo_bloqueio").single();
       if (upErr) throw upErr;
       return updated;
     },
@@ -213,13 +214,15 @@ function EditarAutorizacao() {
       qc.invalidateQueries({ queryKey: ["autorizacao", id] });
       qc.invalidateQueries({ queryKey: ["autorizacao-itens", id] });
       if (a.status === "bloqueado") {
-        toast.warning(`${a.num_aut} agora está BLOQUEADA — limite mensal excedido.`);
+        toast.warning(`${a.num_aut} agora está BLOQUEADA`, {
+          description: a.motivo_bloqueio ?? "Limite mensal excedido.",
+        });
       } else {
         toast.success("Alterações salvas");
       }
       navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const handleSalvar = async () => {

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 import type { PerfilUsuario } from "@/hooks/use-auth";
 import { TELAS, temAcessoPadrao } from "@/lib/telas";
 import { usePermissoesUsuario } from "@/hooks/use-permissoes";
@@ -99,7 +100,7 @@ export function PermissoesDialog({ open, onClose, usuario }: Props) {
       qc.invalidateQueries({ queryKey: ["permissoes_usuario", usuario?.id] });
       onClose();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   if (!usuario) return null;

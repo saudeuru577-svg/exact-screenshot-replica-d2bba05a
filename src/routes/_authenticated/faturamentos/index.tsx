@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, Search, Play, FileCheck2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -89,7 +90,7 @@ function FaturamentosList() {
     onSuccess: (_id, empresaId) => {
       navigate({ to: "/faturamentos/$empresaId", params: { empresaId }, search: { mes } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

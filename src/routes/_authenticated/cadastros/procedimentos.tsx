@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Search, Pencil, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { GrupoCombobox } from "@/components/ui/grupo-combobox";
 import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
@@ -127,7 +128,7 @@ function ProcedimentosPage() {
       qc.invalidateQueries({ queryKey: ["procedimentos"] });
       setOpen(false); setEditing(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const toggleAtivo = useMutation({
@@ -137,7 +138,7 @@ function ProcedimentosPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["procedimentos"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

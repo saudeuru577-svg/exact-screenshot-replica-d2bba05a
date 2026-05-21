@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -235,7 +236,7 @@ function NewPacienteSheet({ open, onOpenChange, onCreated }: {
       qc.invalidateQueries({ queryKey: ["paciente-search"] });
       onCreated(p);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -702,7 +703,7 @@ function SubmitButton(props: {
         if (upErr) throw upErr;
 
         // Re-read for status (trigger may have set 'bloqueado')
-        const { data: final } = await supabase.from("autorizacoes").select("id, status, num_aut").eq("id", autId).single();
+        const { data: final } = await supabase.from("autorizacoes").select("id, status, num_aut, motivo_bloqueio").eq("id", autId).single();
         return final!;
       } catch (e) {
         await removeFiles(uploaded).catch(() => {});
@@ -712,13 +713,15 @@ function SubmitButton(props: {
     onSuccess: (a) => {
       qc.invalidateQueries({ queryKey: ["autorizacoes"] });
       if (a.status === "bloqueado") {
-        toast.warning(`${a.num_aut} criada como BLOQUEADA — limite mensal excedido.`);
+        toast.warning(`${a.num_aut} criada como BLOQUEADA`, {
+          description: a.motivo_bloqueio ?? "Limite mensal excedido.",
+        });
       } else {
         toast.success(`Autorização ${a.num_aut} emitida`);
       }
       navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

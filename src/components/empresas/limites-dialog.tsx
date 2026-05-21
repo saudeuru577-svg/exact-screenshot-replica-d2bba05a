@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/format";
@@ -56,7 +57,7 @@ export function LimitesEmpresaDialog({ open, onOpenChange, empresaId, empresaNom
       qc.invalidateQueries({ queryKey: ["limite-emp"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const remove = useMutation({
@@ -65,7 +66,7 @@ export function LimitesEmpresaDialog({ open, onOpenChange, empresaId, empresaNom
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["limites-empresa", empresaId] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

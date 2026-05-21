@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Search, Pencil, Loader2, Wallet } from "lucide-react";
 import { LimitesEmpresaDialog } from "@/components/empresas/limites-dialog";
 import { toast } from "sonner";
+import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
@@ -129,7 +130,7 @@ function EmpresasPage() {
       qc.invalidateQueries({ queryKey: ["empresas"] });
       setOpen(false); setEditing(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   const toggleAtiva = useMutation({
@@ -139,7 +140,7 @@ function EmpresasPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["empresas"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
 
   return (

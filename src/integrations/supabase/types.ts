@@ -80,6 +80,7 @@ export type Database = {
           empresa_id: string
           foto_requisicao: string | null
           id: string
+          motivo_bloqueio: string | null
           num_aut: string
           paciente_id: string
           pdf_autorizacao: string
@@ -99,6 +100,7 @@ export type Database = {
           empresa_id: string
           foto_requisicao?: string | null
           id?: string
+          motivo_bloqueio?: string | null
           num_aut: string
           paciente_id: string
           pdf_autorizacao: string
@@ -118,6 +120,7 @@ export type Database = {
           empresa_id?: string
           foto_requisicao?: string | null
           id?: string
+          motivo_bloqueio?: string | null
           num_aut?: string
           paciente_id?: string
           pdf_autorizacao?: string
@@ -451,6 +454,30 @@ export type Database = {
           criado_em?: string
           criado_por?: string | null
           empresa_id?: string
+          id?: string
+          mes_referencia?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      limites_globais: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          id: string
+          mes_referencia: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          mes_referencia: string
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
           id?: string
           mes_referencia?: string
           valor?: number
