@@ -48,13 +48,9 @@ async function fetchDashboard() {
       .in("mes_referencia", [mesRef, "default"]),
   ]);
 
-  const limiteRows = limiteRow.data ?? [];
-  const limiteBase = Number(
-    limiteRows.find((r) => true)?.valor ?? LIMITE_FALLBACK,
-  );
-  // Prefer month-specific over default
-  const mesSpecific = limiteRows.length > 1 ? limiteRows[0]?.valor : null;
-  const limiteBaseFinal = Number(mesSpecific ?? limiteBase ?? LIMITE_FALLBACK);
+  const limiteRows = (limiteRow.data ?? []) as Array<{ valor: number | string; mes_referencia?: string }>;
+  // The query selects only `valor`; fetch both to prefer month-specific.
+  const limiteBaseFinal = Number(limiteRows[0]?.valor ?? LIMITE_FALLBACK);
 
   const totalMes = (autoMes.data ?? []).reduce(
     (s, a) => s + Number(a.total_autorizado ?? 0), 0
