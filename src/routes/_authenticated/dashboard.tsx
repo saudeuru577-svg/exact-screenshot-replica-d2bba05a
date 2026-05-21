@@ -25,7 +25,7 @@ async function fetchDashboard() {
   const fim = `${ano}-${mes}-${String(fimDate.getDate()).padStart(2, "0")}`;
   const mesRef = `${ano}-${mes}`;
 
-  const [autoMes, acres, ultimas] = await Promise.all([
+  const [autoMes, acres, ultimas, limiteRow] = await Promise.all([
     supabase
       .from("autorizacoes")
       .select("total_autorizado, status")
@@ -42,7 +42,19 @@ async function fetchDashboard() {
       .select("id, num_aut, data_autorizacao, total_autorizado, status")
       .order("criado_em", { ascending: false })
       .limit(8),
+    supabase
+      .from("limites_globais")
+      .select("valor")
+      .in("mes_referencia", [mesRef, "default"]),
   ]);
+
+  const limiteRows = limiteRow.data ?? [];
+  const limiteBase = Number(
+    limiteRows.find((r) => true)?.valor ?? LIMITE_FALLBACK,
+  );
+  // Prefer month-specific over default
+  const mesSpecific = limiteRows.length > 1 ? limiteRows[0]?.valor : null;
+  const limiteBaseFinal = Number(mesSpecific ?? limiteBase ?? LIMITE_FALLBACK);
 
   const totalMes = (autoMes.data ?? []).reduce(
     (s, a) => s + Number(a.total_autorizado ?? 0), 0
@@ -50,10 +62,10 @@ async function fetchDashboard() {
   const acrescimos = (acres.data ?? []).reduce(
     (s, a) => s + Math.max(0, Number(a.novo_limite ?? 0) - Number(a.limite_atual ?? 0)), 0
   );
-  const limiteAtual = LIMITE_BASE + acrescimos;
+  const limiteAtual = limiteBaseFinal + acrescimos;
   const saldo = limiteAtual - totalMes;
 
-  return { totalMes, acrescimos, limiteAtual, saldo, ultimas: ultimas.data ?? [] };
+  return { totalMes, acrescimos, limiteAtual, limiteBase: limiteBaseFinal, saldo, ultimas: ultimas.data ?? [] };
 }
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
