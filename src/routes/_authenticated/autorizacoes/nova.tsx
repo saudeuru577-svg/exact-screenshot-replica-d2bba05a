@@ -262,13 +262,8 @@ function StepOrigem({
   sintomas: string; setSintomas: (v: string) => void;
   foto: File | null; setFoto: (v: File | null) => void;
 }) {
-  const { data: ubsList = [] } = useQuery({
-    queryKey: ["ubs-all"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ubs").select("id, nome_posto").order("nome_posto");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: ubsList = [] } = useUbsResumo();
+
   const { data: profs = [] } = useQuery({
     queryKey: ["profs-by-ubs", ubsId],
     queryFn: async () => {
