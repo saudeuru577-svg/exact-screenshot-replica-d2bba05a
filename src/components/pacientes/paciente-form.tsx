@@ -1,11 +1,9 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { maskSUS } from "@/lib/format";
+import { useBairrosAtivos } from "@/hooks/queries/use-bairros";
+import { usePovoadosAtivos } from "@/hooks/queries/use-povoados";
 
 const ZONAS = ["urbana", "rural"] as const;
 const SEXOS = ["masculino", "feminino"] as const;
