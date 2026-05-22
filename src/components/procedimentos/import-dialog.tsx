@@ -51,15 +51,8 @@ export function ImportProcedimentosDialog({
     enabled: open,
   });
 
-  const { data: existentes = [] } = useQuery({
-    queryKey: ["procedimentos-existentes"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("procedimentos").select("sigla, empresa_id");
-      if (error) throw error;
-      return (data ?? []) as Proc[];
-    },
-    enabled: open,
-  });
+  const { data: existentes = [] } = useProcedimentosExistentes({ enabled: open });
+
 
   const empresaPorCnpj = useMemo(() => {
     const m = new Map<string, Empresa>();
