@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useUbsResumo } from "@/hooks/queries/use-ubs";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
