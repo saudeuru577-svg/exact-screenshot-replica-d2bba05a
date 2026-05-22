@@ -62,13 +62,8 @@ function ProfissionaisPage() {
   const [editing, setEditing] = useState<Profissional | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { data: ubs = [] } = useQuery({
-    queryKey: ["ubs-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ubs").select("id, nome_posto").order("nome_posto");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: ubs = [] } = useUbsResumo();
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["profissionais"],
