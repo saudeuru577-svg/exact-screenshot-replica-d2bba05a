@@ -51,20 +51,14 @@ const EMPTY: FormValues = {
 
 function UbsPage() {
   const { isAdmin } = usePerfil();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [zonaFiltro, setZonaFiltro] = useState("todas");
   const [editing, setEditing] = useState<UBS | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["ubs"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ubs").select("*").order("nome_posto");
-      if (error) throw error;
-      return data as UBS[];
-    },
-  });
+  const { data: rows = [], isLoading } = useUbs();
+  const data = rows as unknown as UBS[];
+  const { create, update } = useUbsMutations();
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
@@ -75,24 +69,21 @@ function UbsPage() {
     });
   }, [data, busca, zonaFiltro]);
 
-  const save = useMutation({
-    mutationFn: async (v: FormValues) => {
-      const payload = { ...v, contato: v.contato || null };
-      if (editing) {
-        const { error } = await supabase.from("ubs").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("ubs").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
+  const saving = create.isPending || update.isPending;
+  const handleSave = (v: FormValues) => {
+    const payload = { ...v, contato: v.contato || null };
+    const onSuccess = () => {
       toast.success(editing ? "UBS atualizada" : "UBS cadastrada");
-      qc.invalidateQueries({ queryKey: ["ubs"] });
       setOpen(false); setEditing(null);
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+    };
+    const onError = (e: Error) => toast.error(formatSupabaseError(e));
+    if (editing) {
+      update.mutate({ id: editing.id, payload }, { onSuccess, onError });
+    } else {
+      create.mutate(payload, { onSuccess, onError });
+    }
+  };
+
 
   return (
     <>
