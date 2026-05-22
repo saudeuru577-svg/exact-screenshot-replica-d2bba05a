@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useUbsResumo } from "@/hooks/queries/use-ubs";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR, ageFromDob } from "@/lib/format";
