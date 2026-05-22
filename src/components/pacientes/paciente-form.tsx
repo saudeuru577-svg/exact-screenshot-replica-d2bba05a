@@ -71,22 +71,9 @@ export function PacienteFormFields({
     if (zona === "rural") form.setValue("bairro_id", null);
   }, [zona, form]);
 
-  const { data: bairros = [] } = useQuery({
-    queryKey: ["bairros-ativos"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("bairros")
-        .select("id, nome").eq("ativo", true).order("nome");
-      if (error) throw error; return data;
-    },
-  });
-  const { data: povoados = [] } = useQuery({
-    queryKey: ["povoados-ativos"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("povoados")
-        .select("id, nome").eq("ativo", true).order("nome");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: bairros = [] } = useBairrosAtivos();
+  const { data: povoados = [] } = usePovoadosAtivos();
+
 
   return (
     <Form {...form}>
