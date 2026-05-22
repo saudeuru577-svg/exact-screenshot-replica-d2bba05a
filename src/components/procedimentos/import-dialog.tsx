@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useProcedimentosExistentes, useProcedimentosMutations } from "@/hooks/queries/use-procedimentos";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
