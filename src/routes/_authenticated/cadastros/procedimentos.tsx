@@ -201,7 +201,7 @@ function ProcedimentosPage() {
                   <TableCell className="text-right font-medium tabular-nums">{brl(p.valor_unitario)}</TableCell>
                   <TableCell>
                     {isAdmin ? (
-                      <Switch checked={p.ativo} onCheckedChange={() => toggleAtivo.mutate(p)} />
+                      <Switch checked={p.ativo} onCheckedChange={() => handleToggleAtivo(p)} />
                     ) : (
                       <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
                     )}
