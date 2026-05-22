@@ -12,6 +12,7 @@ import { GrupoCombobox } from "@/components/ui/grupo-combobox";
 import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useProcedimentos, useProcedimentosMutations, type ProcedimentoComEmpresa } from "@/hooks/queries/use-procedimentos";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
