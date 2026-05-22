@@ -139,7 +139,7 @@ function UbsPage() {
       </PageBody>
 
       <UbsForm open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
-        ubs={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} />
+        ubs={editing} onSubmit={handleSave} saving={saving} />
     </>
   );
 }
