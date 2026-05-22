@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useUbsResumo } from "@/hooks/queries/use-ubs";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,13 +63,8 @@ function ProfissionaisPage() {
   const [editing, setEditing] = useState<Profissional | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { data: ubs = [] } = useQuery({
-    queryKey: ["ubs-list"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ubs").select("id, nome_posto").order("nome_posto");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: ubs = [] } = useUbsResumo();
+
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["profissionais"],

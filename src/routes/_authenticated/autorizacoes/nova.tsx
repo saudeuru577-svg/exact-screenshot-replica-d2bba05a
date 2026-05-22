@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useUbsResumo } from "@/hooks/queries/use-ubs";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR, ageFromDob } from "@/lib/format";
@@ -261,13 +262,8 @@ function StepOrigem({
   sintomas: string; setSintomas: (v: string) => void;
   foto: File | null; setFoto: (v: File | null) => void;
 }) {
-  const { data: ubsList = [] } = useQuery({
-    queryKey: ["ubs-all"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ubs").select("id, nome_posto").order("nome_posto");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: ubsList = [] } = useUbsResumo();
+
   const { data: profs = [] } = useQuery({
     queryKey: ["profs-by-ubs", ubsId],
     queryFn: async () => {
