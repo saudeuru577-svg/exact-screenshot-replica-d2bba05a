@@ -224,7 +224,7 @@ function ProcedimentosPage() {
         open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
         proc={editing} empresas={empresas.filter((e) => e.ativa || e.id === editing?.empresa_id)}
         grupos={grupos}
-        onSubmit={(v) => save.mutate(v)} saving={save.isPending}
+        onSubmit={handleSave} saving={saving}
       />
       <ImportProcedimentosDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
