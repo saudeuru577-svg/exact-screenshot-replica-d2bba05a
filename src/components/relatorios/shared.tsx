@@ -163,21 +163,9 @@ export function CampoProcedimento({
 }: { value: string; label: string; onChange: (id: string, label: string) => void }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["rel-procedimentos", q],
-    enabled: open,
-    queryFn: async () => {
-      let query = supabase.from("procedimentos")
-        .select("id, nome, sigla").eq("ativo", true).order("nome").limit(30);
-      if (q.trim()) {
-        const term = q.trim();
-        query = query.or(`nome.ilike.%${term}%,sigla.ilike.%${term}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as { id: string; nome: string; sigla: string }[];
-    },
-  });
+  const { data = [], isLoading } = useProcedimentosBusca(q, { enabled: open });
+
+
 
   return (
     <div className="space-y-1">
