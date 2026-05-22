@@ -1,11 +1,9 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { maskSUS } from "@/lib/format";
+import { useBairrosAtivos } from "@/hooks/queries/use-bairros";
+import { usePovoadosAtivos } from "@/hooks/queries/use-povoados";
 
 const ZONAS = ["urbana", "rural"] as const;
 const SEXOS = ["masculino", "feminino"] as const;
@@ -71,22 +71,9 @@ export function PacienteFormFields({
     if (zona === "rural") form.setValue("bairro_id", null);
   }, [zona, form]);
 
-  const { data: bairros = [] } = useQuery({
-    queryKey: ["bairros-ativos"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("bairros")
-        .select("id, nome").eq("ativo", true).order("nome");
-      if (error) throw error; return data;
-    },
-  });
-  const { data: povoados = [] } = useQuery({
-    queryKey: ["povoados-ativos"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("povoados")
-        .select("id, nome").eq("ativo", true).order("nome");
-      if (error) throw error; return data;
-    },
-  });
+  const { data: bairros = [] } = useBairrosAtivos();
+  const { data: povoados = [] } = usePovoadosAtivos();
+
 
   return (
     <Form {...form}>

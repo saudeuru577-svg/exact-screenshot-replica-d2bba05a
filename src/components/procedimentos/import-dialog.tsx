@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useProcedimentosExistentes, useProcedimentosMutations } from "@/hooks/queries/use-procedimentos";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,15 +51,8 @@ export function ImportProcedimentosDialog({
     enabled: open,
   });
 
-  const { data: existentes = [] } = useQuery({
-    queryKey: ["procedimentos-existentes"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("procedimentos").select("sigla, empresa_id");
-      if (error) throw error;
-      return (data ?? []) as Proc[];
-    },
-    enabled: open,
-  });
+  const { data: existentes = [] } = useProcedimentosExistentes({ enabled: open });
+
 
   const empresaPorCnpj = useMemo(() => {
     const m = new Map<string, Empresa>();
@@ -135,6 +129,7 @@ export function ImportProcedimentosDialog({
   const duplicadas = rows.filter((r) => r.status === "duplicada");
   const erros = rows.filter((r) => r.status === "erro");
 
+  const procMut = useProcedimentosMutations();
   const importar = useMutation({
     mutationFn: async () => {
       if (validas.length === 0) return;
@@ -148,19 +143,18 @@ export function ImportProcedimentosDialog({
         nomes_alternativos: r.nomes_alternativos || null,
         ativo: true,
       }));
-      const { error } = await supabase.from("procedimentos").insert(payload);
-      if (error) throw error;
+      await procMut.createMany.mutateAsync(payload);
     },
     onSuccess: () => {
       toast.success(`${validas.length} procedimento(s) importado(s)`);
-      qc.invalidateQueries({ queryKey: ["procedimentos"] });
+      // procMut.createMany já invalida procedimentosKeys.all
       qc.invalidateQueries({ queryKey: ["procedimentos-grupos"] });
-      qc.invalidateQueries({ queryKey: ["procedimentos-existentes"] });
       setRows([]); setFileName("");
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
+
 
   const reset = () => { setRows([]); setFileName(""); };
 

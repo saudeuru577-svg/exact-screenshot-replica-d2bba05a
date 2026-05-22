@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Plus, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
+import { useBairros, useBairrosMutations } from "@/hooks/queries/use-bairros";
+import { usePovoados, usePovoadosMutations } from "@/hooks/queries/use-povoados";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +54,6 @@ function TerritorioPage() {
 function Lista({ tabela, titulo }: { tabela: Tabela; titulo: string }) {
   const { isAdmin } = usePerfil();
   const userId = useAuth((s) => s.user?.id);
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [showInativos, setShowInativos] = useState(false);
   const [open, setOpen] = useState(false);
@@ -61,14 +61,14 @@ function Lista({ tabela, titulo }: { tabela: Tabela; titulo: string }) {
   const [nome, setNome] = useState("");
   const [ativo, setAtivo] = useState(true);
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: [tabela],
-    queryFn: async () => {
-      const { data, error } = await supabase.from(tabela).select("id,nome,ativo,criado_por").order("nome");
-      if (error) throw error;
-      return data as Item[];
-    },
-  });
+  const bairrosQ = useBairros();
+  const povoadosQ = usePovoados();
+  const isLoading = tabela === "bairros" ? bairrosQ.isLoading : povoadosQ.isLoading;
+  const data = (tabela === "bairros" ? bairrosQ.data ?? [] : povoadosQ.data ?? []) as unknown as Item[];
+
+  const bairrosMut = useBairrosMutations();
+  const povoadosMut = usePovoadosMutations();
+  const mut = tabela === "bairros" ? bairrosMut : povoadosMut;
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
@@ -79,19 +79,14 @@ function Lista({ tabela, titulo }: { tabela: Tabela; titulo: string }) {
     mutationFn: async () => {
       if (!nome.trim()) throw new Error("Informe o nome");
       if (editing) {
-        const { error } = await supabase.from(tabela)
-          .update({ nome: nome.trim(), ativo }).eq("id", editing.id);
-        if (error) throw error;
+        await mut.update.mutateAsync({ id: editing.id, payload: { nome: nome.trim(), ativo } });
       } else {
         if (!userId) throw new Error("Sessão inválida");
-        const { error } = await supabase.from(tabela)
-          .insert({ nome: nome.trim(), ativo, criado_por: userId });
-        if (error) throw error;
+        await mut.create.mutateAsync({ nome: nome.trim(), ativo, criado_por: userId });
       }
     },
     onSuccess: () => {
       toast.success(editing ? `${titulo} atualizado` : `${titulo} cadastrado`);
-      qc.invalidateQueries({ queryKey: [tabela] });
       setOpen(false); setEditing(null); setNome(""); setAtivo(true);
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
@@ -99,11 +94,10 @@ function Lista({ tabela, titulo }: { tabela: Tabela; titulo: string }) {
 
   const toggle = useMutation({
     mutationFn: async (item: Item) => {
-      const { error } = await supabase.from(tabela).update({ ativo: !item.ativo }).eq("id", item.id);
-      if (error) throw error;
+      await mut.update.mutateAsync({ id: item.id, payload: { ativo: !item.ativo } });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [tabela] }),
   });
+
 
   function openNew() { setEditing(null); setNome(""); setAtivo(true); setOpen(true); }
   function openEdit(it: Item) { setEditing(it); setNome(it.nome); setAtivo(it.ativo); setOpen(true); }

@@ -12,6 +12,7 @@ import { GrupoCombobox } from "@/components/ui/grupo-combobox";
 import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useProcedimentos, useProcedimentosMutations, type ProcedimentoComEmpresa } from "@/hooks/queries/use-procedimentos";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,17 +81,9 @@ function ProcedimentosPage() {
     },
   });
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["procedimentos"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("procedimentos")
-        .select("*, empresa:empresas(nome_fantasia)")
-        .order("nome");
-      if (error) throw error;
-      return data as unknown as Procedimento[];
-    },
-  });
+  const { data: rows = [], isLoading } = useProcedimentos();
+  const data = rows as unknown as Procedimento[];
+  const procMut = useProcedimentosMutations();
 
   const grupos = useMemo(
     () => Array.from(new Set(data.map((p) => p.grupo).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
@@ -109,37 +102,28 @@ function ProcedimentosPage() {
     });
   }, [data, busca, empFiltro, tipoFiltro, grupoFiltro, showInativos]);
 
-  const save = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const payload = {
-        ...values,
-        nomes_alternativos: values.nomes_alternativos || null,
-      };
-      if (editing) {
-        const { error } = await supabase.from("procedimentos").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("procedimentos").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
+  const saving = procMut.create.isPending || procMut.update.isPending;
+  const handleSave = (values: FormValues) => {
+    const payload = { ...values, nomes_alternativos: values.nomes_alternativos || null };
+    const onSuccess = () => {
       toast.success(editing ? "Procedimento atualizado" : "Procedimento cadastrado");
-      qc.invalidateQueries({ queryKey: ["procedimentos"] });
       setOpen(false); setEditing(null);
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+    };
+    const onError = (e: Error) => toast.error(formatSupabaseError(e));
+    if (editing) {
+      procMut.update.mutate({ id: editing.id, payload }, { onSuccess, onError });
+    } else {
+      procMut.create.mutate(payload, { onSuccess, onError });
+    }
+  };
 
-  const toggleAtivo = useMutation({
-    mutationFn: async (p: Procedimento) => {
-      const { error } = await supabase.from("procedimentos")
-        .update({ ativo: !p.ativo }).eq("id", p.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["procedimentos"] }),
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleToggleAtivo = (p: Procedimento) => {
+    procMut.toggleAtivo.mutate(
+      { id: p.id, ativo: !p.ativo },
+      { onError: (e: Error) => toast.error(formatSupabaseError(e)) },
+    );
+  };
+
 
   return (
     <>
@@ -217,7 +201,7 @@ function ProcedimentosPage() {
                   <TableCell className="text-right font-medium tabular-nums">{brl(p.valor_unitario)}</TableCell>
                   <TableCell>
                     {isAdmin ? (
-                      <Switch checked={p.ativo} onCheckedChange={() => toggleAtivo.mutate(p)} />
+                      <Switch checked={p.ativo} onCheckedChange={() => handleToggleAtivo(p)} />
                     ) : (
                       <Badge variant={p.ativo ? "default" : "secondary"}>{p.ativo ? "Ativo" : "Inativo"}</Badge>
                     )}
@@ -240,7 +224,7 @@ function ProcedimentosPage() {
         open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
         proc={editing} empresas={empresas.filter((e) => e.ativa || e.id === editing?.empresa_id)}
         grupos={grupos}
-        onSubmit={(v) => save.mutate(v)} saving={save.isPending}
+        onSubmit={handleSave} saving={saving}
       />
       <ImportProcedimentosDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
