@@ -168,7 +168,7 @@ function ProfissionaisPage() {
       </PageBody>
 
       <ProfForm open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
-        prof={editing} ubs={ubs} onSubmit={(v) => save.mutate(v)} saving={save.isPending} />
+        prof={editing} ubs={ubs} onSubmit={handleSave} saving={saving} />
     </>
   );
 }
