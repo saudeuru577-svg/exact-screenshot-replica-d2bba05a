@@ -1,9 +1,9 @@
+// Refatorado para usar usePacientesLista (5min staleTime).
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Loader2, Eye } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { usePacientesLista } from "@/hooks/queries/use-pacientes";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,29 +21,14 @@ export const Route = createFileRoute("/_authenticated/pacientes/")({
   component: PacientesList,
 });
 
-type Paciente = {
-  id: string; nome: string; dtn: string; sexo: "masculino" | "feminino";
-  nome_da_mae: string; cartao_sus: string | null; zona: "urbana" | "rural";
-  bairro: { nome: string } | null; povoado: { nome: string } | null;
-};
-
 function PacientesList() {
   const { has } = usePerfil();
   const podeCriar = has(["administrador", "atendente"]);
   const [busca, setBusca] = useState("");
   const [zonaFiltro, setZonaFiltro] = useState("todas");
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["pacientes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pacientes")
-        .select("id, nome, dtn, sexo, nome_da_mae, cartao_sus, zona, bairro:bairros(nome), povoado:povoados(nome)")
-        .order("nome").limit(500);
-      if (error) throw error;
-      return data as unknown as Paciente[];
-    },
-  });
+  const { data = [], isLoading } = usePacientesLista();
+
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
