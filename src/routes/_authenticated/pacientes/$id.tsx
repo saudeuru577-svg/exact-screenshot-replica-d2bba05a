@@ -1,13 +1,15 @@
+// Refatorado para usar usePaciente, usePacienteAutorizacoes e usePacientesMutations.
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
+import {
+  usePaciente, usePacienteAutorizacoes, usePacientesMutations,
+} from "@/hooks/queries/use-pacientes";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,33 +36,13 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 function PacienteDetalhe() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const userId = useAuth((s) => s.user?.id);
   const { isAdmin, has } = usePerfil();
   const [editMode, setEditMode] = useState(false);
 
-  const { data: p, isLoading } = useQuery({
-    queryKey: ["paciente", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pacientes").select("*, bairro:bairros(nome), povoado:povoados(nome)")
-        .eq("id", id).single();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: autorizacoes = [] } = useQuery({
-    queryKey: ["paciente-aut", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("autorizacoes")
-        .select("id, num_aut, data_autorizacao, total_autorizado, status")
-        .eq("paciente_id", id).order("data_autorizacao", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: p, isLoading } = usePaciente(id);
+  const { data: autorizacoes = [] } = usePacienteAutorizacoes(id);
+  const { update } = usePacientesMutations();
 
   const podeEditar = !!p && (isAdmin || (has(["atendente"]) && p.criado_por === userId));
 
@@ -71,30 +53,33 @@ function PacienteDetalhe() {
     rua: p.rua ?? "", numero: p.numero ?? "", ponto_referencia: p.ponto_referencia ?? "",
   } : {});
 
-  const update = useMutation({
-    mutationFn: async (v: PacienteForm) => {
-      const { error } = await supabase.from("pacientes").update({
-        nome: v.nome, nome_da_mae: v.nome_da_mae, dtn: v.dtn, sexo: v.sexo,
-        cartao_sus: v.cartao_sus ? v.cartao_sus.replace(/\D/g, "") : null,
-        naturalidade: v.naturalidade || null, zona: v.zona,
-        bairro_id: v.zona === "urbana" ? v.bairro_id : null,
-        povoado_id: v.zona === "rural" ? v.povoado_id : null,
-        rua: v.rua || null, numero: v.numero || null,
-        ponto_referencia: v.ponto_referencia || null,
-      }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Paciente atualizado");
-      qc.invalidateQueries({ queryKey: ["paciente", id] });
-      qc.invalidateQueries({ queryKey: ["pacientes"] });
-      setEditMode(false);
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleUpdate = (v: PacienteForm) => {
+    update.mutate(
+      {
+        id,
+        payload: {
+          nome: v.nome, nome_da_mae: v.nome_da_mae, dtn: v.dtn, sexo: v.sexo,
+          cartao_sus: v.cartao_sus ? v.cartao_sus.replace(/\D/g, "") : null,
+          naturalidade: v.naturalidade || null, zona: v.zona,
+          bairro_id: v.zona === "urbana" ? v.bairro_id : null,
+          povoado_id: v.zona === "rural" ? v.povoado_id : null,
+          rua: v.rua || null, numero: v.numero || null,
+          ponto_referencia: v.ponto_referencia || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Paciente atualizado");
+          setEditMode(false);
+        },
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
 
   if (isLoading) return <div className="p-10 text-center"><Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" /></div>;
   if (!p) return <PageBody><div className="text-center text-muted-foreground py-10">Paciente não encontrado.</div></PageBody>;
+
 
   return (
     <>
@@ -113,7 +98,7 @@ function PacienteDetalhe() {
       <PageBody>
         {editMode ? (
           <div className="max-w-3xl space-y-4">
-            <PacienteFormFields form={form} onSubmit={(v) => update.mutate(v)} saving={update.isPending} submitLabel="Salvar alterações" />
+            <PacienteFormFields form={form} onSubmit={handleUpdate} saving={update.isPending} submitLabel="Salvar alterações" />
             <Button variant="ghost" onClick={() => setEditMode(false)}>Cancelar edição</Button>
           </div>
         ) : (

@@ -1,6 +1,6 @@
+// Refatorado para usar o hook useEmpresas + useEmpresasMutations (5min staleTime).
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { LimitesEmpresaDialog } from "@/components/empresas/limites-dialog";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
+import { useEmpresas, useEmpresasMutations, type EmpresaRow } from "@/hooks/queries/use-empresas";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,7 @@ const schema = z.object({
 );
 
 type FormValues = z.infer<typeof schema>;
-type Empresa = FormValues & { id: string; criado_em: string };
+type Empresa = EmpresaRow & FormValues;
 
 const EMPTY: FormValues = {
   nome_fantasia: "", razao_social: "", cnpj: "", tipo_servico: "laboratorio",
@@ -71,7 +71,6 @@ const EMPTY: FormValues = {
 
 function EmpresasPage() {
   const { isAdmin } = usePerfil();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState<string>("todos");
   const [showInativas, setShowInativas] = useState(false);
@@ -79,19 +78,13 @@ function EmpresasPage() {
   const [open, setOpen] = useState(false);
   const [limitesEmp, setLimitesEmp] = useState<Empresa | null>(null);
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["empresas"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("empresas").select("*").order("nome_fantasia");
-      if (error) throw error;
-      return data as Empresa[];
-    },
-  });
+  const { data: rows = [], isLoading } = useEmpresas();
+  const data = rows as unknown as Empresa[];
+  const { create, update, toggleAtiva } = useEmpresasMutations();
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    return data.filter((e) => {
+    return data.filter((e: Empresa) => {
       if (!showInativas && !e.ativa) return false;
       if (tipo !== "todos" && e.tipo_servico !== tipo) return false;
       if (t && !`${e.nome_fantasia} ${e.razao_social} ${e.cnpj}`.toLowerCase().includes(t)) return false;
@@ -99,49 +92,44 @@ function EmpresasPage() {
     });
   }, [data, busca, tipo, showInativas]);
 
-  const save = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const payload = {
-        ...values,
-        cnpj: values.cnpj.replace(/\D/g, ""),
-        inscricao_estadual: values.inscricao_estadual || null,
-        email: values.email || null,
-        telefone: values.telefone || null,
-        endereco: values.endereco || null,
-        bairro: values.bairro || null,
-        cidade: values.cidade || null,
-        estado: values.estado ? values.estado.toUpperCase() : null,
-        cep: values.cep || null,
-        responsavel_contrato: values.responsavel_contrato || null,
-        contrato_numero: values.contrato_numero || null,
-        contrato_inicio: values.contrato_inicio || null,
-        contrato_fim: values.contrato_fim || null,
-      };
-      if (editing) {
-        const { error } = await supabase.from("empresas").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("empresas").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
+  const handleSave = (values: FormValues) => {
+    const payload = {
+      ...values,
+      cnpj: values.cnpj.replace(/\D/g, ""),
+      inscricao_estadual: values.inscricao_estadual || null,
+      email: values.email || null,
+      telefone: values.telefone || null,
+      endereco: values.endereco || null,
+      bairro: values.bairro || null,
+      cidade: values.cidade || null,
+      estado: values.estado ? values.estado.toUpperCase() : null,
+      cep: values.cep || null,
+      responsavel_contrato: values.responsavel_contrato || null,
+      contrato_numero: values.contrato_numero || null,
+      contrato_inicio: values.contrato_inicio || null,
+      contrato_fim: values.contrato_fim || null,
+    };
+    const onOk = () => {
       toast.success(editing ? "Empresa atualizada" : "Empresa cadastrada");
-      qc.invalidateQueries({ queryKey: ["empresas"] });
       setOpen(false); setEditing(null);
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+    };
+    const onErr = (e: Error) => toast.error(formatSupabaseError(e));
+    if (editing) {
+      update.mutate({ id: editing.id, payload }, { onSuccess: onOk, onError: onErr });
+    } else {
+      create.mutate(payload, { onSuccess: onOk, onError: onErr });
+    }
+  };
 
-  const toggleAtiva = useMutation({
-    mutationFn: async (e: Empresa) => {
-      const { error } = await supabase.from("empresas")
-        .update({ ativa: !e.ativa }).eq("id", e.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["empresas"] }),
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const saving = create.isPending || update.isPending;
+
+  const handleToggleAtiva = (e: Empresa) => {
+    toggleAtiva.mutate(
+      { id: e.id, ativa: !e.ativa },
+      { onError: (err: Error) => toast.error(formatSupabaseError(err)) },
+    );
+  };
+
 
   return (
     <>
@@ -201,7 +189,7 @@ function EmpresasPage() {
                   </TableCell>
                   <TableCell>
                     {isAdmin ? (
-                      <Switch checked={e.ativa} onCheckedChange={() => toggleAtiva.mutate(e)} />
+                      <Switch checked={e.ativa} onCheckedChange={() => handleToggleAtiva(e)} />
                     ) : (
                       <Badge variant={e.ativa ? "default" : "secondary"}>{e.ativa ? "Ativa" : "Inativa"}</Badge>
                     )}
@@ -228,8 +216,8 @@ function EmpresasPage() {
       <EmpresaForm
         open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
         empresa={editing}
-        onSubmit={(v) => save.mutate(v)}
-        saving={save.isPending}
+        onSubmit={handleSave}
+        saving={saving}
       />
 
       {limitesEmp && (

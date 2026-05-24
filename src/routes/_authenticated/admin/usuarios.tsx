@@ -1,8 +1,12 @@
+// Refatorado: lista via useUsuarios (5min), toggle via useUsuariosMutations.
+// Criação ainda usa edge function admin-create-user; após sucesso invalida cache.
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2, Plus, UserCog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUsuarios, useUsuariosMutations, usuariosKeys } from "@/hooks/queries/use-usuarios";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,33 +32,22 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios")({
 const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro"];
 
 function UsuariosPage() {
-  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [permUser, setPermUser] = useState<{ id: string; nome: string; perfil: PerfilUsuario } | null>(null);
 
-  const { data: usuarios, isLoading } = useQuery({
-    queryKey: ["usuarios"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("id, nome, email, perfil, ativo, criado_em")
-        .order("criado_em", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: usuarios, isLoading } = useUsuarios();
+  const { toggleAtivo } = useUsuariosMutations();
 
-  const toggleAtivo = useMutation({
-    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await supabase.from("usuarios").update({ ativo }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Usuário atualizado");
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleToggleAtivo = (id: string, ativo: boolean) => {
+    toggleAtivo.mutate(
+      { id, ativo },
+      {
+        onSuccess: () => toast.success("Usuário atualizado"),
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
+
 
   return (
     <>
@@ -126,7 +119,7 @@ function UsuariosPage() {
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={u.ativo}
-                            onCheckedChange={(v) => toggleAtivo.mutate({ id: u.id, ativo: v })}
+                            onCheckedChange={(v) => handleToggleAtivo(u.id, v)}
                           />
                         </div>
                       </div>
@@ -172,7 +165,7 @@ function NovoUsuarioDialog({ onClose }: { onClose: () => void }) {
     },
     onSuccess: () => {
       toast.success("Usuário criado com sucesso");
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
+      qc.invalidateQueries({ queryKey: usuariosKeys.all });
       onClose();
       setNome(""); setEmail(""); setPassword(""); setPerfil("atendente");
     },
