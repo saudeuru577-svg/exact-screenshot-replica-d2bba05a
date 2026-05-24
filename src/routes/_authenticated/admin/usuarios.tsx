@@ -1,8 +1,12 @@
+// Refatorado: lista via useUsuarios (5min), toggle via useUsuariosMutations.
+// Criação ainda usa edge function admin-create-user; após sucesso invalida cache.
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2, Plus, UserCog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUsuarios, useUsuariosMutations, usuariosKeys } from "@/hooks/queries/use-usuarios";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
