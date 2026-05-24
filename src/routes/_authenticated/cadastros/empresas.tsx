@@ -1,6 +1,6 @@
+// Refatorado para usar o hook useEmpresas + useEmpresasMutations (5min staleTime).
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { LimitesEmpresaDialog } from "@/components/empresas/limites-dialog";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
+import { useEmpresas, useEmpresasMutations, type EmpresaRow } from "@/hooks/queries/use-empresas";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
