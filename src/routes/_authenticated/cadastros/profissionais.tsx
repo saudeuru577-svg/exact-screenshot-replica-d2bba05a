@@ -56,7 +56,6 @@ const EMPTY: FormValues = {
 
 function ProfissionaisPage() {
   const { isAdmin } = usePerfil();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [ubsFiltro, setUbsFiltro] = useState("todas");
   const [cargoFiltro, setCargoFiltro] = useState("todos");
@@ -65,20 +64,13 @@ function ProfissionaisPage() {
 
   const { data: ubs = [] } = useUbsResumo();
 
-
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["profissionais"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profissionais").select("*, ubs:ubs(nome_posto)").order("nome_profissional");
-      if (error) throw error;
-      return data as unknown as Profissional[];
-    },
-  });
+  const { data: rows = [], isLoading } = useProfissionaisComUbs();
+  const data = rows as unknown as Profissional[];
+  const { create, update } = useProfissionaisMutations();
 
   const filtered = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    return data.filter((p) => {
+    return data.filter((p: Profissional) => {
       if (ubsFiltro !== "todas" && p.ubs_id !== ubsFiltro) return false;
       if (cargoFiltro !== "todos" && p.cargo !== cargoFiltro) return false;
       if (t && !`${p.nome_profissional} ${p.numero_conselho} ${p.especialidade ?? ""}`.toLowerCase().includes(t)) return false;
@@ -86,29 +78,27 @@ function ProfissionaisPage() {
     });
   }, [data, busca, ubsFiltro, cargoFiltro]);
 
-  const save = useMutation({
-    mutationFn: async (v: FormValues) => {
-      const payload = {
-        ...v,
-        especialidade: v.especialidade || null,
-        contato: v.contato || null,
-        estado_conselho: v.estado_conselho.toUpperCase(),
-      };
-      if (editing) {
-        const { error } = await supabase.from("profissionais").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("profissionais").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
+  const handleSave = (v: FormValues) => {
+    const payload = {
+      ...v,
+      especialidade: v.especialidade || null,
+      contato: v.contato || null,
+      estado_conselho: v.estado_conselho.toUpperCase(),
+    };
+    const onOk = () => {
       toast.success(editing ? "Profissional atualizado" : "Profissional cadastrado");
-      qc.invalidateQueries({ queryKey: ["profissionais"] });
       setOpen(false); setEditing(null);
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+    };
+    const onErr = (e: Error) => toast.error(formatSupabaseError(e));
+    if (editing) {
+      update.mutate({ id: editing.id, payload }, { onSuccess: onOk, onError: onErr });
+    } else {
+      create.mutate(payload, { onSuccess: onOk, onError: onErr });
+    }
+  };
+
+  const saving = create.isPending || update.isPending;
+
 
   return (
     <>
