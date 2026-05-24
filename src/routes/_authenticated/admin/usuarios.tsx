@@ -119,7 +119,7 @@ function UsuariosPage() {
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={u.ativo}
-                            onCheckedChange={(v) => toggleAtivo.mutate({ id: u.id, ativo: v })}
+                            onCheckedChange={(v) => handleToggleAtivo(u.id, v)}
                           />
                         </div>
                       </div>
