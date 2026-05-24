@@ -96,7 +96,7 @@ export function LimitesEmpresaDialog({ open, onOpenChange, empresaId, empresaNom
                   <TableCell className="font-mono">{l.mes_referencia}</TableCell>
                   <TableCell className="text-right tabular-nums">{brl(Number(l.valor))}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => remove.mutate(l.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleRemove(l.id)}>
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
                   </TableCell>
