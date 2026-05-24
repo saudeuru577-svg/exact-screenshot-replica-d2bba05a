@@ -98,7 +98,7 @@ function PacienteDetalhe() {
       <PageBody>
         {editMode ? (
           <div className="max-w-3xl space-y-4">
-            <PacienteFormFields form={form} onSubmit={(v) => update.mutate(v)} saving={update.isPending} submitLabel="Salvar alterações" />
+            <PacienteFormFields form={form} onSubmit={handleUpdate} saving={update.isPending} submitLabel="Salvar alterações" />
             <Button variant="ghost" onClick={() => setEditMode(false)}>Cancelar edição</Button>
           </div>
         ) : (
