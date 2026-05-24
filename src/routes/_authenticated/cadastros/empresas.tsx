@@ -189,7 +189,7 @@ function EmpresasPage() {
                   </TableCell>
                   <TableCell>
                     {isAdmin ? (
-                      <Switch checked={e.ativa} onCheckedChange={() => toggleAtiva.mutate(e)} />
+                      <Switch checked={e.ativa} onCheckedChange={() => handleToggleAtiva(e)} />
                     ) : (
                       <Badge variant={e.ativa ? "default" : "secondary"}>{e.ativa ? "Ativa" : "Inativa"}</Badge>
                     )}
