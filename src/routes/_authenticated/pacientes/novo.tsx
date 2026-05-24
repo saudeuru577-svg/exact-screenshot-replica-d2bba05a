@@ -51,7 +51,7 @@ function NovoPaciente() {
       <PageHeader title="Novo paciente" description="Preencha os dados do novo paciente." />
       <PageBody>
         <div className="max-w-3xl">
-          <PacienteFormFields form={form} onSubmit={(v) => create.mutate(v)} saving={create.isPending} submitLabel="Cadastrar" />
+          <PacienteFormFields form={form} onSubmit={handleSubmit} saving={create.isPending} submitLabel="Cadastrar" />
         </div>
       </PageBody>
     </>
