@@ -1,10 +1,12 @@
+// Refatorado para usar useLimitesEmpresa + useLimitesEmpresaMutations (5min staleTime).
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
+import {
+  useLimitesEmpresa, useLimitesEmpresaMutations,
+} from "@/hooks/queries/use-limites";
 import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,50 +26,32 @@ type Props = {
 };
 
 export function LimitesEmpresaDialog({ open, onOpenChange, empresaId, empresaNome }: Props) {
-  const qc = useQueryClient();
   const [mes, setMes] = useState(new Date().toISOString().slice(0, 7));
   const [valor, setValor] = useState("");
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["limites-empresa", empresaId],
-    enabled: open && !!empresaId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("limites_empresa")
-        .select("id, mes_referencia, valor, atualizado_em")
-        .eq("empresa_id", empresaId)
-        .order("mes_referencia", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data = [], isLoading } = useLimitesEmpresa(empresaId, { enabled: open });
+  const { upsert, remove } = useLimitesEmpresaMutations(empresaId);
 
-  const save = useMutation({
-    mutationFn: async () => {
-      const v = parseFloat(valor);
-      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) throw new Error("Mês inválido");
-      if (!(v >= 0)) throw new Error("Valor inválido");
-      const { error } = await supabase.from("limites_empresa")
-        .upsert({ empresa_id: empresaId, mes_referencia: mes, valor: v }, { onConflict: "empresa_id,mes_referencia" });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Limite salvo");
-      setValor("");
-      qc.invalidateQueries({ queryKey: ["limites-empresa", empresaId] });
-      qc.invalidateQueries({ queryKey: ["limite-emp"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleSave = () => {
+    const v = parseFloat(valor);
+    upsert.mutate(
+      { mes, valor: v },
+      {
+        onSuccess: () => {
+          toast.success("Limite salvo");
+          setValor("");
+        },
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
 
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("limites_empresa").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["limites-empresa", empresaId] }),
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleRemove = (id: string) => {
+    remove.mutate(id, {
+      onError: (e: Error) => toast.error(formatSupabaseError(e)),
+    });
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
