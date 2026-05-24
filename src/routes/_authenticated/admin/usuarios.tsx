@@ -32,33 +32,22 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios")({
 const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro"];
 
 function UsuariosPage() {
-  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [permUser, setPermUser] = useState<{ id: string; nome: string; perfil: PerfilUsuario } | null>(null);
 
-  const { data: usuarios, isLoading } = useQuery({
-    queryKey: ["usuarios"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("id, nome, email, perfil, ativo, criado_em")
-        .order("criado_em", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: usuarios, isLoading } = useUsuarios();
+  const { toggleAtivo } = useUsuariosMutations();
 
-  const toggleAtivo = useMutation({
-    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await supabase.from("usuarios").update({ ativo }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Usuário atualizado");
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleToggleAtivo = (id: string, ativo: boolean) => {
+    toggleAtivo.mutate(
+      { id, ativo },
+      {
+        onSuccess: () => toast.success("Usuário atualizado"),
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
+
 
   return (
     <>
