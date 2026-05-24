@@ -1,10 +1,10 @@
+// Refatorado para usar usePacientesMutations (insert via hook centralizado).
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { usePacientesMutations } from "@/hooks/queries/use-pacientes";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import {
   PacienteFormFields, usePacienteForm, type PacienteForm,
@@ -18,31 +18,33 @@ function NovoPaciente() {
   const navigate = useNavigate();
   const userId = useAuth((s) => s.user?.id);
   const form = usePacienteForm();
+  const { create } = usePacientesMutations();
 
-  const create = useMutation({
-    mutationFn: async (v: PacienteForm) => {
-      if (!userId) throw new Error("Sessão inválida");
-      const payload = {
-        nome: v.nome, nome_da_mae: v.nome_da_mae, dtn: v.dtn, sexo: v.sexo,
-        cartao_sus: v.cartao_sus ? v.cartao_sus.replace(/\D/g, "") : null,
-        naturalidade: v.naturalidade || null,
-        zona: v.zona,
-        bairro_id: v.zona === "urbana" ? v.bairro_id : null,
-        povoado_id: v.zona === "rural" ? v.povoado_id : null,
-        rua: v.rua || null, numero: v.numero || null,
-        ponto_referencia: v.ponto_referencia || null,
-        criado_por: userId,
-      };
-      const { data, error } = await supabase.from("pacientes").insert(payload).select("id").single();
-      if (error) throw error;
-      return data.id as string;
-    },
-    onSuccess: (id) => {
-      toast.success("Paciente cadastrado");
-      navigate({ to: "/pacientes/$id", params: { id } });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleSubmit = (v: PacienteForm) => {
+    if (!userId) {
+      toast.error("Sessão inválida");
+      return;
+    }
+    const payload = {
+      nome: v.nome, nome_da_mae: v.nome_da_mae, dtn: v.dtn, sexo: v.sexo,
+      cartao_sus: v.cartao_sus ? v.cartao_sus.replace(/\D/g, "") : null,
+      naturalidade: v.naturalidade || null,
+      zona: v.zona,
+      bairro_id: v.zona === "urbana" ? v.bairro_id : null,
+      povoado_id: v.zona === "rural" ? v.povoado_id : null,
+      rua: v.rua || null, numero: v.numero || null,
+      ponto_referencia: v.ponto_referencia || null,
+      criado_por: userId,
+    };
+    create.mutate(payload, {
+      onSuccess: (id) => {
+        toast.success("Paciente cadastrado");
+        navigate({ to: "/pacientes/$id", params: { id } });
+      },
+      onError: (e: Error) => toast.error(formatSupabaseError(e)),
+    });
+  };
+
 
   return (
     <>
