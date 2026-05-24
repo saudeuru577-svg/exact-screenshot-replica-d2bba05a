@@ -1,13 +1,15 @@
+// Refatorado para usar usePaciente, usePacienteAutorizacoes e usePacientesMutations.
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
+import {
+  usePaciente, usePacienteAutorizacoes, usePacientesMutations,
+} from "@/hooks/queries/use-pacientes";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
