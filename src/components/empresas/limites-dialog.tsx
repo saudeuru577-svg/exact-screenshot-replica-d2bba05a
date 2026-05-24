@@ -69,8 +69,8 @@ export function LimitesEmpresaDialog({ open, onOpenChange, empresaId, empresaNom
             <Label>Valor (R$)</Label>
             <Input type="number" min={0} step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" />
           </div>
-          <Button onClick={() => save.mutate()} disabled={save.isPending || !valor}>
-            {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+          <Button onClick={handleSave} disabled={upsert.isPending || !valor}>
+            {upsert.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
             Salvar
           </Button>
         </div>
