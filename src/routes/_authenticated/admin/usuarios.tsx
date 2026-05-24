@@ -165,7 +165,7 @@ function NovoUsuarioDialog({ onClose }: { onClose: () => void }) {
     },
     onSuccess: () => {
       toast.success("Usuário criado com sucesso");
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
+      qc.invalidateQueries({ queryKey: usuariosKeys.all });
       onClose();
       setNome(""); setEmail(""); setPassword(""); setPerfil("atendente");
     },
