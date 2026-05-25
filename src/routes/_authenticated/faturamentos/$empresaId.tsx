@@ -300,10 +300,7 @@ function ConferenciaFaturamento() {
         onClose={() => setGlosaItem(null)}
         onSave={(motivo, observacao) => {
           if (!glosaItem) return;
-          glosarMut.mutate(
-            { id: glosaItem.id, motivo_glosa_id: motivo, observacao },
-            { onSuccess: () => setGlosaItem(null) },
-          );
+          handleGlosar({ id: glosaItem.id, motivo_glosa_id: motivo, observacao });
         }}
         saving={glosarMut.isPending}
       />
