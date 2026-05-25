@@ -25,10 +25,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 function DashboardPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: fetchDashboard,
-  });
+  const { data, isLoading } = useDashboard();
 
   const saldoCritico = data ? data.saldo <= data.limiteAtual * 0.1 : false;
 
