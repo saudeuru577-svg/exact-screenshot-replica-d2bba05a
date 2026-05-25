@@ -334,8 +334,6 @@ function StatusBadge({ status }: { status: Item["status_faturamento"] }) {
 
 /* ----------------- Glosa Dialog ----------------- */
 
-type Motivo = { id: string; descricao: string };
-
 function GlosaDialog({
   item, onClose, onSave, saving,
 }: {
@@ -345,44 +343,25 @@ function GlosaDialog({
   saving: boolean;
 }) {
   const open = !!item;
-  const qc = useQueryClient();
   const [motivoId, setMotivoId] = useState<string>("");
   const [obs, setObs] = useState("");
   const [popOpen, setPopOpen] = useState(false);
   const [novo, setNovo] = useState<string | null>(null);
 
-  const { data: motivos = [] } = useQuery({
-    queryKey: ["motivos-glosa"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("motivos_glosa")
-        .select("id, descricao")
-        .eq("ativo", true)
-        .order("descricao");
-      if (error) throw error;
-      return data as Motivo[];
-    },
-  });
+  const { data: motivos = [] } = useMotivosGlosa();
+  const { create: criarMotivoMut } = useMotivosGlosaMutations();
 
-  const criarMotivoMut = useMutation({
-    mutationFn: async (descricao: string) => {
-      const { data, error } = await supabase
-        .from("motivos_glosa")
-        .insert({ descricao })
-        .select("id, descricao")
-        .single();
-      if (error) throw error;
-      return data as Motivo;
-    },
-    onSuccess: (m) => {
-      qc.invalidateQueries({ queryKey: ["motivos-glosa"] });
-      setMotivoId(m.id);
-      setNovo(null);
-      setPopOpen(false);
-      toast.success("Motivo cadastrado");
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleCriarMotivo = (descricao: string) => {
+    criarMotivoMut.mutate(descricao, {
+      onSuccess: (m: MotivoGlosa) => {
+        setMotivoId(m.id);
+        setNovo(null);
+        setPopOpen(false);
+        toast.success("Motivo cadastrado");
+      },
+      onError: (e: Error) => toast.error(formatSupabaseError(e)),
+    });
+  };
 
   const motivoLabel = motivos.find((m) => m.id === motivoId)?.descricao;
 
