@@ -411,7 +411,7 @@ function GlosaDialog({
                       ))}
                       {novo && !motivos.some((m) => m.descricao.toLowerCase() === novo.toLowerCase()) && (
                         <CommandItem
-                          onSelect={() => criarMotivoMut.mutate(novo)}
+                          onSelect={() => handleCriarMotivo(novo)}
                           disabled={criarMotivoMut.isPending}
                         >
                           <Plus className="size-4 mr-2" />
