@@ -214,7 +214,7 @@ function ConferenciaFaturamento() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => confirmarMut.mutate([it.id])}
+                              onClick={() => handleConfirmar([it.id])}
                               disabled={confirmarMut.isPending}
                             >
                               <Check className="size-4" /> Confirmar
