@@ -1,69 +1,19 @@
+// Refatorado: dado agregado via useDashboard (staleTime 60s).
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Wallet, TrendingUp, AlertTriangle, FileCheck, ArrowUpRight, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useDashboard } from "@/hooks/queries/use-dashboard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const LIMITE_FALLBACK = 130000;
 const fmtMoney = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-async function fetchDashboard() {
-  const now = new Date();
-  const ano = now.getFullYear();
-  const mes = String(now.getMonth() + 1).padStart(2, "0");
-  const inicio = `${ano}-${mes}-01`;
-  const fimDate = new Date(ano, now.getMonth() + 1, 0);
-  const fim = `${ano}-${mes}-${String(fimDate.getDate()).padStart(2, "0")}`;
-  const mesRef = `${ano}-${mes}`;
-
-  const [autoMes, acres, ultimas, limiteRow] = await Promise.all([
-    supabase
-      .from("autorizacoes")
-      .select("total_autorizado, status")
-      .gte("data_autorizacao", inicio)
-      .lte("data_autorizacao", fim)
-      .in("status", ["pendente", "aprovado", "faturado"]),
-    supabase
-      .from("acrescimos_gastos")
-      .select("novo_limite, limite_atual")
-      .eq("mes_referencia", mesRef)
-      .eq("status", "aprovado"),
-    supabase
-      .from("autorizacoes")
-      .select("id, num_aut, data_autorizacao, total_autorizado, status")
-      .order("criado_em", { ascending: false })
-      .limit(8),
-    supabase
-      .from("limites_globais")
-      .select("valor, mes_referencia")
-      .in("mes_referencia", [mesRef, "default"]),
-  ]);
-
-  const limiteRows = (limiteRow.data ?? []) as Array<{ valor: number | string; mes_referencia: string }>;
-  const mesEspecifico = limiteRows.find((r) => r.mes_referencia === mesRef);
-  const padrao = limiteRows.find((r) => r.mes_referencia === "default");
-  const limiteBaseFinal = Number(mesEspecifico?.valor ?? padrao?.valor ?? LIMITE_FALLBACK);
-
-  const totalMes = (autoMes.data ?? []).reduce(
-    (s, a) => s + Number(a.total_autorizado ?? 0), 0
-  );
-  const acrescimos = (acres.data ?? []).reduce(
-    (s, a) => s + Math.max(0, Number(a.novo_limite ?? 0) - Number(a.limite_atual ?? 0)), 0
-  );
-  const limiteAtual = limiteBaseFinal + acrescimos;
-  const saldo = limiteAtual - totalMes;
-
-  return { totalMes, acrescimos, limiteAtual, limiteBase: limiteBaseFinal, saldo, ultimas: ultimas.data ?? [] };
-}
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   aprovado: "default",
