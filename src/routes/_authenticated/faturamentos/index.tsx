@@ -1,30 +1,27 @@
+// Refatorado: empresas via useEmpresasAtivas (hook compartilhado),
+// faturamentos do mês via useFaturamentosMes (60s) e abrir via mutation centralizada.
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, Search, Play, FileCheck2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { usePerfil } from "@/hooks/use-perfil";
+import { useEmpresasAtivas } from "@/hooks/queries/use-empresas";
+import {
+  useFaturamentosMes,
+  useFaturamentoAbrirMutation,
+  type FaturamentoLista,
+} from "@/hooks/queries/use-faturamentos";
 
 export const Route = createFileRoute("/_authenticated/faturamentos/")({
   component: FaturamentosList,
 });
-
-type Empresa = { id: string; nome_fantasia: string; ativa: boolean };
-type FatRow = {
-  id: string;
-  empresa_id: string;
-  status: string;
-  total_itens: number;
-  total_pendentes: number;
-};
 
 function mesAtual() {
   const d = new Date();
@@ -38,33 +35,11 @@ function FaturamentosList() {
   const [busca, setBusca] = useState("");
   const [mes, setMes] = useState(mesAtual());
 
-  const { data: empresas = [], isLoading: loadingEmpresas } = useQuery({
-    queryKey: ["faturamento-empresas"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("empresas")
-        .select("id, nome_fantasia, ativa")
-        .eq("ativa", true)
-        .order("nome_fantasia");
-      if (error) throw error;
-      return data as Empresa[];
-    },
-  });
-
-  const { data: faturamentos = [] } = useQuery({
-    queryKey: ["faturamentos", mes],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("faturamentos")
-        .select("id, empresa_id, status, total_itens, total_pendentes")
-        .eq("mes_referencia", mes);
-      if (error) throw error;
-      return data as FatRow[];
-    },
-  });
+  const { data: empresas = [], isLoading: loadingEmpresas } = useEmpresasAtivas();
+  const { data: faturamentos = [] } = useFaturamentosMes(mes);
 
   const fatPorEmpresa = useMemo(() => {
-    const m = new Map<string, FatRow>();
+    const m = new Map<string, FaturamentoLista>();
     for (const f of faturamentos) {
       // se já existe um aberto, prioriza; caso contrário pega qualquer
       const cur = m.get(f.empresa_id);
@@ -78,20 +53,18 @@ function FaturamentosList() {
     return empresas.filter((e) => !t || e.nome_fantasia.toLowerCase().includes(t));
   }, [empresas, busca]);
 
-  const abrirMut = useMutation({
-    mutationFn: async (empresaId: string) => {
-      const { data, error } = await supabase.rpc("abrir_faturamento", {
-        p_empresa: empresaId,
-        p_mes: mes,
-      });
-      if (error) throw error;
-      return data as string;
-    },
-    onSuccess: (_id, empresaId) => {
-      navigate({ to: "/faturamentos/$empresaId", params: { empresaId }, search: { mes } });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const abrirMut = useFaturamentoAbrirMutation();
+  const handleAbrir = (empresaId: string) => {
+    abrirMut.mutate(
+      { empresaId, mes },
+      {
+        onSuccess: () => {
+          navigate({ to: "/faturamentos/$empresaId", params: { empresaId }, search: { mes } });
+        },
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
 
   return (
     <>
@@ -155,10 +128,10 @@ function FaturamentosList() {
                   </div>
                   {podeConferir && (
                     <Button
-                      onClick={() => abrirMut.mutate(e.id)}
+                      onClick={() => handleAbrir(e.id)}
                       disabled={abrirMut.isPending || f?.status === "finalizado"}
                     >
-                      {abrirMut.isPending && abrirMut.variables === e.id ? (
+                      {abrirMut.isPending && abrirMut.variables?.empresaId === e.id ? (
                         <Loader2 className="size-4 animate-spin" />
                       ) : (
                         <Play className="size-4" />
