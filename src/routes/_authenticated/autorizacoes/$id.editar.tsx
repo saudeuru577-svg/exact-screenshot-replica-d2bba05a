@@ -1,11 +1,12 @@
+// Refatorado: detalhe/itens/procedimentos via hooks centralizados;
+// save batch via useItensAutorizacaoMutations + useAutorizacoesMutations.
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,15 @@ import { confirm } from "@/components/ui/confirm";
 import { usePerfil } from "@/hooks/use-perfil";
 import { useAuth } from "@/hooks/use-auth";
 import { brl, dateBR } from "@/lib/format";
+import {
+  useAutorizacaoEdicao,
+  useAutorizacoesMutations,
+} from "@/hooks/queries/use-autorizacoes";
+import {
+  useItensPorAutorizacaoEdicao,
+  useItensAutorizacaoMutations,
+} from "@/hooks/queries/use-itens-autorizacao";
+import { useProcedimentosPorEmpresa } from "@/hooks/queries/use-procedimentos";
 
 export const Route = createFileRoute("/_authenticated/autorizacoes/$id/editar")({
   component: EditarAutorizacao,
