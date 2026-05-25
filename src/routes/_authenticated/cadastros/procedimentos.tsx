@@ -2,6 +2,9 @@
 // uma queryKey duplicada ["empresas-ativas"] inline.
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Search, Pencil, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
@@ -59,7 +62,6 @@ const EMPTY: FormValues = {
 
 function ProcedimentosPage() {
   const { isAdmin } = usePerfil();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [empFiltro, setEmpFiltro] = useState("todas");
   const [tipoFiltro, setTipoFiltro] = useState("todos");
@@ -69,15 +71,7 @@ function ProcedimentosPage() {
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas-ativas"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("empresas")
-        .select("id, nome_fantasia, ativa").order("nome_fantasia");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: empresas = [] } = useEmpresasResumo();
 
   const { data: rows = [], isLoading } = useProcedimentos();
   const data = rows as unknown as Procedimento[];
