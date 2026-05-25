@@ -190,7 +190,7 @@ function ConferenciaFaturamento() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => confirmarMut.mutate(pendentes.map((p) => p.id))}
+                        onClick={() => handleConfirmar(pendentes.map((p) => p.id))}
                         disabled={confirmarMut.isPending}
                       >
                         Confirmar todos
