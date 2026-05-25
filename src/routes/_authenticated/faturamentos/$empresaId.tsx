@@ -271,7 +271,7 @@ function ConferenciaFaturamento() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => finalizarMut.mutate()}>
+                      <AlertDialogAction onClick={handleFinalizar}>
                         Finalizar
                       </AlertDialogAction>
                     </AlertDialogFooter>
