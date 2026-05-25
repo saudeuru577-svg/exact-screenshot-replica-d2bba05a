@@ -1,6 +1,7 @@
 // Refatorado: queries voláteis (acrescimos_gastos, autorizacoes/gasto-mes e
 // limite-empresa) movidas para os hooks use-acrescimos e use-orcamento (60s).
 // Empresas vêm de useEmpresasAtivas. A mutation centralizada cuida da invalidação.
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
