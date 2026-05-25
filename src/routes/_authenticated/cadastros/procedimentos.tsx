@@ -1,6 +1,7 @@
+// Refatorado para usar hook compartilhado useEmpresasResumo (5min) em vez de
+// uma queryKey duplicada ["empresas-ativas"] inline.
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +12,8 @@ import { formatSupabaseError } from "@/lib/format-error";
 import { GrupoCombobox } from "@/components/ui/grupo-combobox";
 import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
 
-import { supabase } from "@/integrations/supabase/client";
-import { useProcedimentos, useProcedimentosMutations, type ProcedimentoComEmpresa } from "@/hooks/queries/use-procedimentos";
+import { useProcedimentos, useProcedimentosMutations } from "@/hooks/queries/use-procedimentos";
+import { useEmpresasResumo } from "@/hooks/queries/use-empresas";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +62,6 @@ const EMPTY: FormValues = {
 
 function ProcedimentosPage() {
   const { isAdmin } = usePerfil();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [empFiltro, setEmpFiltro] = useState("todas");
   const [tipoFiltro, setTipoFiltro] = useState("todos");
@@ -71,15 +71,7 @@ function ProcedimentosPage() {
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas-ativas"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("empresas")
-        .select("id, nome_fantasia, ativa").order("nome_fantasia");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: empresas = [] } = useEmpresasResumo();
 
   const { data: rows = [], isLoading } = useProcedimentos();
   const data = rows as unknown as Procedimento[];

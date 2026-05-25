@@ -1,15 +1,24 @@
+// Refatorado: queries voláteis (acrescimos_gastos, autorizacoes/gasto-mes e
+// limite-empresa) movidas para os hooks use-acrescimos e use-orcamento (60s).
+// Empresas vêm de useEmpresasAtivas. A mutation centralizada cuida da invalidação.
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl } from "@/lib/format";
 import { uploadFile, removeFiles } from "@/lib/autorizacao-storage";
+import { useEmpresasAtivas } from "@/hooks/queries/use-empresas";
+import {
+  useAcrescimoTotalMes,
+  useAcrescimosHistoricoMes,
+  useAcrescimosMutations,
+} from "@/hooks/queries/use-acrescimos";
+import { useGastoMes, useLimiteEmpresaMes } from "@/hooks/queries/use-orcamento";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +42,6 @@ type Escopo = "total" | "empresa";
 
 function NovoAcrescimo() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const { has } = usePerfil();
   const userId = useAuth((s) => s.user?.id);
   const podeCriar = has(["administrador", "secretaria"]);
@@ -45,82 +53,22 @@ function NovoAcrescimo() {
   const [justificativa, setJustificativa] = useState("");
   const sigRef = useRef<SignaturePadHandle>(null);
 
-  const { data: empresas = [] } = useQuery({
-    queryKey: ["empresas-ativas"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("empresas")
-        .select("id, nome_fantasia").eq("ativa", true).order("nome_fantasia");
-      if (error) throw error;
-      return data as { id: string; nome_fantasia: string }[];
-    },
-  });
+  const { data: empresas = [] } = useEmpresasAtivas();
 
-  // Limite total do mês
-  const { data: acrescTotal = 0 } = useQuery({
-    queryKey: ["acresc-total", mes],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("acrescimos_gastos")
-        .select("novo_limite, limite_atual")
-        .eq("mes_referencia", mes).eq("status", "aprovado").eq("escopo", "total");
-      if (error) throw error;
-      return (data ?? []).reduce((s, a) => s + Math.max(0, Number(a.novo_limite ?? 0) - Number(a.limite_atual ?? 0)), 0);
-    },
-  });
+  // Limite total do mês = base + acréscimos aprovados (escopo total)
+  const { data: acrescTotal = 0 } = useAcrescimoTotalMes(mes);
   const limiteTotal = LIMITE_BASE + acrescTotal;
 
   // Total gasto no mês (geral ou por empresa)
-  const { data: gastoTotalMes = 0 } = useQuery({
-    queryKey: ["gasto-mes", mes],
-    queryFn: async () => {
-      const inicio = `${mes}-01`;
-      const [y, m] = mes.split("-").map(Number);
-      const last = new Date(y, m, 0).getDate();
-      const fim = `${mes}-${String(last).padStart(2, "0")}`;
-      const { data, error } = await supabase.from("autorizacoes")
-        .select("total_autorizado")
-        .gte("data_autorizacao", inicio).lte("data_autorizacao", fim)
-        .in("status", ["pendente", "aprovado", "faturado"]);
-      if (error) throw error;
-      return (data ?? []).reduce((s, a) => s + Number(a.total_autorizado ?? 0), 0);
-    },
-  });
+  const { data: gastoTotalMes = 0 } = useGastoMes(mes);
 
   // Limite da empresa no mês
-  const { data: limiteEmp = 0 } = useQuery({
-    queryKey: ["limite-emp", mes, empresaId],
+  const { data: limiteEmp = 0 } = useLimiteEmpresaMes(mes, empresaId, {
     enabled: escopo === "empresa" && !!empresaId,
-    queryFn: async () => {
-      const [base, acres] = await Promise.all([
-        supabase.from("limites_empresa").select("valor")
-          .eq("empresa_id", empresaId).eq("mes_referencia", mes).maybeSingle(),
-        supabase.from("acrescimos_gastos").select("novo_limite, limite_atual")
-          .eq("mes_referencia", mes).eq("status", "aprovado")
-          .eq("escopo", "empresa").eq("empresa_id", empresaId),
-      ]);
-      if (base.error) throw base.error;
-      if (acres.error) throw acres.error;
-      const acrescimos = (acres.data ?? []).reduce(
-        (s, a) => s + Math.max(0, Number(a.novo_limite ?? 0) - Number(a.limite_atual ?? 0)), 0);
-      return Number(base.data?.valor ?? 0) + acrescimos;
-    },
   });
 
-  const { data: gastoEmpMes = 0 } = useQuery({
-    queryKey: ["gasto-emp-mes", mes, empresaId],
+  const { data: gastoEmpMes = 0 } = useGastoMes(mes, empresaId, {
     enabled: escopo === "empresa" && !!empresaId,
-    queryFn: async () => {
-      const inicio = `${mes}-01`;
-      const [y, m] = mes.split("-").map(Number);
-      const last = new Date(y, m, 0).getDate();
-      const fim = `${mes}-${String(last).padStart(2, "0")}`;
-      const { data, error } = await supabase.from("autorizacoes")
-        .select("total_autorizado")
-        .eq("empresa_id", empresaId)
-        .gte("data_autorizacao", inicio).lte("data_autorizacao", fim)
-        .in("status", ["pendente", "aprovado", "faturado"]);
-      if (error) throw error;
-      return (data ?? []).reduce((s, a) => s + Number(a.total_autorizado ?? 0), 0);
-    },
   });
 
   const limiteAtual = escopo === "total" ? limiteTotal : limiteEmp;
@@ -128,16 +76,7 @@ function NovoAcrescimo() {
   const novoLimite = parseFloat(novoLimiteStr) || 0;
   const acrescimo = useMemo(() => Math.max(0, novoLimite - limiteAtual), [novoLimite, limiteAtual]);
 
-  const { data: historico = [] } = useQuery({
-    queryKey: ["acrescimos-mes", mes],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("acrescimos_gastos")
-        .select("id, criado_em, novo_limite, limite_atual, escopo, empresa_id, justificativa")
-        .eq("mes_referencia", mes).order("criado_em", { ascending: false });
-      if (error) throw error;
-      return data as Array<{ id: string; criado_em: string; novo_limite: number; limite_atual: number; escopo: Escopo; empresa_id: string | null; justificativa: string }>;
-    },
-  });
+  const { data: historico = [] } = useAcrescimosHistoricoMes(mes);
 
   const empresaNome = (id: string | null) =>
     empresas.find((e) => e.id === id)?.nome_fantasia ?? "—";
@@ -148,6 +87,7 @@ function NovoAcrescimo() {
     /^\d{4}-(0[1-9]|1[0-2])$/.test(mes) &&
     (escopo === "total" || !!empresaId);
 
+  const { create } = useAcrescimosMutations();
   const m = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error("Não autenticado");
@@ -158,7 +98,7 @@ function NovoAcrescimo() {
       const path = `acrescimos/${userId}/${Date.now()}.png`;
       await uploadFile(path, sigBlob, "image/png");
       try {
-        const { data, error } = await supabase.from("acrescimos_gastos").insert({
+        return await create.mutateAsync({
           mes_referencia: mes,
           justificativa: justificativa.trim(),
           assinatura: path,
@@ -168,9 +108,7 @@ function NovoAcrescimo() {
           escopo,
           empresa_id: escopo === "empresa" ? empresaId : null,
           status: "aprovado",
-        }).select("id").single();
-        if (error) throw error;
-        return data;
+        });
       } catch (e) {
         await removeFiles([path]).catch(() => {});
         throw e;
@@ -178,11 +116,6 @@ function NovoAcrescimo() {
     },
     onSuccess: () => {
       toast.success("Acréscimo registrado — novo limite em vigor");
-      qc.invalidateQueries({ queryKey: ["orcamento"] });
-      qc.invalidateQueries({ queryKey: ["acresc-total"] });
-      qc.invalidateQueries({ queryKey: ["limite-emp"] });
-      qc.invalidateQueries({ queryKey: ["acrescimos-mes"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
       navigate({ to: "/dashboard" });
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
