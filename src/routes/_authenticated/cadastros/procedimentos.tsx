@@ -1,9 +1,7 @@
+// Refatorado para usar hook compartilhado useEmpresasResumo (5min) em vez de
+// uma queryKey duplicada ["empresas-ativas"] inline.
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Search, Pencil, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
@@ -11,8 +9,8 @@ import { formatSupabaseError } from "@/lib/format-error";
 import { GrupoCombobox } from "@/components/ui/grupo-combobox";
 import { ImportProcedimentosDialog } from "@/components/procedimentos/import-dialog";
 
-import { supabase } from "@/integrations/supabase/client";
-import { useProcedimentos, useProcedimentosMutations, type ProcedimentoComEmpresa } from "@/hooks/queries/use-procedimentos";
+import { useProcedimentos, useProcedimentosMutations } from "@/hooks/queries/use-procedimentos";
+import { useEmpresasResumo } from "@/hooks/queries/use-empresas";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
