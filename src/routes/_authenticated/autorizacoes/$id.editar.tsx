@@ -57,7 +57,6 @@ type Aut = {
 function EditarAutorizacao() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const { isAdmin, has } = usePerfil();
   const userId = useAuth((s) => s.user?.id);
 
@@ -68,49 +67,9 @@ function EditarAutorizacao() {
   const [removidos, setRemovidos] = useState<string[]>([]);
   const [hidratado, setHidratado] = useState(false);
 
-  const { data: aut, isLoading, error } = useQuery({
-    queryKey: ["autorizacao", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("autorizacoes")
-        .select(`
-          id, num_aut, status, data_autorizacao, sintomas, total_autorizado, criado_por, empresa_id,
-          paciente:pacientes(nome),
-          empresa:empresas(nome_fantasia)
-        `)
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as unknown as Aut;
-    },
-  });
-
-  const { data: itensDb = [] } = useQuery({
-    queryKey: ["autorizacao-itens", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("itens_autorizacao")
-        .select("id, procedimento_id, descricao, quantidade, valor_unitario")
-        .eq("autorizacao_id", id)
-        .order("criado_em", { ascending: true });
-      if (error) throw error;
-      return data as ItemRow[];
-    },
-  });
-
-  const { data: procs = [] } = useQuery({
-    queryKey: ["procs-empresa", aut?.empresa_id],
-    queryFn: async () => {
-      if (!aut?.empresa_id) return [];
-      const { data, error } = await supabase
-        .from("procedimentos")
-        .select("id, sigla, nome, valor_unitario")
-        .eq("empresa_id", aut.empresa_id).eq("ativo", true)
-        .order("nome");
-      if (error) throw error; return data;
-    },
-    enabled: !!aut?.empresa_id,
-  });
+  const { data: aut, isLoading, error } = useAutorizacaoEdicao(id);
+  const { data: itensDb = [] } = useItensPorAutorizacaoEdicao(id);
+  const { data: procs = [] } = useProcedimentosPorEmpresa(aut?.empresa_id);
 
   // hydrate state once
   useEffect(() => {
@@ -160,6 +119,9 @@ function EditarAutorizacao() {
     });
   };
 
+  const { saveBatch } = useItensAutorizacaoMutations();
+  const { update: updateAutMut } = useAutorizacoesMutations();
+
   const salvar = useMutation({
     mutationFn: async () => {
       if (!aut) throw new Error("Autorização não carregada");
@@ -171,39 +133,28 @@ function EditarAutorizacao() {
         throw new Error("Data não pode ser futura");
       }
 
-      // Delete removed items
-      if (removidos.length > 0) {
-        const { error } = await supabase.from("itens_autorizacao").delete().in("id", removidos);
-        if (error) throw error;
-      }
-
-      // Update existing items
-      for (const it of itens.filter((x) => x.id)) {
-        const { error } = await supabase.from("itens_autorizacao").update({
-          quantidade: it.quantidade,
-          valor_unitario: it.valor_unitario,
-          valor_total: it.quantidade * it.valor_unitario,
-          procedimento_id: it.procedimento_id,
-          descricao: it.descricao,
-        }).eq("id", it.id!);
-        if (error) throw error;
-      }
-
-      // Insert new items
-      const novos = itens.filter((x) => !x.id);
-      if (novos.length > 0) {
-        const { error } = await supabase.from("itens_autorizacao").insert(
-          novos.map((it) => ({
-            autorizacao_id: aut.id, procedimento_id: it.procedimento_id,
-            descricao: it.descricao, quantidade: it.quantidade,
+      await saveBatch.mutateAsync({
+        autorizacaoId: aut.id,
+        removerIds: removidos,
+        atualizar: itens
+          .filter((x) => x.id)
+          .map((it) => ({
+            id: it.id!,
+            procedimento_id: it.procedimento_id,
+            descricao: it.descricao,
+            quantidade: it.quantidade,
             valor_unitario: it.valor_unitario,
-            valor_total: it.quantidade * it.valor_unitario,
           })),
-        );
-        if (error) throw error;
-      }
+        inserir: itens
+          .filter((x) => !x.id)
+          .map((it) => ({
+            procedimento_id: it.procedimento_id,
+            descricao: it.descricao,
+            quantidade: it.quantidade,
+            valor_unitario: it.valor_unitario,
+          })),
+      });
 
-      // Update autorizacao
       const basePatch = {
         data_autorizacao: dataAut,
         sintomas: sintomas.trim() || null,
@@ -213,16 +164,9 @@ function EditarAutorizacao() {
         ? { ...basePatch, status: status as (typeof STATUSES)[number] }
         : basePatch;
 
-      const { data: updated, error: upErr } = await supabase
-        .from("autorizacoes").update(patch).eq("id", aut.id)
-        .select("id, status, num_aut, motivo_bloqueio").single();
-      if (upErr) throw upErr;
-      return updated;
+      return await updateAutMut.mutateAsync({ id: aut.id, payload: patch });
     },
     onSuccess: (a) => {
-      qc.invalidateQueries({ queryKey: ["autorizacoes"] });
-      qc.invalidateQueries({ queryKey: ["autorizacao", id] });
-      qc.invalidateQueries({ queryKey: ["autorizacao-itens", id] });
       if (a.status === "bloqueado") {
         toast.warning(`${a.num_aut} agora está BLOQUEADA`, {
           description: a.motivo_bloqueio ?? "Limite mensal excedido.",
@@ -234,6 +178,7 @@ function EditarAutorizacao() {
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
+
 
   const handleSalvar = async () => {
     const ok = await confirm({
