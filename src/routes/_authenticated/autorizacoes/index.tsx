@@ -1,12 +1,11 @@
+// Refatorado: lista e exclusão via use-autorizacoes (staleTime 60s).
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Loader2, Eye, Pencil, FileText, Trash2 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,11 @@ import { confirm } from "@/components/ui/confirm";
 import { downloadBlobUrl } from "@/lib/autorizacao-storage";
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl, dateBR } from "@/lib/format";
+import {
+  useAutorizacoesLista,
+  useAutorizacoesMutations,
+  type AutorizacaoLista,
+} from "@/hooks/queries/use-autorizacoes";
 
 function QrThumb({ value }: { value: string }) {
   const [src, setSrc] = useState<string>("");
@@ -41,44 +45,16 @@ const VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outlin
   cancelado: "outline", faturado: "default",
 };
 
-type Aut = {
-  id: string; num_aut: string; data_autorizacao: string;
-  total_autorizado: number; status: string; pdf_autorizacao: string | null;
-  paciente: { nome: string } | null;
-  empresa: { nome_fantasia: string } | null;
-  ubs: { nome_posto: string } | null;
-};
+type Aut = AutorizacaoLista;
 
 function AutorizacoesList() {
   const { has, isAdmin } = usePerfil();
   const podeCriar = has(["administrador", "atendente"]);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("todos");
-  const qc = useQueryClient();
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["autorizacoes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("autorizacoes")
-        .select("id, num_aut, data_autorizacao, total_autorizado, status, pdf_autorizacao, paciente:pacientes(nome), empresa:empresas(nome_fantasia), ubs:ubs(nome_posto)")
-        .order("data_autorizacao", { ascending: false }).limit(500);
-      if (error) throw error;
-      return data as unknown as Aut[];
-    },
-  });
-
-  const removeMut = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("autorizacoes").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Autorização excluída");
-      qc.invalidateQueries({ queryKey: ["autorizacoes"] });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const { data = [], isLoading } = useAutorizacoesLista();
+  const { remove: removeMut } = useAutorizacoesMutations();
 
   const handleDelete = async (a: Aut) => {
     const ok = await confirm({
@@ -87,7 +63,12 @@ function AutorizacoesList() {
       variant: "destructive",
       confirmLabel: "Excluir",
     });
-    if (ok) removeMut.mutate(a.id);
+    if (ok) {
+      removeMut.mutate(a.id, {
+        onSuccess: () => toast.success("Autorização excluída"),
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      });
+    }
   };
 
   const handlePdf = async (a: Aut) => {

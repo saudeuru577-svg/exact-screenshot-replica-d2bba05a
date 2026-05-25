@@ -21,7 +21,36 @@ export const procedimentosKeys = {
   lista: () => [...procedimentosKeys.all, "lista"] as const,
   busca: (q: string) => [...procedimentosKeys.all, "busca", q] as const,
   existentes: () => [...procedimentosKeys.all, "existentes"] as const,
+  porEmpresa: (empresaId: string) =>
+    [...procedimentosKeys.all, "empresa", empresaId] as const,
 };
+
+export type ProcedimentoOpcao = Pick<
+  ProcedimentoRow,
+  "id" | "sigla" | "nome" | "valor_unitario"
+>;
+
+/** Procedimentos ativos de uma empresa (combobox de edição/criação). */
+export function useProcedimentosPorEmpresa(
+  empresaId: string | undefined,
+  opts?: { enabled?: boolean },
+) {
+  return useQuery<ProcedimentoOpcao[]>({
+    queryKey: procedimentosKeys.porEmpresa(empresaId ?? ""),
+    enabled: (opts?.enabled ?? true) && !!empresaId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("procedimentos")
+        .select("id, sigla, nome, valor_unitario")
+        .eq("empresa_id", empresaId!)
+        .eq("ativo", true)
+        .order("nome");
+      if (error) throw error;
+      return (data ?? []) as ProcedimentoOpcao[];
+    },
+    staleTime: STALE,
+  });
+}
 
 /** Lista completa com join em empresas (tela de cadastro). */
 export function useProcedimentos() {

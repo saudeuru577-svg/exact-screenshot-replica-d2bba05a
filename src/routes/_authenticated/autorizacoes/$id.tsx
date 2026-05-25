@@ -1,11 +1,10 @@
+// Refatorado: detalhe e itens via use-autorizacoes / use-itens-autorizacao.
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, FileText, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 
-import { supabase } from "@/integrations/supabase/client";
 import { signedUrl, downloadBlobUrl } from "@/lib/autorizacao-storage";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePerfil } from "@/hooks/use-perfil";
 import { useAuth } from "@/hooks/use-auth";
 import { brl, dateBR, ageFromDob } from "@/lib/format";
+import { useAutorizacaoDetalhe } from "@/hooks/queries/use-autorizacoes";
+import { useItensPorAutorizacaoVisualizacao } from "@/hooks/queries/use-itens-autorizacao";
 
 export const Route = createFileRoute("/_authenticated/autorizacoes/$id")({
   component: VisualizarAutorizacao,
@@ -24,62 +25,15 @@ const VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outlin
   cancelado: "outline", faturado: "default",
 };
 
-type Item = {
-  id: string; descricao: string; quantidade: number;
-  valor_unitario: number; valor_total: number;
-};
-
-type AutFull = {
-  id: string; num_aut: string; data_autorizacao: string;
-  total_autorizado: number; status: string; sintomas: string | null;
-  pdf_autorizacao: string | null; qr_code: string | null;
-  assinatura_atendente: string | null; assinatura_paciente: string | null;
-  foto_requisicao: string | null; criado_em: string; criado_por: string;
-  paciente: { id: string; nome: string; nome_da_mae: string; dtn: string; cartao_sus: string | null } | null;
-  empresa: { nome_fantasia: string; cnpj: string } | null;
-  ubs: { nome_posto: string } | null;
-  profissional: { nome_profissional: string; conselho: string; numero_conselho: string } | null;
-};
-
 function VisualizarAutorizacao() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { isAdmin, has } = usePerfil();
   const userId = useAuth((s) => s.user?.id);
 
-  const { data: aut, isLoading, error } = useQuery({
-    queryKey: ["autorizacao", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("autorizacoes")
-        .select(`
-          id, num_aut, data_autorizacao, total_autorizado, status, sintomas,
-          pdf_autorizacao, qr_code, assinatura_atendente, assinatura_paciente,
-          foto_requisicao, criado_em, criado_por,
-          paciente:pacientes(id, nome, nome_da_mae, dtn, cartao_sus),
-          empresa:empresas(nome_fantasia, cnpj),
-          ubs:ubs(nome_posto),
-          profissional:profissionais(nome_profissional, conselho, numero_conselho)
-        `)
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as unknown as AutFull;
-    },
-  });
+  const { data: aut, isLoading, error } = useAutorizacaoDetalhe(id);
+  const { data: itens = [] } = useItensPorAutorizacaoVisualizacao(id);
 
-  const { data: itens = [] } = useQuery({
-    queryKey: ["autorizacao-itens", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("itens_autorizacao")
-        .select("id, descricao, quantidade, valor_unitario, valor_total")
-        .eq("autorizacao_id", id)
-        .order("criado_em", { ascending: true });
-      if (error) throw error;
-      return data as Item[];
-    },
-  });
 
   const podeEditar = !!aut && (
     isAdmin || (aut.status === "pendente" && has(["atendente"]) && aut.criado_por === userId)

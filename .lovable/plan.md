@@ -56,12 +56,12 @@ Fase 2 — Recursos semi-estáticos (5min)
   9. use-limites          → limites-dialog.tsx, acrescimos/novo.tsx, dashboard.tsx (limites_globais + limites_empresa)
 
 Fase 3 — Recursos voláteis (60s)
-  10. use-autorizacoes    → autorizacoes/index.tsx, $id.tsx, $id.editar.tsx
-  11. use-itens-autorizacao → $id.tsx, $id.editar.tsx, faturamentos/$empresaId.tsx
-  12. use-faturamentos    → faturamentos/index.tsx ✅, $empresaId.tsx
-  13. use-acrescimos + use-orcamento → acrescimos/novo.tsx ✅ (procedimentos.tsx ✅ migrado para useEmpresasResumo)
-  14. use-dashboard       → dashboard.tsx (agrega vw_orcamento_mes_atual + limites)
-  15. use-motivos-glosa   → faturamentos/$empresaId.tsx
+  10. use-autorizacoes    → autorizacoes/index.tsx ✅, $id.tsx ✅, $id.editar.tsx ✅
+  11. use-itens-autorizacao → $id.tsx ✅, $id.editar.tsx ✅, faturamentos/$empresaId.tsx ✅
+  12. use-faturamentos    → faturamentos/index.tsx ✅, $empresaId.tsx ✅
+  13. use-acrescimos + use-orcamento → acrescimos/novo.tsx ✅
+  14. use-dashboard       → dashboard.tsx ✅
+  15. use-motivos-glosa   → faturamentos/$empresaId.tsx ✅
 ```
 
 ## Plano por tela (template repetido)

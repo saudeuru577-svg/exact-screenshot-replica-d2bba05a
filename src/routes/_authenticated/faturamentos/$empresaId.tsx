@@ -1,12 +1,12 @@
+// Refatorado: faturamento, itens e mutations via hooks centralizados
+// (use-faturamentos, use-itens-autorizacao, use-motivos-glosa). 60s staleTime.
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, Check, XCircle, StopCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 import { z } from "zod";
 
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,20 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { brl, dateBR } from "@/lib/format";
 import { usePerfil } from "@/hooks/use-perfil";
+import {
+  useFaturamentoConferencia,
+  useFaturamentoFinalizarMutation,
+} from "@/hooks/queries/use-faturamentos";
+import {
+  useItensPorFaturamento,
+  useItensAutorizacaoMutations,
+  type ItemFaturamento,
+} from "@/hooks/queries/use-itens-autorizacao";
+import {
+  useMotivosGlosa,
+  useMotivosGlosaMutations,
+  type MotivoGlosa,
+} from "@/hooks/queries/use-motivos-glosa";
 
 const search = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/).optional() });
 
@@ -34,73 +48,22 @@ export const Route = createFileRoute("/_authenticated/faturamentos/$empresaId")(
   component: ConferenciaFaturamento,
 });
 
-type Item = {
-  id: string;
-  autorizacao_id: string;
-  descricao: string;
-  valor_total: number;
-  status_faturamento: "pendente" | "confirmado" | "glosado";
-  motivo_glosa_id: string | null;
-  observacao_glosa: string | null;
-  procedimentos: { nome: string } | null;
-  autorizacoes: {
-    num_aut: string;
-    data_autorizacao: string;
-    pacientes: { nome: string } | null;
-  } | null;
-};
-
-type Faturamento = {
-  id: string;
-  empresa_id: string;
-  mes_referencia: string;
-  status: string;
-  total_itens: number;
-  total_pendentes: number;
-  valor_confirmado: number;
-  valor_glosado: number;
-  empresa: { nome_fantasia: string } | null;
-};
+type Item = ItemFaturamento;
 
 function ConferenciaFaturamento() {
   const { empresaId } = Route.useParams();
   const { mes } = Route.useSearch();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const { has } = usePerfil();
   const podeEditar = has(["administrador", "financeiro"]);
 
-  const { data: faturamento, isLoading: loadingFat, error: errorFat } = useQuery({
-    queryKey: ["faturamento", empresaId, mes],
-    queryFn: async () => {
-      let q = supabase
-        .from("faturamentos")
-        .select("id, empresa_id, mes_referencia, status, total_itens, total_pendentes, valor_confirmado, valor_glosado, empresa:empresas(nome_fantasia)")
-        .eq("empresa_id", empresaId)
-        .order("iniciado_em", { ascending: false })
-        .limit(1);
-      if (mes) q = q.eq("mes_referencia", mes);
-      const { data, error } = await q.maybeSingle();
-      if (error) throw error;
-      return data as unknown as Faturamento | null;
-    },
-  });
+  const { data: faturamento, isLoading: loadingFat, error: errorFat } =
+    useFaturamentoConferencia(empresaId, mes);
 
   const fatId = faturamento?.id;
 
-  const { data: itens = [], isLoading: loadingItens, error: errorItens } = useQuery({
-    enabled: !!fatId,
-    queryKey: ["faturamento-itens", fatId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("itens_autorizacao")
-        .select("id, autorizacao_id, descricao, valor_total, status_faturamento, motivo_glosa_id, observacao_glosa, procedimentos(nome), autorizacoes(num_aut, data_autorizacao, pacientes(nome))")
-        .eq("faturamento_id", fatId!)
-        .order("autorizacao_id");
-      if (error) throw error;
-      return data as unknown as Item[];
-    },
-  });
+  const { data: itens = [], isLoading: loadingItens, error: errorItens } =
+    useItensPorFaturamento(fatId);
 
   const grupos = useMemo(() => {
     const m = new Map<string, { aut: Item["autorizacoes"]; itens: Item[] }>();
@@ -112,68 +75,44 @@ function ConferenciaFaturamento() {
     return Array.from(m.entries()).map(([autorizacao_id, g]) => ({ autorizacao_id, ...g }));
   }, [itens]);
 
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["faturamento", empresaId] });
-    qc.invalidateQueries({ queryKey: ["faturamento-itens", fatId] });
+  const { confirmar: confirmarMut, glosar: glosarMut } = useItensAutorizacaoMutations();
+  const finalizarMut = useFaturamentoFinalizarMutation();
+
+  const handleConfirmar = (ids: string[]) => {
+    if (!fatId) return;
+    confirmarMut.mutate(
+      { ids, faturamentoId: fatId },
+      { onError: (e: Error) => toast.error(formatSupabaseError(e)) },
+    );
   };
 
-  const confirmarMut = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const { error } = await supabase
-        .from("itens_autorizacao")
-        .update({
-          status_faturamento: "confirmado",
-          motivo_glosa_id: null,
-          observacao_glosa: null,
-          data_conferencia: new Date().toISOString(),
-        })
-        .in("id", ids);
-      if (error) throw error;
-    },
-    onSuccess: invalidate,
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleGlosar = (p: { id: string; motivo_glosa_id: string; observacao: string }) => {
+    if (!fatId) return;
+    glosarMut.mutate(
+      { ...p, faturamentoId: fatId },
+      {
+        onSuccess: () => {
+          toast.success("Glosa registrada");
+          setGlosaItem(null);
+        },
+        onError: (e: Error) => toast.error(formatSupabaseError(e)),
+      },
+    );
+  };
 
-  const glosarMut = useMutation({
-    mutationFn: async (p: { id: string; motivo_glosa_id: string; observacao: string }) => {
-      const { error } = await supabase
-        .from("itens_autorizacao")
-        .update({
-          status_faturamento: "glosado",
-          motivo_glosa_id: p.motivo_glosa_id,
-          observacao_glosa: p.observacao || null,
-          data_conferencia: new Date().toISOString(),
-        })
-        .eq("id", p.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      invalidate();
-      toast.success("Glosa registrada");
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
-
-  const finalizarMut = useMutation({
-    mutationFn: async () => {
-      if (!fatId) return;
-      const { error } = await supabase
-        .from("faturamentos")
-        .update({
-          status: "finalizado",
-          finalizado_em: new Date().toISOString(),
-        })
-        .eq("id", fatId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Faturamento finalizado");
-      navigate({ to: "/faturamentos" });
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleFinalizar = () => {
+    if (!fatId) return;
+    finalizarMut.mutate(fatId, {
+      onSuccess: () => {
+        toast.success("Faturamento finalizado");
+        navigate({ to: "/faturamentos" });
+      },
+      onError: (e: Error) => toast.error(formatSupabaseError(e)),
+    });
+  };
 
   const [glosaItem, setGlosaItem] = useState<Item | null>(null);
+
 
   if (loadingFat) {
     return (
@@ -251,7 +190,7 @@ function ConferenciaFaturamento() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => confirmarMut.mutate(pendentes.map((p) => p.id))}
+                        onClick={() => handleConfirmar(pendentes.map((p) => p.id))}
                         disabled={confirmarMut.isPending}
                       >
                         Confirmar todos
@@ -275,7 +214,7 @@ function ConferenciaFaturamento() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => confirmarMut.mutate([it.id])}
+                              onClick={() => handleConfirmar([it.id])}
                               disabled={confirmarMut.isPending}
                             >
                               <Check className="size-4" /> Confirmar
@@ -332,7 +271,7 @@ function ConferenciaFaturamento() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => finalizarMut.mutate()}>
+                      <AlertDialogAction onClick={handleFinalizar}>
                         Finalizar
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -361,10 +300,7 @@ function ConferenciaFaturamento() {
         onClose={() => setGlosaItem(null)}
         onSave={(motivo, observacao) => {
           if (!glosaItem) return;
-          glosarMut.mutate(
-            { id: glosaItem.id, motivo_glosa_id: motivo, observacao },
-            { onSuccess: () => setGlosaItem(null) },
-          );
+          handleGlosar({ id: glosaItem.id, motivo_glosa_id: motivo, observacao });
         }}
         saving={glosarMut.isPending}
       />
@@ -398,8 +334,6 @@ function StatusBadge({ status }: { status: Item["status_faturamento"] }) {
 
 /* ----------------- Glosa Dialog ----------------- */
 
-type Motivo = { id: string; descricao: string };
-
 function GlosaDialog({
   item, onClose, onSave, saving,
 }: {
@@ -409,44 +343,25 @@ function GlosaDialog({
   saving: boolean;
 }) {
   const open = !!item;
-  const qc = useQueryClient();
   const [motivoId, setMotivoId] = useState<string>("");
   const [obs, setObs] = useState("");
   const [popOpen, setPopOpen] = useState(false);
   const [novo, setNovo] = useState<string | null>(null);
 
-  const { data: motivos = [] } = useQuery({
-    queryKey: ["motivos-glosa"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("motivos_glosa")
-        .select("id, descricao")
-        .eq("ativo", true)
-        .order("descricao");
-      if (error) throw error;
-      return data as Motivo[];
-    },
-  });
+  const { data: motivos = [] } = useMotivosGlosa();
+  const { create: criarMotivoMut } = useMotivosGlosaMutations();
 
-  const criarMotivoMut = useMutation({
-    mutationFn: async (descricao: string) => {
-      const { data, error } = await supabase
-        .from("motivos_glosa")
-        .insert({ descricao })
-        .select("id, descricao")
-        .single();
-      if (error) throw error;
-      return data as Motivo;
-    },
-    onSuccess: (m) => {
-      qc.invalidateQueries({ queryKey: ["motivos-glosa"] });
-      setMotivoId(m.id);
-      setNovo(null);
-      setPopOpen(false);
-      toast.success("Motivo cadastrado");
-    },
-    onError: (e: Error) => toast.error(formatSupabaseError(e)),
-  });
+  const handleCriarMotivo = (descricao: string) => {
+    criarMotivoMut.mutate(descricao, {
+      onSuccess: (m: MotivoGlosa) => {
+        setMotivoId(m.id);
+        setNovo(null);
+        setPopOpen(false);
+        toast.success("Motivo cadastrado");
+      },
+      onError: (e: Error) => toast.error(formatSupabaseError(e)),
+    });
+  };
 
   const motivoLabel = motivos.find((m) => m.id === motivoId)?.descricao;
 
@@ -496,7 +411,7 @@ function GlosaDialog({
                       ))}
                       {novo && !motivos.some((m) => m.descricao.toLowerCase() === novo.toLowerCase()) && (
                         <CommandItem
-                          onSelect={() => criarMotivoMut.mutate(novo)}
+                          onSelect={() => handleCriarMotivo(novo)}
                           disabled={criarMotivoMut.isPending}
                         >
                           <Plus className="size-4 mr-2" />
