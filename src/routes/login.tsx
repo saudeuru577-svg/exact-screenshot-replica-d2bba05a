@@ -19,7 +19,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard" });
+    if (!loading && user) navigate({ to: "/saude/regulacao/autorizacao-exames/dashboard" });
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -31,7 +31,7 @@ function LoginPage() {
       toast.error("Email ou senha inválidos");
       return;
     }
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/saude/regulacao/autorizacao-exames/dashboard" });
   };
 
   return (

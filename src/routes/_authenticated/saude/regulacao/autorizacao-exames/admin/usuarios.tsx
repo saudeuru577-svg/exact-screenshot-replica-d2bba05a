@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizaca
   component: UsuariosPage,
 });
 
-const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro"];
+const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"];
 
 function UsuariosPage() {
   const [open, setOpen] = useState(false);

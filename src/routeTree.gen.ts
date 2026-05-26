@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/relatorios/index'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/pacientes/index'
@@ -46,131 +47,137 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute =
+  AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport.update({
+    id: '/saude/regulacao/autorizacao-exames',
+    path: '/saude/regulacao/autorizacao-exames',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/dashboard',
-    path: '/saude/regulacao/autorizacao-exames/dashboard',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/relatorios/',
-      path: '/saude/regulacao/autorizacao-exames/relatorios/',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/relatorios/',
+      path: '/relatorios/',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/pacientes/',
-    path: '/saude/regulacao/autorizacao-exames/pacientes/',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/pacientes/',
+    path: '/pacientes/',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/faturamentos/',
-      path: '/saude/regulacao/autorizacao-exames/faturamentos/',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/faturamentos/',
+      path: '/faturamentos/',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/autorizacoes/',
-      path: '/saude/regulacao/autorizacao-exames/autorizacoes/',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/autorizacoes/',
+      path: '/autorizacoes/',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/pacientes/novo',
-    path: '/saude/regulacao/autorizacao-exames/pacientes/novo',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/pacientes/novo',
+    path: '/pacientes/novo',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/pacientes/$id',
-    path: '/saude/regulacao/autorizacao-exames/pacientes/$id',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/pacientes/$id',
+    path: '/pacientes/$id',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/faturamentos/$empresaId',
-      path: '/saude/regulacao/autorizacao-exames/faturamentos/$empresaId',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/faturamentos/$empresaId',
+      path: '/faturamentos/$empresaId',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/cadastros/ubs',
-    path: '/saude/regulacao/autorizacao-exames/cadastros/ubs',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/cadastros/ubs',
+    path: '/cadastros/ubs',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/cadastros/territorio',
-      path: '/saude/regulacao/autorizacao-exames/cadastros/territorio',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/cadastros/territorio',
+      path: '/cadastros/territorio',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/cadastros/profissionais',
-      path: '/saude/regulacao/autorizacao-exames/cadastros/profissionais',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/cadastros/profissionais',
+      path: '/cadastros/profissionais',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/cadastros/procedimentos',
-      path: '/saude/regulacao/autorizacao-exames/cadastros/procedimentos',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/cadastros/procedimentos',
+      path: '/cadastros/procedimentos',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/cadastros/empresas',
-      path: '/saude/regulacao/autorizacao-exames/cadastros/empresas',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/cadastros/empresas',
+      path: '/cadastros/empresas',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRouteImport.update(
     {
-      id: '/saude/regulacao/autorizacao-exames/autorizacoes/nova',
-      path: '/saude/regulacao/autorizacao-exames/autorizacoes/nova',
-      getParentRoute: () => AuthenticatedRoute,
+      id: '/autorizacoes/nova',
+      path: '/autorizacoes/nova',
+      getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
     } as any,
   )
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/autorizacoes/$id',
-    path: '/saude/regulacao/autorizacao-exames/autorizacoes/$id',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/autorizacoes/$id',
+    path: '/autorizacoes/$id',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/admin/usuarios',
-    path: '/saude/regulacao/autorizacao-exames/admin/usuarios',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/admin/usuarios',
+    path: '/admin/usuarios',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/admin/logs',
-    path: '/saude/regulacao/autorizacao-exames/admin/logs',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/admin/logs',
+    path: '/admin/logs',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRouteImport.update({
-    id: '/saude/regulacao/autorizacao-exames/acrescimos/novo',
-    path: '/saude/regulacao/autorizacao-exames/acrescimos/novo',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/acrescimos/novo',
+    path: '/acrescimos/novo',
+    getParentRoute: () => AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRouteImport.update(
@@ -185,6 +192,7 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
   '/saude/regulacao/autorizacao-exames/admin/logs': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute
@@ -208,6 +216,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
   '/saude/regulacao/autorizacao-exames/admin/logs': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/_authenticated/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
   '/_authenticated/saude/regulacao/autorizacao-exames/admin/logs': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
     | '/saude/regulacao/autorizacao-exames/admin/logs'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
     | '/saude/regulacao/autorizacao-exames/admin/logs'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/saude/regulacao/autorizacao-exames'
     | '/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
     | '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo'
     | '/_authenticated/saude/regulacao/autorizacao-exames/admin/logs'
@@ -355,131 +368,138 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/saude/regulacao/autorizacao-exames': {
+      id: '/_authenticated/saude/regulacao/autorizacao-exames'
+      path: '/saude/regulacao/autorizacao-exames'
+      fullPath: '/saude/regulacao/autorizacao-exames'
+      preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/saude/regulacao/autorizacao-exames/dashboard': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
-      path: '/saude/regulacao/autorizacao-exames/dashboard'
+      path: '/dashboard'
       fullPath: '/saude/regulacao/autorizacao-exames/dashboard'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/relatorios/': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/relatorios/'
-      path: '/saude/regulacao/autorizacao-exames/relatorios'
+      path: '/relatorios'
       fullPath: '/saude/regulacao/autorizacao-exames/relatorios/'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/'
-      path: '/saude/regulacao/autorizacao-exames/pacientes'
+      path: '/pacientes'
       fullPath: '/saude/regulacao/autorizacao-exames/pacientes/'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/'
-      path: '/saude/regulacao/autorizacao-exames/faturamentos'
+      path: '/faturamentos'
       fullPath: '/saude/regulacao/autorizacao-exames/faturamentos/'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/'
-      path: '/saude/regulacao/autorizacao-exames/autorizacoes'
+      path: '/autorizacoes'
       fullPath: '/saude/regulacao/autorizacao-exames/autorizacoes/'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/novo': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/novo'
-      path: '/saude/regulacao/autorizacao-exames/pacientes/novo'
+      path: '/pacientes/novo'
       fullPath: '/saude/regulacao/autorizacao-exames/pacientes/novo'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/$id': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/pacientes/$id'
-      path: '/saude/regulacao/autorizacao-exames/pacientes/$id'
+      path: '/pacientes/$id'
       fullPath: '/saude/regulacao/autorizacao-exames/pacientes/$id'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/$empresaId': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/$empresaId'
-      path: '/saude/regulacao/autorizacao-exames/faturamentos/$empresaId'
+      path: '/faturamentos/$empresaId'
       fullPath: '/saude/regulacao/autorizacao-exames/faturamentos/$empresaId'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/ubs': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/ubs'
-      path: '/saude/regulacao/autorizacao-exames/cadastros/ubs'
+      path: '/cadastros/ubs'
       fullPath: '/saude/regulacao/autorizacao-exames/cadastros/ubs'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/territorio': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/territorio'
-      path: '/saude/regulacao/autorizacao-exames/cadastros/territorio'
+      path: '/cadastros/territorio'
       fullPath: '/saude/regulacao/autorizacao-exames/cadastros/territorio'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/profissionais': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/profissionais'
-      path: '/saude/regulacao/autorizacao-exames/cadastros/profissionais'
+      path: '/cadastros/profissionais'
       fullPath: '/saude/regulacao/autorizacao-exames/cadastros/profissionais'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/procedimentos': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/procedimentos'
-      path: '/saude/regulacao/autorizacao-exames/cadastros/procedimentos'
+      path: '/cadastros/procedimentos'
       fullPath: '/saude/regulacao/autorizacao-exames/cadastros/procedimentos'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/empresas': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/cadastros/empresas'
-      path: '/saude/regulacao/autorizacao-exames/cadastros/empresas'
+      path: '/cadastros/empresas'
       fullPath: '/saude/regulacao/autorizacao-exames/cadastros/empresas'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/nova': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/nova'
-      path: '/saude/regulacao/autorizacao-exames/autorizacoes/nova'
+      path: '/autorizacoes/nova'
       fullPath: '/saude/regulacao/autorizacao-exames/autorizacoes/nova'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id'
-      path: '/saude/regulacao/autorizacao-exames/autorizacoes/$id'
+      path: '/autorizacoes/$id'
       fullPath: '/saude/regulacao/autorizacao-exames/autorizacoes/$id'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/admin/usuarios': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/admin/usuarios'
-      path: '/saude/regulacao/autorizacao-exames/admin/usuarios'
+      path: '/admin/usuarios'
       fullPath: '/saude/regulacao/autorizacao-exames/admin/usuarios'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/admin/logs': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/admin/logs'
-      path: '/saude/regulacao/autorizacao-exames/admin/logs'
+      path: '/admin/logs'
       fullPath: '/saude/regulacao/autorizacao-exames/admin/logs'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo'
-      path: '/saude/regulacao/autorizacao-exames/acrescimos/novo'
+      path: '/acrescimos/novo'
       fullPath: '/saude/regulacao/autorizacao-exames/acrescimos/novo'
       preLoaderRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar'
@@ -506,7 +526,7 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteWithChildre
     AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteChildren,
   )
 
-interface AuthenticatedRouteChildren {
+interface AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteChildren {
   AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
   AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute
@@ -527,43 +547,58 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute
 }
 
+const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteChildren: AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteChildren =
+  {
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteWithChildren,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRoute,
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute:
+      AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute,
+  }
+
+const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren =
+  AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute._addFileChildren(
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
+}
+
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminLogsRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAdminUsuariosRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdRouteWithChildren,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesNovaRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosEmpresasRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProcedimentosRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosProfissionaisRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosTerritorioRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesCadastrosUbsRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosEmpresaIdRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIdRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesNovoRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIndexRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesFaturamentosIndexRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesPacientesIndexRoute,
-  AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute:
-    AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRoute,
+  AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute:
+    AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
