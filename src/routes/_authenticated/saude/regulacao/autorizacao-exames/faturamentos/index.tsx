@@ -19,7 +19,7 @@ import {
   type FaturamentoLista,
 } from "@/hooks/queries/use-faturamentos";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/faturamentos/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/")({
   component: FaturamentosList,
 });
 

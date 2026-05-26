@@ -10,7 +10,7 @@ import {
   PacienteFormFields, usePacienteForm, type PacienteForm,
 } from "@/components/pacientes/paciente-form";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/novo")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/pacientes/novo")({
   component: NovoPaciente,
 });
 

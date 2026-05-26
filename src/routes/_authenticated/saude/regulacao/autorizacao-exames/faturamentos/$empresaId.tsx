@@ -43,7 +43,7 @@ import {
 
 const search = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/).optional() });
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/faturamentos/$empresaId")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/$empresaId")({
   validateSearch: search,
   component: ConferenciaFaturamento,
 });

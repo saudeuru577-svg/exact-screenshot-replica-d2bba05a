@@ -35,7 +35,7 @@ function QrThumb({ value }: { value: string }) {
     : <div className="size-14 rounded-sm border bg-muted animate-pulse" />;
 }
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/")({
   component: AutorizacoesList,
 });
 

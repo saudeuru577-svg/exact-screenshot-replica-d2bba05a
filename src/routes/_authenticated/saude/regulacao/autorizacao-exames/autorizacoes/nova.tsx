@@ -26,7 +26,7 @@ import { SignaturePad, type SignaturePadHandle } from "@/components/autorizacoes
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PacienteFormFields, pacienteSchema, usePacienteForm, type PacienteForm } from "@/components/pacientes/paciente-form";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/nova")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/nova")({
   component: NovaAutorizacao,
 });
 

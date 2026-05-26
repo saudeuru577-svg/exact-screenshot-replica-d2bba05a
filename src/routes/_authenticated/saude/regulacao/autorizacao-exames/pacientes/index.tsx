@@ -17,7 +17,7 @@ import {
 import { usePerfil } from "@/hooks/use-perfil";
 import { ageFromDob, dateBR, maskSUS } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/pacientes/")({
   component: PacientesList,
 });
 

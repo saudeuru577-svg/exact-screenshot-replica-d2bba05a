@@ -31,7 +31,7 @@ import {
 } from "@/hooks/queries/use-itens-autorizacao";
 import { useProcedimentosPorEmpresa } from "@/hooks/queries/use-procedimentos";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar")({
   component: EditarAutorizacao,
 });
 

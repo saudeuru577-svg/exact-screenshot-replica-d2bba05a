@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { SignaturePad, type SignaturePadHandle } from "@/components/autorizacoes/signature-pad";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/acrescimos/novo")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo")({
   component: NovoAcrescimo,
 });
 

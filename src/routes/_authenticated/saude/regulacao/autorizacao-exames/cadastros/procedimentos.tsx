@@ -35,7 +35,7 @@ import {
 import { usePerfil } from "@/hooks/use-perfil";
 import { brl } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/cadastros/procedimentos")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/cadastros/procedimentos")({
   component: ProcedimentosPage,
 });
 

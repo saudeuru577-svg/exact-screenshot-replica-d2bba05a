@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/hooks/queries/use-dashboard";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/dashboard")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/dashboard")({
   component: DashboardPage,
 });
 

@@ -16,7 +16,7 @@ import { brl, dateBR, ageFromDob } from "@/lib/format";
 import { useAutorizacaoDetalhe } from "@/hooks/queries/use-autorizacoes";
 import { useItensPorAutorizacaoVisualizacao } from "@/hooks/queries/use-itens-autorizacao";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/$id")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id")({
   component: VisualizarAutorizacao,
 });
 

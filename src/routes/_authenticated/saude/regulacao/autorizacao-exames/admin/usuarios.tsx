@@ -25,7 +25,7 @@ import { formatSupabaseError } from "@/lib/format-error";
 import type { PerfilUsuario } from "@/hooks/use-auth";
 import { PermissoesDialog } from "@/components/admin/permissoes-dialog";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/admin/usuarios")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/admin/usuarios")({
   component: UsuariosPage,
 });
 

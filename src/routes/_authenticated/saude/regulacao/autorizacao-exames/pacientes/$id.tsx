@@ -24,7 +24,7 @@ import {
 } from "@/components/pacientes/paciente-form";
 import { ageFromDob, brl, dateBR, maskSUS } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/$id")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/pacientes/$id")({
   component: PacienteDetalhe,
 });
 
