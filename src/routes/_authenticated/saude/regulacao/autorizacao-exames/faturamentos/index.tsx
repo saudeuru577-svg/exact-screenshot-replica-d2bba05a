@@ -19,7 +19,7 @@ import {
   type FaturamentoLista,
 } from "@/hooks/queries/use-faturamentos";
 
-export const Route = createFileRoute("/_authenticated/faturamentos/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/faturamentos/")({
   component: FaturamentosList,
 });
 
@@ -59,7 +59,7 @@ function FaturamentosList() {
       { empresaId, mes },
       {
         onSuccess: () => {
-          navigate({ to: "/faturamentos/$empresaId", params: { empresaId }, search: { mes } });
+          navigate({ to: "/saude/regulacao/autorizacao-exames/faturamentos/$empresaId", params: { empresaId }, search: { mes } });
         },
         onError: (e: Error) => toast.error(formatSupabaseError(e)),
       },

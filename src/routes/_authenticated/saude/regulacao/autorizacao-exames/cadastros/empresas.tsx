@@ -30,7 +30,7 @@ import {
 import { usePerfil } from "@/hooks/use-perfil";
 import { dateBR, maskCEP, maskCNPJ, maskPhone, validCNPJ } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/cadastros/empresas")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/cadastros/empresas")({
   component: EmpresasPage,
 });
 

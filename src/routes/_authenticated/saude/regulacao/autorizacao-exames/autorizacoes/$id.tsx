@@ -16,7 +16,7 @@ import { brl, dateBR, ageFromDob } from "@/lib/format";
 import { useAutorizacaoDetalhe } from "@/hooks/queries/use-autorizacoes";
 import { useItensPorAutorizacaoVisualizacao } from "@/hooks/queries/use-itens-autorizacao";
 
-export const Route = createFileRoute("/_authenticated/autorizacoes/$id")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id")({
   component: VisualizarAutorizacao,
 });
 
@@ -65,7 +65,7 @@ function VisualizarAutorizacao() {
         <div className="max-w-xl mx-auto text-center space-y-3 py-20">
           <p className="text-destructive font-medium">Autorização não encontrada.</p>
           <Button variant="outline" asChild>
-            <Link to="/autorizacoes"><ArrowLeft className="size-4" /> Voltar</Link>
+            <Link to="/saude/regulacao/autorizacao-exames/autorizacoes"><ArrowLeft className="size-4" /> Voltar</Link>
           </Button>
         </div>
       </PageBody>
@@ -79,7 +79,7 @@ function VisualizarAutorizacao() {
         description={`Emitida em ${dateBR(aut.data_autorizacao)}`}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate({ to: "/autorizacoes" })}>
+            <Button variant="outline" onClick={() => navigate({ to: "/saude/regulacao/autorizacao-exames/autorizacoes" })}>
               <ArrowLeft className="size-4" /> Voltar
             </Button>
             <Button variant="outline" onClick={() => abrirArquivo(aut.pdf_autorizacao, "PDF")}>
@@ -87,7 +87,7 @@ function VisualizarAutorizacao() {
             </Button>
             {podeEditar && (
               <Button asChild>
-                <Link to="/autorizacoes/$id/editar" params={{ id: aut.id }}>
+                <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar" params={{ id: aut.id }}>
                   <Pencil className="size-4" /> Editar
                 </Link>
               </Button>

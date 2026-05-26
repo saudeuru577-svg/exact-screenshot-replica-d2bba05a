@@ -22,7 +22,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/cadastros/territorio")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/cadastros/territorio")({
   component: TerritorioPage,
 });
 

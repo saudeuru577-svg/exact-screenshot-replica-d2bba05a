@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/hooks/queries/use-dashboard";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/dashboard")({
   component: DashboardPage,
 });
 
@@ -74,7 +74,7 @@ function DashboardPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">Últimas autorizações</CardTitle>
                 <Link
-                  to="/autorizacoes"
+                  to="/saude/regulacao/autorizacao-exames/autorizacoes"
                   className="text-sm text-primary hover:underline inline-flex items-center gap-1"
                 >
                   Ver todas <ArrowUpRight className="size-3.5" />

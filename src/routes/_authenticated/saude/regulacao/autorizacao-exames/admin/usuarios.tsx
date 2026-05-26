@@ -25,11 +25,11 @@ import { formatSupabaseError } from "@/lib/format-error";
 import type { PerfilUsuario } from "@/hooks/use-auth";
 import { PermissoesDialog } from "@/components/admin/permissoes-dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/usuarios")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/admin/usuarios")({
   component: UsuariosPage,
 });
 
-const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro"];
+const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"];
 
 function UsuariosPage() {
   const [open, setOpen] = useState(false);

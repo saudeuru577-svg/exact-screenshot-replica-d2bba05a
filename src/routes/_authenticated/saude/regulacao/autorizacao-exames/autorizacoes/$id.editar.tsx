@@ -31,7 +31,7 @@ import {
 } from "@/hooks/queries/use-itens-autorizacao";
 import { useProcedimentosPorEmpresa } from "@/hooks/queries/use-procedimentos";
 
-export const Route = createFileRoute("/_authenticated/autorizacoes/$id/editar")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar")({
   component: EditarAutorizacao,
 });
 
@@ -174,7 +174,7 @@ function EditarAutorizacao() {
       } else {
         toast.success("Alterações salvas");
       }
-      navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
+      navigate({ to: "/saude/regulacao/autorizacao-exames/autorizacoes/$id", params: { id: a.id } });
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
@@ -205,7 +205,7 @@ function EditarAutorizacao() {
         <div className="max-w-xl mx-auto text-center space-y-3 py-20">
           <p className="text-destructive font-medium">Autorização não encontrada.</p>
           <Button variant="outline" asChild>
-            <Link to="/autorizacoes"><ArrowLeft className="size-4" /> Voltar</Link>
+            <Link to="/saude/regulacao/autorizacao-exames/autorizacoes"><ArrowLeft className="size-4" /> Voltar</Link>
           </Button>
         </div>
       </PageBody>
@@ -224,7 +224,7 @@ function EditarAutorizacao() {
                 Atendentes só podem editar autorizações pendentes que eles próprios emitiram.
               </p>
               <Button variant="outline" asChild>
-                <Link to="/autorizacoes/$id" params={{ id: aut.id }}>
+                <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id" params={{ id: aut.id }}>
                   <ArrowLeft className="size-4" /> Voltar à visualização
                 </Link>
               </Button>
@@ -242,7 +242,7 @@ function EditarAutorizacao() {
         description={`${aut.paciente?.nome ?? "—"} · ${aut.empresa?.nome_fantasia ?? "—"}`}
         actions={
           <Button variant="outline" asChild>
-            <Link to="/autorizacoes/$id" params={{ id: aut.id }}>
+            <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id" params={{ id: aut.id }}>
               <ArrowLeft className="size-4" /> Cancelar
             </Link>
           </Button>
@@ -358,7 +358,7 @@ function EditarAutorizacao() {
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" asChild>
-              <Link to="/autorizacoes/$id" params={{ id: aut.id }}>Cancelar</Link>
+              <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id" params={{ id: aut.id }}>Cancelar</Link>
             </Button>
             <Button onClick={handleSalvar} disabled={salvar.isPending}>
               {salvar.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
