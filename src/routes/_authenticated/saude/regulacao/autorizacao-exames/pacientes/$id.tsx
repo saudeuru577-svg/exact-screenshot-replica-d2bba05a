@@ -24,7 +24,7 @@ import {
 } from "@/components/pacientes/paciente-form";
 import { ageFromDob, brl, dateBR, maskSUS } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/pacientes/$id")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/$id")({
   component: PacienteDetalhe,
 });
 
@@ -88,7 +88,7 @@ function PacienteDetalhe() {
         description={`Nascimento: ${dateBR(p.dtn)} • ${ageFromDob(p.dtn)} anos • ${p.sexo}`}
         actions={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => navigate({ to: "/pacientes" })}><ArrowLeft className="size-4" /> Voltar</Button>
+            <Button variant="ghost" onClick={() => navigate({ to: "/saude/regulacao/autorizacao-exames/pacientes" })}><ArrowLeft className="size-4" /> Voltar</Button>
             {podeEditar && !editMode && (
               <Button onClick={() => setEditMode(true)}><Pencil className="size-4" /> Editar</Button>
             )}
@@ -143,7 +143,7 @@ function PacienteDetalhe() {
                           <TableCell className="text-right tabular-nums">{brl(Number(a.total_autorizado))}</TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm" asChild>
-                              <Link to="/autorizacoes/$id" params={{ id: a.id }}>Ver</Link>
+                              <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id" params={{ id: a.id }}>Ver</Link>
                             </Button>
                           </TableCell>
                         </TableRow>

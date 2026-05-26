@@ -26,7 +26,7 @@ import { SignaturePad, type SignaturePadHandle } from "@/components/autorizacoes
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PacienteFormFields, pacienteSchema, usePacienteForm, type PacienteForm } from "@/components/pacientes/paciente-form";
 
-export const Route = createFileRoute("/_authenticated/autorizacoes/nova")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/nova")({
   component: NovaAutorizacao,
 });
 
@@ -108,7 +108,7 @@ function NovaAutorizacao() {
           )}
 
           <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={() => (step === 0 ? navigate({ to: "/autorizacoes" }) : setStep(step - 1))}>
+            <Button variant="outline" onClick={() => (step === 0 ? navigate({ to: "/saude/regulacao/autorizacao-exames/autorizacoes" }) : setStep(step - 1))}>
               <ArrowLeft className="size-4" /> {step === 0 ? "Cancelar" : "Voltar"}
             </Button>
             {step < 4 ? (
@@ -715,7 +715,7 @@ function SubmitButton(props: {
       } else {
         toast.success(`Autorização ${a.num_aut} emitida`);
       }
-      navigate({ to: "/autorizacoes/$id", params: { id: a.id } });
+      navigate({ to: "/saude/regulacao/autorizacao-exames/autorizacoes/$id", params: { id: a.id } });
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });

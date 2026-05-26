@@ -17,7 +17,7 @@ import {
 import { usePerfil } from "@/hooks/use-perfil";
 import { ageFromDob, dateBR, maskSUS } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/pacientes/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/")({
   component: PacientesList,
 });
 
@@ -44,7 +44,7 @@ function PacientesList() {
       <PageHeader
         title="Pacientes" description="Cadastro municipal de pacientes."
         actions={podeCriar && (
-          <Button asChild><Link to="/pacientes/novo"><Plus className="size-4" /> Novo paciente</Link></Button>
+          <Button asChild><Link to="/saude/regulacao/autorizacao-exames/pacientes/novo"><Plus className="size-4" /> Novo paciente</Link></Button>
         )}
       />
       <PageBody>
@@ -87,7 +87,7 @@ function PacientesList() {
                   <TableCell className="text-sm">{p.bairro?.nome ?? p.povoado?.nome ?? "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link to="/pacientes/$id" params={{ id: p.id }}><Eye className="size-4" /></Link>
+                      <Link to="/saude/regulacao/autorizacao-exames/pacientes/$id" params={{ id: p.id }}><Eye className="size-4" /></Link>
                     </Button>
                   </TableCell>
                 </TableRow>

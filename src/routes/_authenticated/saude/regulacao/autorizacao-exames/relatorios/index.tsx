@@ -5,7 +5,7 @@ import { R1AutPorProcedimento } from "@/components/relatorios/aut-por-procedimen
 import { R2FatPorProcedimento } from "@/components/relatorios/fat-por-procedimento";
 import { RelatorioNominal } from "@/components/relatorios/relatorio-nominal";
 
-export const Route = createFileRoute("/_authenticated/relatorios/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/relatorios/")({
   component: RelatoriosPage,
 });
 

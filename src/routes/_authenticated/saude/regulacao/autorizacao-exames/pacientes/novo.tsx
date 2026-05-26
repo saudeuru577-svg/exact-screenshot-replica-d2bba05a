@@ -10,7 +10,7 @@ import {
   PacienteFormFields, usePacienteForm, type PacienteForm,
 } from "@/components/pacientes/paciente-form";
 
-export const Route = createFileRoute("/_authenticated/pacientes/novo")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/pacientes/novo")({
   component: NovoPaciente,
 });
 
@@ -39,7 +39,7 @@ function NovoPaciente() {
     create.mutate(payload, {
       onSuccess: (id) => {
         toast.success("Paciente cadastrado");
-        navigate({ to: "/pacientes/$id", params: { id } });
+        navigate({ to: "/saude/regulacao/autorizacao-exames/pacientes/$id", params: { id } });
       },
       onError: (e: Error) => toast.error(formatSupabaseError(e)),
     });

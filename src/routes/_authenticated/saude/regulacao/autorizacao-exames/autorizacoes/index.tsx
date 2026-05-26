@@ -35,7 +35,7 @@ function QrThumb({ value }: { value: string }) {
     : <div className="size-14 rounded-sm border bg-muted animate-pulse" />;
 }
 
-export const Route = createFileRoute("/_authenticated/autorizacoes/")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/autorizacoes/")({
   component: AutorizacoesList,
 });
 
@@ -100,7 +100,7 @@ function AutorizacoesList() {
       <PageHeader
         title="Autorizações" description="Histórico e emissão de autorizações de exames e consultas."
         actions={podeCriar && (
-          <Button asChild><Link to="/autorizacoes/nova"><Plus className="size-4" /> Nova autorização</Link></Button>
+          <Button asChild><Link to="/saude/regulacao/autorizacao-exames/autorizacoes/nova"><Plus className="size-4" /> Nova autorização</Link></Button>
         )}
       />
       <PageBody>
@@ -162,13 +162,13 @@ function AutorizacoesList() {
                 </span>
                 <div className="flex items-center gap-0.5">
                   <Button variant="ghost" size="icon" asChild className="size-8" title="Visualizar">
-                    <Link to="/autorizacoes/$id" params={{ id: a.id }} aria-label="Visualizar">
+                    <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id" params={{ id: a.id }} aria-label="Visualizar">
                       <Eye className="size-4" />
                     </Link>
                   </Button>
                   {(isAdmin || (a.status === "pendente" && has(["atendente"]))) && (
                     <Button variant="ghost" size="icon" asChild className="size-8" title="Editar">
-                      <Link to="/autorizacoes/$id/editar" params={{ id: a.id }} aria-label="Editar">
+                      <Link to="/saude/regulacao/autorizacao-exames/autorizacoes/$id/editar" params={{ id: a.id }} aria-label="Editar">
                         <Pencil className="size-4" />
                       </Link>
                     </Button>

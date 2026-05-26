@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { SignaturePad, type SignaturePadHandle } from "@/components/autorizacoes/signature-pad";
 
-export const Route = createFileRoute("/_authenticated/acrescimos/novo")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/acrescimos/novo")({
   component: NovoAcrescimo,
 });
 
@@ -116,7 +116,7 @@ function NovoAcrescimo() {
     },
     onSuccess: () => {
       toast.success("Acréscimo registrado — novo limite em vigor");
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/saude/regulacao/autorizacao-exames/dashboard" });
     },
     onError: (e: Error) => toast.error(formatSupabaseError(e)),
   });
@@ -214,7 +214,7 @@ function NovoAcrescimo() {
           )}
 
           <div className="flex justify-between pt-4 border-t">
-            <Button variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancelar</Button>
+            <Button variant="outline" onClick={() => navigate({ to: "/saude/regulacao/autorizacao-exames/dashboard" })}>Cancelar</Button>
             <Button onClick={() => m.mutate()} disabled={!podeEnviar || m.isPending}>
               {m.isPending && <Loader2 className="size-4 animate-spin" />} Registrar acréscimo
             </Button>

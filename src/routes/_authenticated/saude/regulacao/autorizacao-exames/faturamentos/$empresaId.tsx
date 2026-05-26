@@ -43,7 +43,7 @@ import {
 
 const search = z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/).optional() });
 
-export const Route = createFileRoute("/_authenticated/faturamentos/$empresaId")({
+export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/saude/regulacao/autorizacao-exames/faturamentos/$empresaId")({
   validateSearch: search,
   component: ConferenciaFaturamento,
 });
@@ -105,7 +105,7 @@ function ConferenciaFaturamento() {
     finalizarMut.mutate(fatId, {
       onSuccess: () => {
         toast.success("Faturamento finalizado");
-        navigate({ to: "/faturamentos" });
+        navigate({ to: "/saude/regulacao/autorizacao-exames/faturamentos" });
       },
       onError: (e: Error) => toast.error(formatSupabaseError(e)),
     });
@@ -127,7 +127,7 @@ function ConferenciaFaturamento() {
   if (errorFat || !faturamento) {
     return (
       <>
-        <PageHeader title="Conferência" actions={<Link to="/faturamentos"><Button variant="outline"><ArrowLeft className="size-4" /> Voltar</Button></Link>} />
+        <PageHeader title="Conferência" actions={<Link to="/saude/regulacao/autorizacao-exames/faturamentos"><Button variant="outline"><ArrowLeft className="size-4" /> Voltar</Button></Link>} />
         <PageBody>
           <Card className="p-8 text-center">
             {errorFat ? (
@@ -153,7 +153,7 @@ function ConferenciaFaturamento() {
         title={faturamento.empresa?.nome_fantasia ?? "Conferência"}
         description={`Mês de referência: ${faturamento.mes_referencia}`}
         actions={
-          <Link to="/faturamentos">
+          <Link to="/saude/regulacao/autorizacao-exames/faturamentos">
             <Button variant="outline" size="sm"><ArrowLeft className="size-4" /> Voltar</Button>
           </Link>
         }
