@@ -2,7 +2,13 @@ import { create } from "zustand";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type PerfilUsuario = "administrador" | "secretaria" | "atendente" | "financeiro";
+export type PerfilUsuario =
+  | "administrador"
+  | "secretaria"
+  | "atendente"
+  | "financeiro"
+  | "regulador"
+  | "profissional_ubs";
 
 export type Usuario = {
   id: string;
