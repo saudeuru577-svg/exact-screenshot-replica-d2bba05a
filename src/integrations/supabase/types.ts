@@ -901,6 +901,8 @@ export type Database = {
         | "secretaria"
         | "atendente"
         | "financeiro"
+        | "regulador"
+        | "profissional_ubs"
       sexo_tipo: "masculino" | "feminino"
       status_acrescimo: "pendente" | "aprovado" | "rejeitado"
       status_autorizacao:
@@ -1054,6 +1056,8 @@ export const Constants = {
         "secretaria",
         "atendente",
         "financeiro",
+        "regulador",
+        "profissional_ubs",
       ],
       sexo_tipo: ["masculino", "feminino"],
       status_acrescimo: ["pendente", "aprovado", "rejeitado"],
