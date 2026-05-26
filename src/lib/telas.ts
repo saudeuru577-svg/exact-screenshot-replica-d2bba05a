@@ -7,24 +7,46 @@ export type TelaDef = {
   perfisPadrao: PerfilUsuario[]; // perfis com acesso por padrão
 };
 
+/** Perfis com acesso ao submódulo Autorização de Exames (Cidade Presente · Saúde). */
+export const PERFIS_SUBMODULO: PerfilUsuario[] = [
+  "administrador",
+  "regulador",
+  "profissional_ubs",
+];
+
+const BASE = "/saude/regulacao/autorizacao-exames";
+
 export const TELAS: TelaDef[] = [
-  { key: "/dashboard", label: "Dashboard", grupo: "Geral", perfisPadrao: ["administrador", "secretaria", "atendente", "financeiro"] },
+  { key: `${BASE}/dashboard`, label: "Dashboard", grupo: "Central de Regulação",
+    perfisPadrao: ["administrador", "regulador", "profissional_ubs"] },
 
-  { key: "/pacientes", label: "Pacientes", grupo: "Operacional", perfisPadrao: ["administrador", "secretaria", "atendente"] },
-  { key: "/autorizacoes", label: "Autorizações", grupo: "Operacional", perfisPadrao: ["administrador", "secretaria", "atendente", "financeiro"] },
-  { key: "/acrescimos/novo", label: "Solicitar acréscimo", grupo: "Operacional", perfisPadrao: ["administrador", "secretaria"] },
+  { key: `${BASE}/pacientes`, label: "Pacientes", grupo: "Central de Regulação",
+    perfisPadrao: ["administrador", "profissional_ubs"] },
+  { key: `${BASE}/autorizacoes`, label: "Autorizações", grupo: "Central de Regulação",
+    perfisPadrao: ["administrador", "regulador", "profissional_ubs"] },
+  { key: `${BASE}/acrescimos/novo`, label: "Solicitar acréscimo", grupo: "Central de Regulação",
+    perfisPadrao: ["administrador", "regulador"] },
 
-  { key: "/faturamentos", label: "Faturamentos", grupo: "Financeiro", perfisPadrao: ["administrador", "financeiro"] },
-  { key: "/relatorios", label: "Relatórios", grupo: "Financeiro", perfisPadrao: ["administrador", "secretaria", "financeiro"] },
+  { key: `${BASE}/faturamentos`, label: "Faturamentos", grupo: "Apoio",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/relatorios`, label: "Relatórios", grupo: "Apoio",
+    perfisPadrao: ["administrador", "regulador"] },
 
-  { key: "/cadastros/ubs", label: "UBS", grupo: "Cadastros", perfisPadrao: ["administrador"] },
-  { key: "/cadastros/profissionais", label: "Profissionais", grupo: "Cadastros", perfisPadrao: ["administrador"] },
-  { key: "/cadastros/empresas", label: "Empresas", grupo: "Cadastros", perfisPadrao: ["administrador"] },
-  { key: "/cadastros/procedimentos", label: "Procedimentos", grupo: "Cadastros", perfisPadrao: ["administrador"] },
-  { key: "/cadastros/territorio", label: "Bairros e Povoados", grupo: "Cadastros", perfisPadrao: ["administrador"] },
+  { key: `${BASE}/cadastros/ubs`, label: "UBS", grupo: "Cadastros",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/cadastros/profissionais`, label: "Profissionais", grupo: "Cadastros",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/cadastros/empresas`, label: "Empresas", grupo: "Cadastros",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/cadastros/procedimentos`, label: "Procedimentos", grupo: "Cadastros",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/cadastros/territorio`, label: "Bairros e Povoados", grupo: "Cadastros",
+    perfisPadrao: ["administrador"] },
 
-  { key: "/admin/usuarios", label: "Usuários", grupo: "Administração", perfisPadrao: ["administrador"] },
-  { key: "/admin/logs", label: "Logs de auditoria", grupo: "Administração", perfisPadrao: ["administrador"] },
+  { key: `${BASE}/admin/usuarios`, label: "Usuários", grupo: "Administração",
+    perfisPadrao: ["administrador"] },
+  { key: `${BASE}/admin/logs`, label: "Logs de auditoria", grupo: "Administração",
+    perfisPadrao: ["administrador"] },
 ];
 
 export function temAcessoPadrao(tela: TelaDef, perfil: PerfilUsuario): boolean {
