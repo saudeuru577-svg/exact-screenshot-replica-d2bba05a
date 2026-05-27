@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!["administrador", "secretaria", "atendente", "financeiro"].includes(perfil)) {
+    if (!["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"].includes(perfil)) {
       return new Response(JSON.stringify({ error: "Perfil inválido" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
