@@ -269,3 +269,80 @@ function NovoUsuarioDialog({ onClose }: { onClose: () => void }) {
     </DialogContent>
   );
 }
+
+function EditarUsuarioDialog({ usuario, onClose }: { usuario: UsuarioLista; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [nome, setNome] = useState(usuario.nome);
+  const [perfil, setPerfil] = useState<PerfilUsuario>(usuario.perfil);
+  const [password, setPassword] = useState("");
+
+  const update = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin-manage-user", {
+        body: {
+          action: "update",
+          user_id: usuario.id,
+          nome,
+          perfil,
+          password: password || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      toast.success("Usuário atualizado");
+      qc.invalidateQueries({ queryKey: usuariosKeys.all });
+      onClose();
+    },
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
+  });
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Editar usuário</DialogTitle>
+        <DialogDescription>{usuario.email}</DialogDescription>
+      </DialogHeader>
+      <form
+        className="space-y-4"
+        onSubmit={(e) => { e.preventDefault(); update.mutate(); }}
+      >
+        <div className="space-y-2">
+          <Label>Nome</Label>
+          <Input value={nome} onChange={(e) => setNome(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label>Perfil</Label>
+          <Select value={perfil} onValueChange={(v) => setPerfil(v as PerfilUsuario)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PERFIS.map((p) => (
+                <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Nova senha (opcional)</Label>
+          <Input
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            placeholder="Deixe em branco para manter"
+          />
+          <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="submit" disabled={update.isPending}>
+            {update.isPending && <Loader2 className="size-4 animate-spin" />}
+            Salvar
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  );
+}
+
