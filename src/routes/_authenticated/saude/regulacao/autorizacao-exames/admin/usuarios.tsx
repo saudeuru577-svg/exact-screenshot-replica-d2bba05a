@@ -23,6 +23,8 @@ import {
 import { toast } from "sonner";
 import { formatSupabaseError } from "@/lib/format-error";
 import type { PerfilUsuario } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
+import { confirm } from "@/components/ui/confirm";
 import { PermissoesDialog } from "@/components/admin/permissoes-dialog";
 
 export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizacao-exames/admin/usuarios")({
