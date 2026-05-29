@@ -198,28 +198,6 @@ function UsuariosPage() {
   );
 }
 
-                {(!usuarios || usuarios.length === 0) && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                      <UserCog className="size-8 mx-auto mb-2 opacity-50" />
-                      Nenhum usuário cadastrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </PageBody>
-      <PermissoesDialog
-        open={!!permUser}
-        usuario={permUser}
-        onClose={() => setPermUser(null)}
-      />
-    </>
-  );
-}
-
 function NovoUsuarioDialog({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [nome, setNome] = useState("");
