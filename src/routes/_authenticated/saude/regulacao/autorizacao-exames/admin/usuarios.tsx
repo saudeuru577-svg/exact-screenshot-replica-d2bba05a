@@ -34,7 +34,10 @@ export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizaca
 const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"];
 
 function UsuariosPage() {
+  const qc = useQueryClient();
+  const myId = useAuth((s) => s.usuario?.id);
   const [open, setOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UsuarioLista | null>(null);
   const [permUser, setPermUser] = useState<{ id: string; nome: string; perfil: PerfilUsuario } | null>(null);
 
   const { data: usuarios, isLoading } = useUsuarios();
@@ -49,6 +52,32 @@ function UsuariosPage() {
       },
     );
   };
+
+  const removeUser = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-manage-user", {
+        body: { action: "delete", user_id: id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      toast.success("Usuário excluído");
+      qc.invalidateQueries({ queryKey: usuariosKeys.all });
+    },
+    onError: (e: Error) => toast.error(formatSupabaseError(e)),
+  });
+
+  const handleDelete = async (u: UsuarioLista) => {
+    const ok = await confirm({
+      title: `Excluir ${u.nome}?`,
+      description: "Esta ação é permanente e remove o acesso do usuário ao sistema.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (ok) removeUser.mutate(u.id);
+  };
+
 
 
   return (
