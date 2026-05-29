@@ -139,14 +139,30 @@ function UsuariosPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-3">
+                      <div className="inline-flex items-center gap-2">
                         <Button
                           variant="ghost" size="sm"
                           onClick={() => setPermUser({ id: u.id, nome: u.nome, perfil: u.perfil })}
                         >
                           Permissões
                         </Button>
-                        <div className="inline-flex items-center gap-2">
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => setEditUser(u)}
+                          title="Editar"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => handleDelete(u)}
+                          disabled={u.id === myId || removeUser.isPending}
+                          title={u.id === myId ? "Você não pode excluir o próprio usuário" : "Excluir"}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                        <div className="inline-flex items-center gap-2 ml-2">
                           <span className="text-xs text-muted-foreground">Ativo</span>
                           <Switch
                             checked={u.ativo}
@@ -157,6 +173,31 @@ function UsuariosPage() {
                     </td>
                   </tr>
                 ))}
+                {(!usuarios || usuarios.length === 0) && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                      <UserCog className="size-8 mx-auto mb-2 opacity-50" />
+                      Nenhum usuário cadastrado.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PageBody>
+      <PermissoesDialog
+        open={!!permUser}
+        usuario={permUser}
+        onClose={() => setPermUser(null)}
+      />
+      <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
+        {editUser && <EditarUsuarioDialog usuario={editUser} onClose={() => setEditUser(null)} />}
+      </Dialog>
+    </>
+  );
+}
+
                 {(!usuarios || usuarios.length === 0) && (
                   <tr>
                     <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
