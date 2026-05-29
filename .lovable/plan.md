@@ -1,72 +1,75 @@
 ## Objetivo
 
-Reconhecer o app atual como submódulo **Autorização de Exames** dentro de **Saúde › Central de Regulação** da plataforma Cidade Presente, sem tocar na lógica de negócio nem nos componentes visuais internos das telas existentes.
+Transformar o app no **Módulo Saúde** completo da plataforma Cidade Presente, com 5 subáreas — Central de Regulação (já existe: Autorização de Exames), Atenção Básica, Farmácia, Agendamento e Vigilância. Nesta entrega só Autorização de Exames continua funcional; os demais ficam como shells "Em breve", mas com rotas, perfis e permissões já reservados.
 
 ## Decisões aprovadas
 
-- **Escopo:** re-prefixar rotas e adaptar a sidebar (não construir os 9 módulos agora).
-- **Perfis:** adicionar `regulador` e `profissional_ubs` ao enum, mantendo os atuais.
-- **Visual:** aplicar paleta institucional Cidade Presente (Institutional Blue, neutros, 8pt grid, microcopy respeitosa) apenas no shell — telas internas permanecem como estão.
+- **Navegação:** hub `/saude` com cards dos subáreas; ao entrar, cada submódulo tem sua própria sidebar.
+- **Escopo:** só shell + placeholders (sem tabelas novas, sem regras de negócio para os novos submódulos).
+- **Perfis:** criar perfis específicos por área no enum `perfil_usuario`.
 
-## Resultado esperado
+## Estrutura final
 
 ```
-URL:    /saude/regulacao/autorizacao-exames/<tela-atual>
-Shell:  [Header Saúde] [Breadcrumb: Saúde > Central de Regulação > Autorização de Exames]
-        [Sidebar SIGESA com 'Central de Regulação' aberta e 'Autorização de Exames' ativo]
-        [Conteúdo das telas existentes, intacto]
-Acesso: apenas perfis regulador e profissional_ubs (admin mantém acesso total)
+/saude                                  -> Hub (cards dos 5 submódulos)
+  /saude/regulacao/autorizacao-exames   -> EXISTENTE, intacto
+  /saude/atencao-basica                 -> Shell "Em breve"
+  /saude/farmacia                       -> Shell "Em breve"
+  /saude/agendamento                    -> Shell "Em breve"
+  /saude/vigilancia                     -> Shell "Em breve"
 ```
+
+Layout de submódulo "em breve" reutiliza header institucional + breadcrumb + sidebar mínima já existentes em Autorização de Exames, mas mostra `ComingSoon` no conteúdo (componente já existe em `src/components/layout/coming-soon.tsx`).
 
 ## Tarefas
 
-### 1. Banco — adicionar perfis Regulador e Profissional de UBS
-- Migration: `ALTER TYPE` do enum de perfil (ou app_role) para incluir `regulador` e `profissional_ubs`.
-- Não migrar usuários existentes automaticamente; admin atribui depois pela tela `/admin/usuarios`.
-- **Esperado:** tipos regenerados; nenhum dado quebrado; novos perfis selecionáveis no formulário de usuário.
+### 1. Banco — novos perfis (migration)
+- `ALTER TYPE perfil_usuario ADD VALUE` para: `agente_saude`, `enfermeiro_ubs`, `farmaceutico`, `agendador`, `vigilancia_sanitaria`, `gestor_saude`.
+- Mantém todos os perfis atuais; não migra usuários.
 
-### 2. Tipos e telas — refletir novos perfis
-- Atualizar `PerfilUsuario` em `src/hooks/use-auth.ts` (`"regulador" | "profissional_ubs"`).
-- Atualizar `PERFIL_LABEL` em `_authenticated.tsx` e qualquer select de perfil em `admin/usuarios.tsx` e `permissoes-dialog.tsx`.
-- **Esperado:** zero erros de tipo após `tsc`.
+### 2. Tipos e label de perfil
+- Atualizar `PerfilUsuario` em `src/hooks/use-auth.ts` com os novos valores.
+- Atualizar `PERFIL_LABEL` em `src/routes/_authenticated/saude/regulacao/autorizacao-exames.tsx` e no select de perfil em `admin/usuarios.tsx` + `permissoes-dialog.tsx`.
+- `gestor_saude` é o "super-perfil" de Saúde — acesso a todos os submódulos por padrão.
 
-### 3. Mapa de permissões do submódulo (`src/lib/telas.ts`)
-- Definir constante única `PERFIS_AUT_EXAMES = ["administrador", "regulador", "profissional_ubs"]`.
-- Atualizar `perfisPadrao` de todas as TELAS do submódulo (dashboard, pacientes, autorizações, acréscimos, faturamentos, relatórios, cadastros, admin) usando essa constante + admin onde fizer sentido.
-- Reescrever as `key`s das telas com o novo prefixo `/saude/regulacao/autorizacao-exames/...`.
-- **Esperado:** `temAcessoFinal` continua funcionando; perfis legados (`secretaria`, `atendente`, `financeiro`) deixam de ter acesso por padrão (podem ser concedidos via overrides em `permissoes_usuario`).
+### 3. Mapa de submódulos (`src/lib/modulos-saude.ts` — novo)
+- Constante `SUBMODULOS_SAUDE` com `{ key, label, descricao, icon, perfisPadrao, status: "ativo" | "em_breve" }`.
+- Entradas: Autorização de Exames (ativo), Atenção Básica, Farmácia, Agendamento, Vigilância (em_breve).
+- Função `temAcessoSubmodulo(perfil)` reutilizando lógica de `temAcessoFinal`.
 
-### 4. Re-prefixar rotas para `/saude/regulacao/autorizacao-exames/*`
-- Renomear a pasta `src/routes/_authenticated/` → `src/routes/_authenticated/saude/regulacao/autorizacao-exames/` (mantendo a subárvore intacta: `dashboard.tsx`, `pacientes/`, `autorizacoes/`, `acrescimos/`, `faturamentos/`, `cadastros/`, `relatorios/`, `admin/`).
-- Atualizar cada `createFileRoute("/_authenticated/...")` para a nova string completa.
-- Atualizar `src/routes/index.tsx` → redirect para `/saude/regulacao/autorizacao-exames/dashboard`.
-- Atualizar **todos** os `<Link to=...>` e `navigate({ to: ... })` (rg-search em `src/`) para os novos paths.
-- Não editar `routeTree.gen.ts` (regenerado).
-- **Esperado:** app abre em `/saude/regulacao/autorizacao-exames/dashboard`; nenhum 404 ao navegar.
+### 4. Hub Saúde (`src/routes/_authenticated/saude/index.tsx` — novo)
+- Página com grid de cards (um por submódulo).
+- Cada card: ícone, título, descrição curta, badge "Em breve" quando aplicável, click → navega para o submódulo.
+- Cards bloqueados (perfil sem acesso) ficam visíveis mas desabilitados, com tooltip explicando.
+- Header institucional "SAÚDE · Cidade Presente" reutilizando o estilo do submódulo atual.
 
-### 5. Layout institucional do submódulo
-- Criar `src/routes/_authenticated/saude.tsx` como layout pathless intermediário com `<Outlet />` (futuro espaço para header do módulo Saúde).
-- Criar `src/routes/_authenticated/saude/regulacao/autorizacao-exames/route.tsx` como layout do submódulo, contendo:
-  - **Header do módulo:** faixa superior "SAÚDE · Central de Regulação" com Institutional Blue (`--primary` em tom institucional, definido em `src/styles.css`).
-  - **Breadcrumb:** `Saúde > Central de Regulação > Autorização de Exames` (componente novo `src/components/layout/breadcrumb.tsx` baseado no shadcn breadcrumb existente).
-  - **Sidebar adaptada:** reaproveitar `_authenticated.tsx` mas reorganizar o NAV em duas seções: "Central de Regulação" (Dashboard, Pacientes, Autorizações, Acréscimos) e "Apoio" (Faturamentos, Relatórios, Cadastros, Administração). Topo da sidebar passa a mostrar "SIGESA · Saúde" no lugar de "SISMUNA".
-  - `<Outlet />` para conteúdo.
-- Mover o conteúdo de gate (loading, conta não vinculada/inativa) de `_authenticated.tsx` para um helper compartilhado; `_authenticated.tsx` continua apenas como gate de auth.
-- **Esperado:** todas as telas existentes renderizam dentro do novo shell, sem alteração visual interna.
+### 5. Shells dos novos submódulos
+Para cada um dos 4 novos submódulos criar:
+- `src/routes/_authenticated/saude/<slug>.tsx` (layout do submódulo, igual em estrutura ao de autorização-exames: header + breadcrumb + sidebar simples + `<Outlet />`).
+- `src/routes/_authenticated/saude/<slug>/index.tsx` renderizando `<ComingSoon />`.
+- Sidebar contém apenas um item "Visão geral" + link "← Voltar para Saúde".
+- Gate de perfil aplicado no `beforeLoad` ou no componente (mesma lógica de PERFIS_SUBMODULO atual).
 
-### 6. Tokens visuais Cidade Presente
-- Em `src/styles.css`: adicionar/ajustar tokens `--sigesa-primary` (Institutional Blue em oklch), `--sigesa-surface`, `--sigesa-muted`, espaçamentos múltiplos de 8px se necessário.
-- Aplicar apenas no header do módulo e na barra ativa da sidebar. **Não tocar** nos tokens globais usados pelas telas internas.
-- **Esperado:** identidade visual institucional visível só no shell.
+Slugs: `atencao-basica`, `farmacia`, `agendamento`, `vigilancia`.
 
-### 7. Verificação
-- `bunx tsc --noEmit` → 0 erros.
-- Smoke manual via preview: login → redireciona para `/saude/regulacao/autorizacao-exames/dashboard`; cada item da sidebar abre a tela correta; breadcrumb correto; usuário com perfil `regulador` vê tudo; usuário sem perfil é barrado.
-- Console e network sem regressões.
+### 6. Roteamento e entrada
+- `src/routes/index.tsx`: redirect passa a apontar para `/saude` (hub) em vez de direto para autorização-exames.
+- Layout pathless `src/routes/_authenticated/saude.tsx` (se ainda não existir como pathless real) continua só com `<Outlet />`.
+- Atualizar a sidebar de Autorização de Exames para incluir botão "← Outros módulos de Saúde" no topo, voltando para `/saude`.
 
-## Fora de escopo (explícito)
+### 7. Permissões na tela admin
+- O dialog de permissões (`permissoes-dialog.tsx`) já consome `TELAS`. Adicionar entradas em `src/lib/telas.ts` para as chaves novas: `/saude/atencao-basica`, `/saude/farmacia`, `/saude/agendamento`, `/saude/vigilancia`, cada uma com `perfisPadrao` apropriado.
 
-- Construir os outros 8 módulos do Cidade Presente.
-- Refatorar componentes internos das telas (Pacientes, Autorizações, etc.).
-- Migrar usuários existentes para os novos perfis automaticamente.
-- Mover lógica para outro projeto Lovable.
+### 8. Verificação
+- `tsc` sem erros.
+- Login → hub `/saude` com 5 cards (1 ativo, 4 "Em breve").
+- Click em Autorização de Exames → funciona exatamente como hoje.
+- Click em qualquer outro → mostra shell com `ComingSoon`.
+- Admin consegue selecionar os novos perfis ao criar/editar usuário.
+
+## Fora de escopo
+
+- Tabelas, formulários ou regras de negócio dos 4 novos submódulos.
+- Migrar usuários para novos perfis.
+- Redesenho do shell de Autorização de Exames.
+- Outros módulos do Cidade Presente fora de Saúde (Educação, Obras, etc.).
