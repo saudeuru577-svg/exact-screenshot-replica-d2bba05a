@@ -12,7 +12,7 @@ import {
 import {
   LayoutDashboard, Users, FileText, Plus, Wallet, BarChart3,
   Building2, Stethoscope, MapPin, ListChecks, ShieldAlert,
-  LogOut, HeartPulse, UserCog, ChevronRight,
+  LogOut, HeartPulse, UserCog, ChevronRight, ArrowLeft,
 } from "lucide-react";
 import { useAuth, type PerfilUsuario } from "@/hooks/use-auth";
 import { useMinhasPermissoes } from "@/hooks/use-permissoes";
