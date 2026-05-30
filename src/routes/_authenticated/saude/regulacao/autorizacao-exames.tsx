@@ -12,7 +12,7 @@ import {
 import {
   LayoutDashboard, Users, FileText, Plus, Wallet, BarChart3,
   Building2, Stethoscope, MapPin, ListChecks, ShieldAlert,
-  LogOut, HeartPulse, UserCog, ChevronRight,
+  LogOut, HeartPulse, UserCog, ChevronRight, ArrowLeft,
 } from "lucide-react";
 import { useAuth, type PerfilUsuario } from "@/hooks/use-auth";
 import { useMinhasPermissoes } from "@/hooks/use-permissoes";
@@ -87,6 +87,12 @@ const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   financeiro: "Financeiro",
   regulador: "Regulador",
   profissional_ubs: "Profissional de UBS",
+  agente_saude: "Agente de Saúde",
+  enfermeiro_ubs: "Enfermeiro(a) UBS",
+  farmaceutico: "Farmacêutico(a)",
+  agendador: "Agendador(a)",
+  vigilancia_sanitaria: "Vigilância Sanitária",
+  gestor_saude: "Gestor(a) de Saúde",
 };
 
 function SubmoduloLayout() {
@@ -134,6 +140,15 @@ function SubmoduloLayout() {
             <div className="font-semibold text-sm">SIGESA · Saúde</div>
             <div className="text-[11px] text-muted-foreground">Cidade Presente</div>
           </div>
+        </div>
+
+        <div className="px-3 pt-3">
+          <Link
+            to="/saude"
+            className="flex items-center gap-2 px-2.5 py-2 rounded-md text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          >
+            <ArrowLeft className="size-3.5" /> Outros módulos de Saúde
+          </Link>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
