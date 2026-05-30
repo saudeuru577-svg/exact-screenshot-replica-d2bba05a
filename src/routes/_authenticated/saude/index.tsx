@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, HeartPulse, Lock } from "lucide-react";
+import { LogOut, HeartPulse, Lock, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,11 +47,19 @@ function SaudeHub() {
 
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-6 lg:px-8 py-10">
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold tracking-tight">Selecione um submódulo</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Acesse as áreas operacionais da Secretaria de Saúde.
-            </p>
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Selecione um submódulo</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Acesse as áreas operacionais da Secretaria de Saúde.
+              </p>
+            </div>
+            <Link
+              to="/inicio"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 shrink-0 mt-1"
+            >
+              <ArrowLeft className="size-3.5" /> Voltar ao Cidade Presente
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
