@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/saude/regulacao/autorizaca
   component: UsuariosPage,
 });
 
-const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"];
+const PERFIS: PerfilUsuario[] = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs", "agente_saude", "enfermeiro_ubs", "farmaceutico", "agendador", "vigilancia_sanitaria", "gestor_saude"];
 
 function UsuariosPage() {
   const qc = useQueryClient();
