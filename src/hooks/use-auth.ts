@@ -8,7 +8,13 @@ export type PerfilUsuario =
   | "atendente"
   | "financeiro"
   | "regulador"
-  | "profissional_ubs";
+  | "profissional_ubs"
+  | "agente_saude"
+  | "enfermeiro_ubs"
+  | "farmaceutico"
+  | "agendador"
+  | "vigilancia_sanitaria"
+  | "gestor_saude";
 
 export type Usuario = {
   id: string;
