@@ -12,11 +12,55 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
+import { Route as AuthenticatedSegurancaIndexRouteImport } from './routes/_authenticated/seguranca/index'
 import { Route as AuthenticatedSaudeIndexRouteImport } from './routes/_authenticated/saude/index'
+import { Route as AuthenticatedOuvidoriaIndexRouteImport } from './routes/_authenticated/ouvidoria/index'
+import { Route as AuthenticatedObrasIndexRouteImport } from './routes/_authenticated/obras/index'
+import { Route as AuthenticatedMeioAmbienteIndexRouteImport } from './routes/_authenticated/meio-ambiente/index'
+import { Route as AuthenticatedFazendaIndexRouteImport } from './routes/_authenticated/fazenda/index'
+import { Route as AuthenticatedEducacaoIndexRouteImport } from './routes/_authenticated/educacao/index'
+import { Route as AuthenticatedCulturaEsporteTurismoIndexRouteImport } from './routes/_authenticated/cultura-esporte-turismo/index'
+import { Route as AuthenticatedAssistenciaSocialIndexRouteImport } from './routes/_authenticated/assistencia-social/index'
+import { Route as AuthenticatedAgriculturaIndexRouteImport } from './routes/_authenticated/agricultura/index'
+import { Route as AuthenticatedAdministracaoIndexRouteImport } from './routes/_authenticated/administracao/index'
+import { Route as AuthenticatedSegurancaOcorrenciasRouteImport } from './routes/_authenticated/seguranca/ocorrencias'
+import { Route as AuthenticatedSegurancaGuardaRouteImport } from './routes/_authenticated/seguranca/guarda'
+import { Route as AuthenticatedSegurancaAlertasRouteImport } from './routes/_authenticated/seguranca/alertas'
 import { Route as AuthenticatedSaudeVigilanciaRouteImport } from './routes/_authenticated/saude/vigilancia'
 import { Route as AuthenticatedSaudeFarmaciaRouteImport } from './routes/_authenticated/saude/farmacia'
 import { Route as AuthenticatedSaudeAtencaoBasicaRouteImport } from './routes/_authenticated/saude/atencao-basica'
 import { Route as AuthenticatedSaudeAgendamentoRouteImport } from './routes/_authenticated/saude/agendamento'
+import { Route as AuthenticatedOuvidoriaManifestacoesRouteImport } from './routes/_authenticated/ouvidoria/manifestacoes'
+import { Route as AuthenticatedObrasOrdensServicoRouteImport } from './routes/_authenticated/obras/ordens-servico'
+import { Route as AuthenticatedObrasManutencaoViariaRouteImport } from './routes/_authenticated/obras/manutencao-viaria'
+import { Route as AuthenticatedObrasIluminacaoRouteImport } from './routes/_authenticated/obras/iluminacao'
+import { Route as AuthenticatedMeioAmbienteLicenciamentoRouteImport } from './routes/_authenticated/meio-ambiente/licenciamento'
+import { Route as AuthenticatedMeioAmbienteFiscalizacaoRouteImport } from './routes/_authenticated/meio-ambiente/fiscalizacao'
+import { Route as AuthenticatedMeioAmbienteDenunciasRouteImport } from './routes/_authenticated/meio-ambiente/denuncias'
+import { Route as AuthenticatedFazendaIssRouteImport } from './routes/_authenticated/fazenda/iss'
+import { Route as AuthenticatedFazendaIptuRouteImport } from './routes/_authenticated/fazenda/iptu'
+import { Route as AuthenticatedFazendaDividaAtivaRouteImport } from './routes/_authenticated/fazenda/divida-ativa'
+import { Route as AuthenticatedFazendaAlvarasRouteImport } from './routes/_authenticated/fazenda/alvaras'
+import { Route as AuthenticatedEducacaoTransporteRouteImport } from './routes/_authenticated/educacao/transporte'
+import { Route as AuthenticatedEducacaoMerendaRouteImport } from './routes/_authenticated/educacao/merenda'
+import { Route as AuthenticatedEducacaoMatriculasRouteImport } from './routes/_authenticated/educacao/matriculas'
+import { Route as AuthenticatedEducacaoEscolasRouteImport } from './routes/_authenticated/educacao/escolas'
+import { Route as AuthenticatedEducacaoCensoRouteImport } from './routes/_authenticated/educacao/censo'
+import { Route as AuthenticatedCulturaEsporteTurismoInscricoesRouteImport } from './routes/_authenticated/cultura-esporte-turismo/inscricoes'
+import { Route as AuthenticatedCulturaEsporteTurismoEventosRouteImport } from './routes/_authenticated/cultura-esporte-turismo/eventos'
+import { Route as AuthenticatedCulturaEsporteTurismoEquipamentosRouteImport } from './routes/_authenticated/cultura-esporte-turismo/equipamentos'
+import { Route as AuthenticatedAssistenciaSocialCreasRouteImport } from './routes/_authenticated/assistencia-social/creas'
+import { Route as AuthenticatedAssistenciaSocialCrasRouteImport } from './routes/_authenticated/assistencia-social/cras'
+import { Route as AuthenticatedAssistenciaSocialCadastroUnicoRouteImport } from './routes/_authenticated/assistencia-social/cadastro-unico'
+import { Route as AuthenticatedAssistenciaSocialBeneficiosRouteImport } from './routes/_authenticated/assistencia-social/beneficios'
+import { Route as AuthenticatedAgriculturaProdutorRuralRouteImport } from './routes/_authenticated/agricultura/produtor-rural'
+import { Route as AuthenticatedAgriculturaFeirasRouteImport } from './routes/_authenticated/agricultura/feiras'
+import { Route as AuthenticatedAgriculturaAterRouteImport } from './routes/_authenticated/agricultura/ater'
+import { Route as AuthenticatedAdministracaoRhRouteImport } from './routes/_authenticated/administracao/rh'
+import { Route as AuthenticatedAdministracaoProtocoloRouteImport } from './routes/_authenticated/administracao/protocolo'
+import { Route as AuthenticatedAdministracaoPatrimonioRouteImport } from './routes/_authenticated/administracao/patrimonio'
+import { Route as AuthenticatedAdministracaoFrotaRouteImport } from './routes/_authenticated/administracao/frota'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/relatorios/index'
@@ -52,11 +96,93 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSegurancaIndexRoute =
+  AuthenticatedSegurancaIndexRouteImport.update({
+    id: '/seguranca/',
+    path: '/seguranca/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSaudeIndexRoute = AuthenticatedSaudeIndexRouteImport.update({
   id: '/saude/',
   path: '/saude/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOuvidoriaIndexRoute =
+  AuthenticatedOuvidoriaIndexRouteImport.update({
+    id: '/ouvidoria/',
+    path: '/ouvidoria/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedObrasIndexRoute = AuthenticatedObrasIndexRouteImport.update({
+  id: '/obras/',
+  path: '/obras/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMeioAmbienteIndexRoute =
+  AuthenticatedMeioAmbienteIndexRouteImport.update({
+    id: '/meio-ambiente/',
+    path: '/meio-ambiente/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFazendaIndexRoute =
+  AuthenticatedFazendaIndexRouteImport.update({
+    id: '/fazenda/',
+    path: '/fazenda/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoIndexRoute =
+  AuthenticatedEducacaoIndexRouteImport.update({
+    id: '/educacao/',
+    path: '/educacao/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCulturaEsporteTurismoIndexRoute =
+  AuthenticatedCulturaEsporteTurismoIndexRouteImport.update({
+    id: '/cultura-esporte-turismo/',
+    path: '/cultura-esporte-turismo/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistenciaSocialIndexRoute =
+  AuthenticatedAssistenciaSocialIndexRouteImport.update({
+    id: '/assistencia-social/',
+    path: '/assistencia-social/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgriculturaIndexRoute =
+  AuthenticatedAgriculturaIndexRouteImport.update({
+    id: '/agricultura/',
+    path: '/agricultura/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdministracaoIndexRoute =
+  AuthenticatedAdministracaoIndexRouteImport.update({
+    id: '/administracao/',
+    path: '/administracao/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSegurancaOcorrenciasRoute =
+  AuthenticatedSegurancaOcorrenciasRouteImport.update({
+    id: '/seguranca/ocorrencias',
+    path: '/seguranca/ocorrencias',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSegurancaGuardaRoute =
+  AuthenticatedSegurancaGuardaRouteImport.update({
+    id: '/seguranca/guarda',
+    path: '/seguranca/guarda',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSegurancaAlertasRoute =
+  AuthenticatedSegurancaAlertasRouteImport.update({
+    id: '/seguranca/alertas',
+    path: '/seguranca/alertas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSaudeVigilanciaRoute =
   AuthenticatedSaudeVigilanciaRouteImport.update({
     id: '/saude/vigilancia',
@@ -79,6 +205,185 @@ const AuthenticatedSaudeAgendamentoRoute =
   AuthenticatedSaudeAgendamentoRouteImport.update({
     id: '/saude/agendamento',
     path: '/saude/agendamento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedOuvidoriaManifestacoesRoute =
+  AuthenticatedOuvidoriaManifestacoesRouteImport.update({
+    id: '/ouvidoria/manifestacoes',
+    path: '/ouvidoria/manifestacoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedObrasOrdensServicoRoute =
+  AuthenticatedObrasOrdensServicoRouteImport.update({
+    id: '/obras/ordens-servico',
+    path: '/obras/ordens-servico',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedObrasManutencaoViariaRoute =
+  AuthenticatedObrasManutencaoViariaRouteImport.update({
+    id: '/obras/manutencao-viaria',
+    path: '/obras/manutencao-viaria',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedObrasIluminacaoRoute =
+  AuthenticatedObrasIluminacaoRouteImport.update({
+    id: '/obras/iluminacao',
+    path: '/obras/iluminacao',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMeioAmbienteLicenciamentoRoute =
+  AuthenticatedMeioAmbienteLicenciamentoRouteImport.update({
+    id: '/meio-ambiente/licenciamento',
+    path: '/meio-ambiente/licenciamento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMeioAmbienteFiscalizacaoRoute =
+  AuthenticatedMeioAmbienteFiscalizacaoRouteImport.update({
+    id: '/meio-ambiente/fiscalizacao',
+    path: '/meio-ambiente/fiscalizacao',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMeioAmbienteDenunciasRoute =
+  AuthenticatedMeioAmbienteDenunciasRouteImport.update({
+    id: '/meio-ambiente/denuncias',
+    path: '/meio-ambiente/denuncias',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFazendaIssRoute = AuthenticatedFazendaIssRouteImport.update({
+  id: '/fazenda/iss',
+  path: '/fazenda/iss',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFazendaIptuRoute =
+  AuthenticatedFazendaIptuRouteImport.update({
+    id: '/fazenda/iptu',
+    path: '/fazenda/iptu',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFazendaDividaAtivaRoute =
+  AuthenticatedFazendaDividaAtivaRouteImport.update({
+    id: '/fazenda/divida-ativa',
+    path: '/fazenda/divida-ativa',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFazendaAlvarasRoute =
+  AuthenticatedFazendaAlvarasRouteImport.update({
+    id: '/fazenda/alvaras',
+    path: '/fazenda/alvaras',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoTransporteRoute =
+  AuthenticatedEducacaoTransporteRouteImport.update({
+    id: '/educacao/transporte',
+    path: '/educacao/transporte',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoMerendaRoute =
+  AuthenticatedEducacaoMerendaRouteImport.update({
+    id: '/educacao/merenda',
+    path: '/educacao/merenda',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoMatriculasRoute =
+  AuthenticatedEducacaoMatriculasRouteImport.update({
+    id: '/educacao/matriculas',
+    path: '/educacao/matriculas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoEscolasRoute =
+  AuthenticatedEducacaoEscolasRouteImport.update({
+    id: '/educacao/escolas',
+    path: '/educacao/escolas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEducacaoCensoRoute =
+  AuthenticatedEducacaoCensoRouteImport.update({
+    id: '/educacao/censo',
+    path: '/educacao/censo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCulturaEsporteTurismoInscricoesRoute =
+  AuthenticatedCulturaEsporteTurismoInscricoesRouteImport.update({
+    id: '/cultura-esporte-turismo/inscricoes',
+    path: '/cultura-esporte-turismo/inscricoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCulturaEsporteTurismoEventosRoute =
+  AuthenticatedCulturaEsporteTurismoEventosRouteImport.update({
+    id: '/cultura-esporte-turismo/eventos',
+    path: '/cultura-esporte-turismo/eventos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCulturaEsporteTurismoEquipamentosRoute =
+  AuthenticatedCulturaEsporteTurismoEquipamentosRouteImport.update({
+    id: '/cultura-esporte-turismo/equipamentos',
+    path: '/cultura-esporte-turismo/equipamentos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistenciaSocialCreasRoute =
+  AuthenticatedAssistenciaSocialCreasRouteImport.update({
+    id: '/assistencia-social/creas',
+    path: '/assistencia-social/creas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistenciaSocialCrasRoute =
+  AuthenticatedAssistenciaSocialCrasRouteImport.update({
+    id: '/assistencia-social/cras',
+    path: '/assistencia-social/cras',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistenciaSocialCadastroUnicoRoute =
+  AuthenticatedAssistenciaSocialCadastroUnicoRouteImport.update({
+    id: '/assistencia-social/cadastro-unico',
+    path: '/assistencia-social/cadastro-unico',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAssistenciaSocialBeneficiosRoute =
+  AuthenticatedAssistenciaSocialBeneficiosRouteImport.update({
+    id: '/assistencia-social/beneficios',
+    path: '/assistencia-social/beneficios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgriculturaProdutorRuralRoute =
+  AuthenticatedAgriculturaProdutorRuralRouteImport.update({
+    id: '/agricultura/produtor-rural',
+    path: '/agricultura/produtor-rural',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgriculturaFeirasRoute =
+  AuthenticatedAgriculturaFeirasRouteImport.update({
+    id: '/agricultura/feiras',
+    path: '/agricultura/feiras',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAgriculturaAterRoute =
+  AuthenticatedAgriculturaAterRouteImport.update({
+    id: '/agricultura/ater',
+    path: '/agricultura/ater',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdministracaoRhRoute =
+  AuthenticatedAdministracaoRhRouteImport.update({
+    id: '/administracao/rh',
+    path: '/administracao/rh',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdministracaoProtocoloRoute =
+  AuthenticatedAdministracaoProtocoloRouteImport.update({
+    id: '/administracao/protocolo',
+    path: '/administracao/protocolo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdministracaoPatrimonioRoute =
+  AuthenticatedAdministracaoPatrimonioRouteImport.update({
+    id: '/administracao/patrimonio',
+    path: '/administracao/patrimonio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdministracaoFrotaRoute =
+  AuthenticatedAdministracaoFrotaRouteImport.update({
+    id: '/administracao/frota',
+    path: '/administracao/frota',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute =
@@ -226,11 +531,55 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/inicio': typeof AuthenticatedInicioRoute
+  '/administracao/frota': typeof AuthenticatedAdministracaoFrotaRoute
+  '/administracao/patrimonio': typeof AuthenticatedAdministracaoPatrimonioRoute
+  '/administracao/protocolo': typeof AuthenticatedAdministracaoProtocoloRoute
+  '/administracao/rh': typeof AuthenticatedAdministracaoRhRoute
+  '/agricultura/ater': typeof AuthenticatedAgriculturaAterRoute
+  '/agricultura/feiras': typeof AuthenticatedAgriculturaFeirasRoute
+  '/agricultura/produtor-rural': typeof AuthenticatedAgriculturaProdutorRuralRoute
+  '/assistencia-social/beneficios': typeof AuthenticatedAssistenciaSocialBeneficiosRoute
+  '/assistencia-social/cadastro-unico': typeof AuthenticatedAssistenciaSocialCadastroUnicoRoute
+  '/assistencia-social/cras': typeof AuthenticatedAssistenciaSocialCrasRoute
+  '/assistencia-social/creas': typeof AuthenticatedAssistenciaSocialCreasRoute
+  '/cultura-esporte-turismo/equipamentos': typeof AuthenticatedCulturaEsporteTurismoEquipamentosRoute
+  '/cultura-esporte-turismo/eventos': typeof AuthenticatedCulturaEsporteTurismoEventosRoute
+  '/cultura-esporte-turismo/inscricoes': typeof AuthenticatedCulturaEsporteTurismoInscricoesRoute
+  '/educacao/censo': typeof AuthenticatedEducacaoCensoRoute
+  '/educacao/escolas': typeof AuthenticatedEducacaoEscolasRoute
+  '/educacao/matriculas': typeof AuthenticatedEducacaoMatriculasRoute
+  '/educacao/merenda': typeof AuthenticatedEducacaoMerendaRoute
+  '/educacao/transporte': typeof AuthenticatedEducacaoTransporteRoute
+  '/fazenda/alvaras': typeof AuthenticatedFazendaAlvarasRoute
+  '/fazenda/divida-ativa': typeof AuthenticatedFazendaDividaAtivaRoute
+  '/fazenda/iptu': typeof AuthenticatedFazendaIptuRoute
+  '/fazenda/iss': typeof AuthenticatedFazendaIssRoute
+  '/meio-ambiente/denuncias': typeof AuthenticatedMeioAmbienteDenunciasRoute
+  '/meio-ambiente/fiscalizacao': typeof AuthenticatedMeioAmbienteFiscalizacaoRoute
+  '/meio-ambiente/licenciamento': typeof AuthenticatedMeioAmbienteLicenciamentoRoute
+  '/obras/iluminacao': typeof AuthenticatedObrasIluminacaoRoute
+  '/obras/manutencao-viaria': typeof AuthenticatedObrasManutencaoViariaRoute
+  '/obras/ordens-servico': typeof AuthenticatedObrasOrdensServicoRoute
+  '/ouvidoria/manifestacoes': typeof AuthenticatedOuvidoriaManifestacoesRoute
   '/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude/vigilancia': typeof AuthenticatedSaudeVigilanciaRoute
+  '/seguranca/alertas': typeof AuthenticatedSegurancaAlertasRoute
+  '/seguranca/guarda': typeof AuthenticatedSegurancaGuardaRoute
+  '/seguranca/ocorrencias': typeof AuthenticatedSegurancaOcorrenciasRoute
+  '/administracao/': typeof AuthenticatedAdministracaoIndexRoute
+  '/agricultura/': typeof AuthenticatedAgriculturaIndexRoute
+  '/assistencia-social/': typeof AuthenticatedAssistenciaSocialIndexRoute
+  '/cultura-esporte-turismo/': typeof AuthenticatedCulturaEsporteTurismoIndexRoute
+  '/educacao/': typeof AuthenticatedEducacaoIndexRoute
+  '/fazenda/': typeof AuthenticatedFazendaIndexRoute
+  '/meio-ambiente/': typeof AuthenticatedMeioAmbienteIndexRoute
+  '/obras/': typeof AuthenticatedObrasIndexRoute
+  '/ouvidoria/': typeof AuthenticatedOuvidoriaIndexRoute
   '/saude/': typeof AuthenticatedSaudeIndexRoute
+  '/seguranca/': typeof AuthenticatedSegurancaIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -255,11 +604,55 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/inicio': typeof AuthenticatedInicioRoute
+  '/administracao/frota': typeof AuthenticatedAdministracaoFrotaRoute
+  '/administracao/patrimonio': typeof AuthenticatedAdministracaoPatrimonioRoute
+  '/administracao/protocolo': typeof AuthenticatedAdministracaoProtocoloRoute
+  '/administracao/rh': typeof AuthenticatedAdministracaoRhRoute
+  '/agricultura/ater': typeof AuthenticatedAgriculturaAterRoute
+  '/agricultura/feiras': typeof AuthenticatedAgriculturaFeirasRoute
+  '/agricultura/produtor-rural': typeof AuthenticatedAgriculturaProdutorRuralRoute
+  '/assistencia-social/beneficios': typeof AuthenticatedAssistenciaSocialBeneficiosRoute
+  '/assistencia-social/cadastro-unico': typeof AuthenticatedAssistenciaSocialCadastroUnicoRoute
+  '/assistencia-social/cras': typeof AuthenticatedAssistenciaSocialCrasRoute
+  '/assistencia-social/creas': typeof AuthenticatedAssistenciaSocialCreasRoute
+  '/cultura-esporte-turismo/equipamentos': typeof AuthenticatedCulturaEsporteTurismoEquipamentosRoute
+  '/cultura-esporte-turismo/eventos': typeof AuthenticatedCulturaEsporteTurismoEventosRoute
+  '/cultura-esporte-turismo/inscricoes': typeof AuthenticatedCulturaEsporteTurismoInscricoesRoute
+  '/educacao/censo': typeof AuthenticatedEducacaoCensoRoute
+  '/educacao/escolas': typeof AuthenticatedEducacaoEscolasRoute
+  '/educacao/matriculas': typeof AuthenticatedEducacaoMatriculasRoute
+  '/educacao/merenda': typeof AuthenticatedEducacaoMerendaRoute
+  '/educacao/transporte': typeof AuthenticatedEducacaoTransporteRoute
+  '/fazenda/alvaras': typeof AuthenticatedFazendaAlvarasRoute
+  '/fazenda/divida-ativa': typeof AuthenticatedFazendaDividaAtivaRoute
+  '/fazenda/iptu': typeof AuthenticatedFazendaIptuRoute
+  '/fazenda/iss': typeof AuthenticatedFazendaIssRoute
+  '/meio-ambiente/denuncias': typeof AuthenticatedMeioAmbienteDenunciasRoute
+  '/meio-ambiente/fiscalizacao': typeof AuthenticatedMeioAmbienteFiscalizacaoRoute
+  '/meio-ambiente/licenciamento': typeof AuthenticatedMeioAmbienteLicenciamentoRoute
+  '/obras/iluminacao': typeof AuthenticatedObrasIluminacaoRoute
+  '/obras/manutencao-viaria': typeof AuthenticatedObrasManutencaoViariaRoute
+  '/obras/ordens-servico': typeof AuthenticatedObrasOrdensServicoRoute
+  '/ouvidoria/manifestacoes': typeof AuthenticatedOuvidoriaManifestacoesRoute
   '/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude/vigilancia': typeof AuthenticatedSaudeVigilanciaRoute
+  '/seguranca/alertas': typeof AuthenticatedSegurancaAlertasRoute
+  '/seguranca/guarda': typeof AuthenticatedSegurancaGuardaRoute
+  '/seguranca/ocorrencias': typeof AuthenticatedSegurancaOcorrenciasRoute
+  '/administracao': typeof AuthenticatedAdministracaoIndexRoute
+  '/agricultura': typeof AuthenticatedAgriculturaIndexRoute
+  '/assistencia-social': typeof AuthenticatedAssistenciaSocialIndexRoute
+  '/cultura-esporte-turismo': typeof AuthenticatedCulturaEsporteTurismoIndexRoute
+  '/educacao': typeof AuthenticatedEducacaoIndexRoute
+  '/fazenda': typeof AuthenticatedFazendaIndexRoute
+  '/meio-ambiente': typeof AuthenticatedMeioAmbienteIndexRoute
+  '/obras': typeof AuthenticatedObrasIndexRoute
+  '/ouvidoria': typeof AuthenticatedOuvidoriaIndexRoute
   '/saude': typeof AuthenticatedSaudeIndexRoute
+  '/seguranca': typeof AuthenticatedSegurancaIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -286,11 +679,55 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/inicio': typeof AuthenticatedInicioRoute
+  '/_authenticated/administracao/frota': typeof AuthenticatedAdministracaoFrotaRoute
+  '/_authenticated/administracao/patrimonio': typeof AuthenticatedAdministracaoPatrimonioRoute
+  '/_authenticated/administracao/protocolo': typeof AuthenticatedAdministracaoProtocoloRoute
+  '/_authenticated/administracao/rh': typeof AuthenticatedAdministracaoRhRoute
+  '/_authenticated/agricultura/ater': typeof AuthenticatedAgriculturaAterRoute
+  '/_authenticated/agricultura/feiras': typeof AuthenticatedAgriculturaFeirasRoute
+  '/_authenticated/agricultura/produtor-rural': typeof AuthenticatedAgriculturaProdutorRuralRoute
+  '/_authenticated/assistencia-social/beneficios': typeof AuthenticatedAssistenciaSocialBeneficiosRoute
+  '/_authenticated/assistencia-social/cadastro-unico': typeof AuthenticatedAssistenciaSocialCadastroUnicoRoute
+  '/_authenticated/assistencia-social/cras': typeof AuthenticatedAssistenciaSocialCrasRoute
+  '/_authenticated/assistencia-social/creas': typeof AuthenticatedAssistenciaSocialCreasRoute
+  '/_authenticated/cultura-esporte-turismo/equipamentos': typeof AuthenticatedCulturaEsporteTurismoEquipamentosRoute
+  '/_authenticated/cultura-esporte-turismo/eventos': typeof AuthenticatedCulturaEsporteTurismoEventosRoute
+  '/_authenticated/cultura-esporte-turismo/inscricoes': typeof AuthenticatedCulturaEsporteTurismoInscricoesRoute
+  '/_authenticated/educacao/censo': typeof AuthenticatedEducacaoCensoRoute
+  '/_authenticated/educacao/escolas': typeof AuthenticatedEducacaoEscolasRoute
+  '/_authenticated/educacao/matriculas': typeof AuthenticatedEducacaoMatriculasRoute
+  '/_authenticated/educacao/merenda': typeof AuthenticatedEducacaoMerendaRoute
+  '/_authenticated/educacao/transporte': typeof AuthenticatedEducacaoTransporteRoute
+  '/_authenticated/fazenda/alvaras': typeof AuthenticatedFazendaAlvarasRoute
+  '/_authenticated/fazenda/divida-ativa': typeof AuthenticatedFazendaDividaAtivaRoute
+  '/_authenticated/fazenda/iptu': typeof AuthenticatedFazendaIptuRoute
+  '/_authenticated/fazenda/iss': typeof AuthenticatedFazendaIssRoute
+  '/_authenticated/meio-ambiente/denuncias': typeof AuthenticatedMeioAmbienteDenunciasRoute
+  '/_authenticated/meio-ambiente/fiscalizacao': typeof AuthenticatedMeioAmbienteFiscalizacaoRoute
+  '/_authenticated/meio-ambiente/licenciamento': typeof AuthenticatedMeioAmbienteLicenciamentoRoute
+  '/_authenticated/obras/iluminacao': typeof AuthenticatedObrasIluminacaoRoute
+  '/_authenticated/obras/manutencao-viaria': typeof AuthenticatedObrasManutencaoViariaRoute
+  '/_authenticated/obras/ordens-servico': typeof AuthenticatedObrasOrdensServicoRoute
+  '/_authenticated/ouvidoria/manifestacoes': typeof AuthenticatedOuvidoriaManifestacoesRoute
   '/_authenticated/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/_authenticated/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/_authenticated/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/_authenticated/saude/vigilancia': typeof AuthenticatedSaudeVigilanciaRoute
+  '/_authenticated/seguranca/alertas': typeof AuthenticatedSegurancaAlertasRoute
+  '/_authenticated/seguranca/guarda': typeof AuthenticatedSegurancaGuardaRoute
+  '/_authenticated/seguranca/ocorrencias': typeof AuthenticatedSegurancaOcorrenciasRoute
+  '/_authenticated/administracao/': typeof AuthenticatedAdministracaoIndexRoute
+  '/_authenticated/agricultura/': typeof AuthenticatedAgriculturaIndexRoute
+  '/_authenticated/assistencia-social/': typeof AuthenticatedAssistenciaSocialIndexRoute
+  '/_authenticated/cultura-esporte-turismo/': typeof AuthenticatedCulturaEsporteTurismoIndexRoute
+  '/_authenticated/educacao/': typeof AuthenticatedEducacaoIndexRoute
+  '/_authenticated/fazenda/': typeof AuthenticatedFazendaIndexRoute
+  '/_authenticated/meio-ambiente/': typeof AuthenticatedMeioAmbienteIndexRoute
+  '/_authenticated/obras/': typeof AuthenticatedObrasIndexRoute
+  '/_authenticated/ouvidoria/': typeof AuthenticatedOuvidoriaIndexRoute
   '/_authenticated/saude/': typeof AuthenticatedSaudeIndexRoute
+  '/_authenticated/seguranca/': typeof AuthenticatedSegurancaIndexRoute
   '/_authenticated/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/_authenticated/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -317,11 +754,55 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/inicio'
+    | '/administracao/frota'
+    | '/administracao/patrimonio'
+    | '/administracao/protocolo'
+    | '/administracao/rh'
+    | '/agricultura/ater'
+    | '/agricultura/feiras'
+    | '/agricultura/produtor-rural'
+    | '/assistencia-social/beneficios'
+    | '/assistencia-social/cadastro-unico'
+    | '/assistencia-social/cras'
+    | '/assistencia-social/creas'
+    | '/cultura-esporte-turismo/equipamentos'
+    | '/cultura-esporte-turismo/eventos'
+    | '/cultura-esporte-turismo/inscricoes'
+    | '/educacao/censo'
+    | '/educacao/escolas'
+    | '/educacao/matriculas'
+    | '/educacao/merenda'
+    | '/educacao/transporte'
+    | '/fazenda/alvaras'
+    | '/fazenda/divida-ativa'
+    | '/fazenda/iptu'
+    | '/fazenda/iss'
+    | '/meio-ambiente/denuncias'
+    | '/meio-ambiente/fiscalizacao'
+    | '/meio-ambiente/licenciamento'
+    | '/obras/iluminacao'
+    | '/obras/manutencao-viaria'
+    | '/obras/ordens-servico'
+    | '/ouvidoria/manifestacoes'
     | '/saude/agendamento'
     | '/saude/atencao-basica'
     | '/saude/farmacia'
     | '/saude/vigilancia'
+    | '/seguranca/alertas'
+    | '/seguranca/guarda'
+    | '/seguranca/ocorrencias'
+    | '/administracao/'
+    | '/agricultura/'
+    | '/assistencia-social/'
+    | '/cultura-esporte-turismo/'
+    | '/educacao/'
+    | '/fazenda/'
+    | '/meio-ambiente/'
+    | '/obras/'
+    | '/ouvidoria/'
     | '/saude/'
+    | '/seguranca/'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -346,11 +827,55 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/inicio'
+    | '/administracao/frota'
+    | '/administracao/patrimonio'
+    | '/administracao/protocolo'
+    | '/administracao/rh'
+    | '/agricultura/ater'
+    | '/agricultura/feiras'
+    | '/agricultura/produtor-rural'
+    | '/assistencia-social/beneficios'
+    | '/assistencia-social/cadastro-unico'
+    | '/assistencia-social/cras'
+    | '/assistencia-social/creas'
+    | '/cultura-esporte-turismo/equipamentos'
+    | '/cultura-esporte-turismo/eventos'
+    | '/cultura-esporte-turismo/inscricoes'
+    | '/educacao/censo'
+    | '/educacao/escolas'
+    | '/educacao/matriculas'
+    | '/educacao/merenda'
+    | '/educacao/transporte'
+    | '/fazenda/alvaras'
+    | '/fazenda/divida-ativa'
+    | '/fazenda/iptu'
+    | '/fazenda/iss'
+    | '/meio-ambiente/denuncias'
+    | '/meio-ambiente/fiscalizacao'
+    | '/meio-ambiente/licenciamento'
+    | '/obras/iluminacao'
+    | '/obras/manutencao-viaria'
+    | '/obras/ordens-servico'
+    | '/ouvidoria/manifestacoes'
     | '/saude/agendamento'
     | '/saude/atencao-basica'
     | '/saude/farmacia'
     | '/saude/vigilancia'
+    | '/seguranca/alertas'
+    | '/seguranca/guarda'
+    | '/seguranca/ocorrencias'
+    | '/administracao'
+    | '/agricultura'
+    | '/assistencia-social'
+    | '/cultura-esporte-turismo'
+    | '/educacao'
+    | '/fazenda'
+    | '/meio-ambiente'
+    | '/obras'
+    | '/ouvidoria'
     | '/saude'
+    | '/seguranca'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -376,11 +901,55 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/inicio'
+    | '/_authenticated/administracao/frota'
+    | '/_authenticated/administracao/patrimonio'
+    | '/_authenticated/administracao/protocolo'
+    | '/_authenticated/administracao/rh'
+    | '/_authenticated/agricultura/ater'
+    | '/_authenticated/agricultura/feiras'
+    | '/_authenticated/agricultura/produtor-rural'
+    | '/_authenticated/assistencia-social/beneficios'
+    | '/_authenticated/assistencia-social/cadastro-unico'
+    | '/_authenticated/assistencia-social/cras'
+    | '/_authenticated/assistencia-social/creas'
+    | '/_authenticated/cultura-esporte-turismo/equipamentos'
+    | '/_authenticated/cultura-esporte-turismo/eventos'
+    | '/_authenticated/cultura-esporte-turismo/inscricoes'
+    | '/_authenticated/educacao/censo'
+    | '/_authenticated/educacao/escolas'
+    | '/_authenticated/educacao/matriculas'
+    | '/_authenticated/educacao/merenda'
+    | '/_authenticated/educacao/transporte'
+    | '/_authenticated/fazenda/alvaras'
+    | '/_authenticated/fazenda/divida-ativa'
+    | '/_authenticated/fazenda/iptu'
+    | '/_authenticated/fazenda/iss'
+    | '/_authenticated/meio-ambiente/denuncias'
+    | '/_authenticated/meio-ambiente/fiscalizacao'
+    | '/_authenticated/meio-ambiente/licenciamento'
+    | '/_authenticated/obras/iluminacao'
+    | '/_authenticated/obras/manutencao-viaria'
+    | '/_authenticated/obras/ordens-servico'
+    | '/_authenticated/ouvidoria/manifestacoes'
     | '/_authenticated/saude/agendamento'
     | '/_authenticated/saude/atencao-basica'
     | '/_authenticated/saude/farmacia'
     | '/_authenticated/saude/vigilancia'
+    | '/_authenticated/seguranca/alertas'
+    | '/_authenticated/seguranca/guarda'
+    | '/_authenticated/seguranca/ocorrencias'
+    | '/_authenticated/administracao/'
+    | '/_authenticated/agricultura/'
+    | '/_authenticated/assistencia-social/'
+    | '/_authenticated/cultura-esporte-turismo/'
+    | '/_authenticated/educacao/'
+    | '/_authenticated/fazenda/'
+    | '/_authenticated/meio-ambiente/'
+    | '/_authenticated/obras/'
+    | '/_authenticated/ouvidoria/'
     | '/_authenticated/saude/'
+    | '/_authenticated/seguranca/'
     | '/_authenticated/saude/regulacao/autorizacao-exames'
     | '/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
     | '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -432,11 +1001,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/inicio': {
+      id: '/_authenticated/inicio'
+      path: '/inicio'
+      fullPath: '/inicio'
+      preLoaderRoute: typeof AuthenticatedInicioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/seguranca/': {
+      id: '/_authenticated/seguranca/'
+      path: '/seguranca'
+      fullPath: '/seguranca/'
+      preLoaderRoute: typeof AuthenticatedSegurancaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/saude/': {
       id: '/_authenticated/saude/'
       path: '/saude'
       fullPath: '/saude/'
       preLoaderRoute: typeof AuthenticatedSaudeIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ouvidoria/': {
+      id: '/_authenticated/ouvidoria/'
+      path: '/ouvidoria'
+      fullPath: '/ouvidoria/'
+      preLoaderRoute: typeof AuthenticatedOuvidoriaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/obras/': {
+      id: '/_authenticated/obras/'
+      path: '/obras'
+      fullPath: '/obras/'
+      preLoaderRoute: typeof AuthenticatedObrasIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meio-ambiente/': {
+      id: '/_authenticated/meio-ambiente/'
+      path: '/meio-ambiente'
+      fullPath: '/meio-ambiente/'
+      preLoaderRoute: typeof AuthenticatedMeioAmbienteIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fazenda/': {
+      id: '/_authenticated/fazenda/'
+      path: '/fazenda'
+      fullPath: '/fazenda/'
+      preLoaderRoute: typeof AuthenticatedFazendaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/': {
+      id: '/_authenticated/educacao/'
+      path: '/educacao'
+      fullPath: '/educacao/'
+      preLoaderRoute: typeof AuthenticatedEducacaoIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cultura-esporte-turismo/': {
+      id: '/_authenticated/cultura-esporte-turismo/'
+      path: '/cultura-esporte-turismo'
+      fullPath: '/cultura-esporte-turismo/'
+      preLoaderRoute: typeof AuthenticatedCulturaEsporteTurismoIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistencia-social/': {
+      id: '/_authenticated/assistencia-social/'
+      path: '/assistencia-social'
+      fullPath: '/assistencia-social/'
+      preLoaderRoute: typeof AuthenticatedAssistenciaSocialIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agricultura/': {
+      id: '/_authenticated/agricultura/'
+      path: '/agricultura'
+      fullPath: '/agricultura/'
+      preLoaderRoute: typeof AuthenticatedAgriculturaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/administracao/': {
+      id: '/_authenticated/administracao/'
+      path: '/administracao'
+      fullPath: '/administracao/'
+      preLoaderRoute: typeof AuthenticatedAdministracaoIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/seguranca/ocorrencias': {
+      id: '/_authenticated/seguranca/ocorrencias'
+      path: '/seguranca/ocorrencias'
+      fullPath: '/seguranca/ocorrencias'
+      preLoaderRoute: typeof AuthenticatedSegurancaOcorrenciasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/seguranca/guarda': {
+      id: '/_authenticated/seguranca/guarda'
+      path: '/seguranca/guarda'
+      fullPath: '/seguranca/guarda'
+      preLoaderRoute: typeof AuthenticatedSegurancaGuardaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/seguranca/alertas': {
+      id: '/_authenticated/seguranca/alertas'
+      path: '/seguranca/alertas'
+      fullPath: '/seguranca/alertas'
+      preLoaderRoute: typeof AuthenticatedSegurancaAlertasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/saude/vigilancia': {
@@ -465,6 +1132,216 @@ declare module '@tanstack/react-router' {
       path: '/saude/agendamento'
       fullPath: '/saude/agendamento'
       preLoaderRoute: typeof AuthenticatedSaudeAgendamentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ouvidoria/manifestacoes': {
+      id: '/_authenticated/ouvidoria/manifestacoes'
+      path: '/ouvidoria/manifestacoes'
+      fullPath: '/ouvidoria/manifestacoes'
+      preLoaderRoute: typeof AuthenticatedOuvidoriaManifestacoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/obras/ordens-servico': {
+      id: '/_authenticated/obras/ordens-servico'
+      path: '/obras/ordens-servico'
+      fullPath: '/obras/ordens-servico'
+      preLoaderRoute: typeof AuthenticatedObrasOrdensServicoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/obras/manutencao-viaria': {
+      id: '/_authenticated/obras/manutencao-viaria'
+      path: '/obras/manutencao-viaria'
+      fullPath: '/obras/manutencao-viaria'
+      preLoaderRoute: typeof AuthenticatedObrasManutencaoViariaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/obras/iluminacao': {
+      id: '/_authenticated/obras/iluminacao'
+      path: '/obras/iluminacao'
+      fullPath: '/obras/iluminacao'
+      preLoaderRoute: typeof AuthenticatedObrasIluminacaoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meio-ambiente/licenciamento': {
+      id: '/_authenticated/meio-ambiente/licenciamento'
+      path: '/meio-ambiente/licenciamento'
+      fullPath: '/meio-ambiente/licenciamento'
+      preLoaderRoute: typeof AuthenticatedMeioAmbienteLicenciamentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meio-ambiente/fiscalizacao': {
+      id: '/_authenticated/meio-ambiente/fiscalizacao'
+      path: '/meio-ambiente/fiscalizacao'
+      fullPath: '/meio-ambiente/fiscalizacao'
+      preLoaderRoute: typeof AuthenticatedMeioAmbienteFiscalizacaoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meio-ambiente/denuncias': {
+      id: '/_authenticated/meio-ambiente/denuncias'
+      path: '/meio-ambiente/denuncias'
+      fullPath: '/meio-ambiente/denuncias'
+      preLoaderRoute: typeof AuthenticatedMeioAmbienteDenunciasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fazenda/iss': {
+      id: '/_authenticated/fazenda/iss'
+      path: '/fazenda/iss'
+      fullPath: '/fazenda/iss'
+      preLoaderRoute: typeof AuthenticatedFazendaIssRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fazenda/iptu': {
+      id: '/_authenticated/fazenda/iptu'
+      path: '/fazenda/iptu'
+      fullPath: '/fazenda/iptu'
+      preLoaderRoute: typeof AuthenticatedFazendaIptuRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fazenda/divida-ativa': {
+      id: '/_authenticated/fazenda/divida-ativa'
+      path: '/fazenda/divida-ativa'
+      fullPath: '/fazenda/divida-ativa'
+      preLoaderRoute: typeof AuthenticatedFazendaDividaAtivaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fazenda/alvaras': {
+      id: '/_authenticated/fazenda/alvaras'
+      path: '/fazenda/alvaras'
+      fullPath: '/fazenda/alvaras'
+      preLoaderRoute: typeof AuthenticatedFazendaAlvarasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/transporte': {
+      id: '/_authenticated/educacao/transporte'
+      path: '/educacao/transporte'
+      fullPath: '/educacao/transporte'
+      preLoaderRoute: typeof AuthenticatedEducacaoTransporteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/merenda': {
+      id: '/_authenticated/educacao/merenda'
+      path: '/educacao/merenda'
+      fullPath: '/educacao/merenda'
+      preLoaderRoute: typeof AuthenticatedEducacaoMerendaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/matriculas': {
+      id: '/_authenticated/educacao/matriculas'
+      path: '/educacao/matriculas'
+      fullPath: '/educacao/matriculas'
+      preLoaderRoute: typeof AuthenticatedEducacaoMatriculasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/escolas': {
+      id: '/_authenticated/educacao/escolas'
+      path: '/educacao/escolas'
+      fullPath: '/educacao/escolas'
+      preLoaderRoute: typeof AuthenticatedEducacaoEscolasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/educacao/censo': {
+      id: '/_authenticated/educacao/censo'
+      path: '/educacao/censo'
+      fullPath: '/educacao/censo'
+      preLoaderRoute: typeof AuthenticatedEducacaoCensoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cultura-esporte-turismo/inscricoes': {
+      id: '/_authenticated/cultura-esporte-turismo/inscricoes'
+      path: '/cultura-esporte-turismo/inscricoes'
+      fullPath: '/cultura-esporte-turismo/inscricoes'
+      preLoaderRoute: typeof AuthenticatedCulturaEsporteTurismoInscricoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cultura-esporte-turismo/eventos': {
+      id: '/_authenticated/cultura-esporte-turismo/eventos'
+      path: '/cultura-esporte-turismo/eventos'
+      fullPath: '/cultura-esporte-turismo/eventos'
+      preLoaderRoute: typeof AuthenticatedCulturaEsporteTurismoEventosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/cultura-esporte-turismo/equipamentos': {
+      id: '/_authenticated/cultura-esporte-turismo/equipamentos'
+      path: '/cultura-esporte-turismo/equipamentos'
+      fullPath: '/cultura-esporte-turismo/equipamentos'
+      preLoaderRoute: typeof AuthenticatedCulturaEsporteTurismoEquipamentosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistencia-social/creas': {
+      id: '/_authenticated/assistencia-social/creas'
+      path: '/assistencia-social/creas'
+      fullPath: '/assistencia-social/creas'
+      preLoaderRoute: typeof AuthenticatedAssistenciaSocialCreasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistencia-social/cras': {
+      id: '/_authenticated/assistencia-social/cras'
+      path: '/assistencia-social/cras'
+      fullPath: '/assistencia-social/cras'
+      preLoaderRoute: typeof AuthenticatedAssistenciaSocialCrasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistencia-social/cadastro-unico': {
+      id: '/_authenticated/assistencia-social/cadastro-unico'
+      path: '/assistencia-social/cadastro-unico'
+      fullPath: '/assistencia-social/cadastro-unico'
+      preLoaderRoute: typeof AuthenticatedAssistenciaSocialCadastroUnicoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/assistencia-social/beneficios': {
+      id: '/_authenticated/assistencia-social/beneficios'
+      path: '/assistencia-social/beneficios'
+      fullPath: '/assistencia-social/beneficios'
+      preLoaderRoute: typeof AuthenticatedAssistenciaSocialBeneficiosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agricultura/produtor-rural': {
+      id: '/_authenticated/agricultura/produtor-rural'
+      path: '/agricultura/produtor-rural'
+      fullPath: '/agricultura/produtor-rural'
+      preLoaderRoute: typeof AuthenticatedAgriculturaProdutorRuralRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agricultura/feiras': {
+      id: '/_authenticated/agricultura/feiras'
+      path: '/agricultura/feiras'
+      fullPath: '/agricultura/feiras'
+      preLoaderRoute: typeof AuthenticatedAgriculturaFeirasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agricultura/ater': {
+      id: '/_authenticated/agricultura/ater'
+      path: '/agricultura/ater'
+      fullPath: '/agricultura/ater'
+      preLoaderRoute: typeof AuthenticatedAgriculturaAterRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/administracao/rh': {
+      id: '/_authenticated/administracao/rh'
+      path: '/administracao/rh'
+      fullPath: '/administracao/rh'
+      preLoaderRoute: typeof AuthenticatedAdministracaoRhRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/administracao/protocolo': {
+      id: '/_authenticated/administracao/protocolo'
+      path: '/administracao/protocolo'
+      fullPath: '/administracao/protocolo'
+      preLoaderRoute: typeof AuthenticatedAdministracaoProtocoloRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/administracao/patrimonio': {
+      id: '/_authenticated/administracao/patrimonio'
+      path: '/administracao/patrimonio'
+      fullPath: '/administracao/patrimonio'
+      preLoaderRoute: typeof AuthenticatedAdministracaoPatrimonioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/administracao/frota': {
+      id: '/_authenticated/administracao/frota'
+      path: '/administracao/frota'
+      fullPath: '/administracao/frota'
+      preLoaderRoute: typeof AuthenticatedAdministracaoFrotaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames': {
@@ -692,20 +1569,126 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
+  AuthenticatedAdministracaoFrotaRoute: typeof AuthenticatedAdministracaoFrotaRoute
+  AuthenticatedAdministracaoPatrimonioRoute: typeof AuthenticatedAdministracaoPatrimonioRoute
+  AuthenticatedAdministracaoProtocoloRoute: typeof AuthenticatedAdministracaoProtocoloRoute
+  AuthenticatedAdministracaoRhRoute: typeof AuthenticatedAdministracaoRhRoute
+  AuthenticatedAgriculturaAterRoute: typeof AuthenticatedAgriculturaAterRoute
+  AuthenticatedAgriculturaFeirasRoute: typeof AuthenticatedAgriculturaFeirasRoute
+  AuthenticatedAgriculturaProdutorRuralRoute: typeof AuthenticatedAgriculturaProdutorRuralRoute
+  AuthenticatedAssistenciaSocialBeneficiosRoute: typeof AuthenticatedAssistenciaSocialBeneficiosRoute
+  AuthenticatedAssistenciaSocialCadastroUnicoRoute: typeof AuthenticatedAssistenciaSocialCadastroUnicoRoute
+  AuthenticatedAssistenciaSocialCrasRoute: typeof AuthenticatedAssistenciaSocialCrasRoute
+  AuthenticatedAssistenciaSocialCreasRoute: typeof AuthenticatedAssistenciaSocialCreasRoute
+  AuthenticatedCulturaEsporteTurismoEquipamentosRoute: typeof AuthenticatedCulturaEsporteTurismoEquipamentosRoute
+  AuthenticatedCulturaEsporteTurismoEventosRoute: typeof AuthenticatedCulturaEsporteTurismoEventosRoute
+  AuthenticatedCulturaEsporteTurismoInscricoesRoute: typeof AuthenticatedCulturaEsporteTurismoInscricoesRoute
+  AuthenticatedEducacaoCensoRoute: typeof AuthenticatedEducacaoCensoRoute
+  AuthenticatedEducacaoEscolasRoute: typeof AuthenticatedEducacaoEscolasRoute
+  AuthenticatedEducacaoMatriculasRoute: typeof AuthenticatedEducacaoMatriculasRoute
+  AuthenticatedEducacaoMerendaRoute: typeof AuthenticatedEducacaoMerendaRoute
+  AuthenticatedEducacaoTransporteRoute: typeof AuthenticatedEducacaoTransporteRoute
+  AuthenticatedFazendaAlvarasRoute: typeof AuthenticatedFazendaAlvarasRoute
+  AuthenticatedFazendaDividaAtivaRoute: typeof AuthenticatedFazendaDividaAtivaRoute
+  AuthenticatedFazendaIptuRoute: typeof AuthenticatedFazendaIptuRoute
+  AuthenticatedFazendaIssRoute: typeof AuthenticatedFazendaIssRoute
+  AuthenticatedMeioAmbienteDenunciasRoute: typeof AuthenticatedMeioAmbienteDenunciasRoute
+  AuthenticatedMeioAmbienteFiscalizacaoRoute: typeof AuthenticatedMeioAmbienteFiscalizacaoRoute
+  AuthenticatedMeioAmbienteLicenciamentoRoute: typeof AuthenticatedMeioAmbienteLicenciamentoRoute
+  AuthenticatedObrasIluminacaoRoute: typeof AuthenticatedObrasIluminacaoRoute
+  AuthenticatedObrasManutencaoViariaRoute: typeof AuthenticatedObrasManutencaoViariaRoute
+  AuthenticatedObrasOrdensServicoRoute: typeof AuthenticatedObrasOrdensServicoRoute
+  AuthenticatedOuvidoriaManifestacoesRoute: typeof AuthenticatedOuvidoriaManifestacoesRoute
   AuthenticatedSaudeAgendamentoRoute: typeof AuthenticatedSaudeAgendamentoRoute
   AuthenticatedSaudeAtencaoBasicaRoute: typeof AuthenticatedSaudeAtencaoBasicaRoute
   AuthenticatedSaudeFarmaciaRoute: typeof AuthenticatedSaudeFarmaciaRoute
   AuthenticatedSaudeVigilanciaRoute: typeof AuthenticatedSaudeVigilanciaRoute
+  AuthenticatedSegurancaAlertasRoute: typeof AuthenticatedSegurancaAlertasRoute
+  AuthenticatedSegurancaGuardaRoute: typeof AuthenticatedSegurancaGuardaRoute
+  AuthenticatedSegurancaOcorrenciasRoute: typeof AuthenticatedSegurancaOcorrenciasRoute
+  AuthenticatedAdministracaoIndexRoute: typeof AuthenticatedAdministracaoIndexRoute
+  AuthenticatedAgriculturaIndexRoute: typeof AuthenticatedAgriculturaIndexRoute
+  AuthenticatedAssistenciaSocialIndexRoute: typeof AuthenticatedAssistenciaSocialIndexRoute
+  AuthenticatedCulturaEsporteTurismoIndexRoute: typeof AuthenticatedCulturaEsporteTurismoIndexRoute
+  AuthenticatedEducacaoIndexRoute: typeof AuthenticatedEducacaoIndexRoute
+  AuthenticatedFazendaIndexRoute: typeof AuthenticatedFazendaIndexRoute
+  AuthenticatedMeioAmbienteIndexRoute: typeof AuthenticatedMeioAmbienteIndexRoute
+  AuthenticatedObrasIndexRoute: typeof AuthenticatedObrasIndexRoute
+  AuthenticatedOuvidoriaIndexRoute: typeof AuthenticatedOuvidoriaIndexRoute
   AuthenticatedSaudeIndexRoute: typeof AuthenticatedSaudeIndexRoute
+  AuthenticatedSegurancaIndexRoute: typeof AuthenticatedSegurancaIndexRoute
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedInicioRoute: AuthenticatedInicioRoute,
+  AuthenticatedAdministracaoFrotaRoute: AuthenticatedAdministracaoFrotaRoute,
+  AuthenticatedAdministracaoPatrimonioRoute:
+    AuthenticatedAdministracaoPatrimonioRoute,
+  AuthenticatedAdministracaoProtocoloRoute:
+    AuthenticatedAdministracaoProtocoloRoute,
+  AuthenticatedAdministracaoRhRoute: AuthenticatedAdministracaoRhRoute,
+  AuthenticatedAgriculturaAterRoute: AuthenticatedAgriculturaAterRoute,
+  AuthenticatedAgriculturaFeirasRoute: AuthenticatedAgriculturaFeirasRoute,
+  AuthenticatedAgriculturaProdutorRuralRoute:
+    AuthenticatedAgriculturaProdutorRuralRoute,
+  AuthenticatedAssistenciaSocialBeneficiosRoute:
+    AuthenticatedAssistenciaSocialBeneficiosRoute,
+  AuthenticatedAssistenciaSocialCadastroUnicoRoute:
+    AuthenticatedAssistenciaSocialCadastroUnicoRoute,
+  AuthenticatedAssistenciaSocialCrasRoute:
+    AuthenticatedAssistenciaSocialCrasRoute,
+  AuthenticatedAssistenciaSocialCreasRoute:
+    AuthenticatedAssistenciaSocialCreasRoute,
+  AuthenticatedCulturaEsporteTurismoEquipamentosRoute:
+    AuthenticatedCulturaEsporteTurismoEquipamentosRoute,
+  AuthenticatedCulturaEsporteTurismoEventosRoute:
+    AuthenticatedCulturaEsporteTurismoEventosRoute,
+  AuthenticatedCulturaEsporteTurismoInscricoesRoute:
+    AuthenticatedCulturaEsporteTurismoInscricoesRoute,
+  AuthenticatedEducacaoCensoRoute: AuthenticatedEducacaoCensoRoute,
+  AuthenticatedEducacaoEscolasRoute: AuthenticatedEducacaoEscolasRoute,
+  AuthenticatedEducacaoMatriculasRoute: AuthenticatedEducacaoMatriculasRoute,
+  AuthenticatedEducacaoMerendaRoute: AuthenticatedEducacaoMerendaRoute,
+  AuthenticatedEducacaoTransporteRoute: AuthenticatedEducacaoTransporteRoute,
+  AuthenticatedFazendaAlvarasRoute: AuthenticatedFazendaAlvarasRoute,
+  AuthenticatedFazendaDividaAtivaRoute: AuthenticatedFazendaDividaAtivaRoute,
+  AuthenticatedFazendaIptuRoute: AuthenticatedFazendaIptuRoute,
+  AuthenticatedFazendaIssRoute: AuthenticatedFazendaIssRoute,
+  AuthenticatedMeioAmbienteDenunciasRoute:
+    AuthenticatedMeioAmbienteDenunciasRoute,
+  AuthenticatedMeioAmbienteFiscalizacaoRoute:
+    AuthenticatedMeioAmbienteFiscalizacaoRoute,
+  AuthenticatedMeioAmbienteLicenciamentoRoute:
+    AuthenticatedMeioAmbienteLicenciamentoRoute,
+  AuthenticatedObrasIluminacaoRoute: AuthenticatedObrasIluminacaoRoute,
+  AuthenticatedObrasManutencaoViariaRoute:
+    AuthenticatedObrasManutencaoViariaRoute,
+  AuthenticatedObrasOrdensServicoRoute: AuthenticatedObrasOrdensServicoRoute,
+  AuthenticatedOuvidoriaManifestacoesRoute:
+    AuthenticatedOuvidoriaManifestacoesRoute,
   AuthenticatedSaudeAgendamentoRoute: AuthenticatedSaudeAgendamentoRoute,
   AuthenticatedSaudeAtencaoBasicaRoute: AuthenticatedSaudeAtencaoBasicaRoute,
   AuthenticatedSaudeFarmaciaRoute: AuthenticatedSaudeFarmaciaRoute,
   AuthenticatedSaudeVigilanciaRoute: AuthenticatedSaudeVigilanciaRoute,
+  AuthenticatedSegurancaAlertasRoute: AuthenticatedSegurancaAlertasRoute,
+  AuthenticatedSegurancaGuardaRoute: AuthenticatedSegurancaGuardaRoute,
+  AuthenticatedSegurancaOcorrenciasRoute:
+    AuthenticatedSegurancaOcorrenciasRoute,
+  AuthenticatedAdministracaoIndexRoute: AuthenticatedAdministracaoIndexRoute,
+  AuthenticatedAgriculturaIndexRoute: AuthenticatedAgriculturaIndexRoute,
+  AuthenticatedAssistenciaSocialIndexRoute:
+    AuthenticatedAssistenciaSocialIndexRoute,
+  AuthenticatedCulturaEsporteTurismoIndexRoute:
+    AuthenticatedCulturaEsporteTurismoIndexRoute,
+  AuthenticatedEducacaoIndexRoute: AuthenticatedEducacaoIndexRoute,
+  AuthenticatedFazendaIndexRoute: AuthenticatedFazendaIndexRoute,
+  AuthenticatedMeioAmbienteIndexRoute: AuthenticatedMeioAmbienteIndexRoute,
+  AuthenticatedObrasIndexRoute: AuthenticatedObrasIndexRoute,
+  AuthenticatedOuvidoriaIndexRoute: AuthenticatedOuvidoriaIndexRoute,
   AuthenticatedSaudeIndexRoute: AuthenticatedSaudeIndexRoute,
+  AuthenticatedSegurancaIndexRoute: AuthenticatedSegurancaIndexRoute,
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute:
     AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren,
 }
@@ -722,13 +1705,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

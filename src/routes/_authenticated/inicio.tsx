@@ -1,16 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, HeartPulse, Lock, ArrowLeft } from "lucide-react";
+import { LogOut, Building2, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SUBMODULOS_SAUDE, temAcessoSubmodulo } from "@/lib/modulos-saude";
+import { SECRETARIAS, temAcessoSecretaria } from "@/lib/secretarias";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/saude/")({
-  component: SaudeHub,
+export const Route = createFileRoute("/_authenticated/inicio")({
+  component: InicioHub,
 });
 
-function SaudeHub() {
+function InicioHub() {
   const navigate = useNavigate();
   const { usuario, signOut } = useAuth();
   if (!usuario) return null;
@@ -21,13 +21,13 @@ function SaudeHub() {
         <div className="max-w-6xl mx-auto px-6 lg:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-md bg-primary-foreground/15 grid place-items-center">
-              <HeartPulse className="size-5" />
+              <Building2 className="size-5" />
             </div>
             <div className="leading-tight">
               <div className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-80">
-                Cidade Presente · SIGESA
+                Painel do Servidor
               </div>
-              <div className="text-lg font-semibold">Módulo Saúde</div>
+              <div className="text-lg font-semibold">Cidade Presente</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -47,27 +47,19 @@ function SaudeHub() {
 
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-6 lg:px-8 py-10">
-          <div className="mb-8 flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Selecione um submódulo</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Acesse as áreas operacionais da Secretaria de Saúde.
-              </p>
-            </div>
-            <Link
-              to="/inicio"
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 shrink-0 mt-1"
-            >
-              <ArrowLeft className="size-3.5" /> Voltar ao Cidade Presente
-            </Link>
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold tracking-tight">Selecione uma secretaria</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Plataforma integrada de gestão municipal.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SUBMODULOS_SAUDE.map((sub) => {
-              const Icon = sub.icon;
-              const acesso = temAcessoSubmodulo(sub, usuario.perfil);
-              const ativo = sub.status === "ativo";
-              const habilitado = acesso && ativo;
+            {SECRETARIAS.map((sec) => {
+              const Icon = sec.icon;
+              const acesso = temAcessoSecretaria(sec, usuario.perfil);
+              const ativo = sec.status === "ativo";
+              const habilitado = acesso; // shells "em_breve" são clicáveis se tiver acesso
               const cardClasses = cn(
                 "group relative rounded-xl border bg-card p-5 transition-all",
                 habilitado
@@ -95,22 +87,27 @@ function SaudeHub() {
                       </Badge>
                     )}
                   </div>
-                  <h2 className="text-base font-semibold">{sub.label}</h2>
+                  <h2 className="text-base font-semibold">{sec.label}</h2>
                   <p className="text-sm text-muted-foreground mt-1 leading-snug">
-                    {sub.descricao}
+                    {sec.descricao}
                   </p>
                 </>
               );
 
               if (habilitado) {
                 return (
-                  <Link key={sub.key} to={sub.to} className={cardClasses}>
+                  <Link key={sec.slug} to={sec.to} className={cardClasses}>
                     {inner}
                   </Link>
                 );
               }
               return (
-                <div key={sub.key} className={cardClasses} aria-disabled>
+                <div
+                  key={sec.slug}
+                  className={cardClasses}
+                  aria-disabled
+                  title="Acesso restrito ao seu perfil"
+                >
                   {inner}
                 </div>
               );

@@ -19,7 +19,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/saude" });
+    if (!loading && user) navigate({ to: "/inicio" });
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -31,7 +31,7 @@ function LoginPage() {
       toast.error("Email ou senha inválidos");
       return;
     }
-    navigate({ to: "/saude" });
+    navigate({ to: "/inicio" });
   };
 
   return (
