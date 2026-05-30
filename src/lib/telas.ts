@@ -57,6 +57,18 @@ export const TELAS: TelaDef[] = [
     perfisPadrao: ["administrador", "gestor_saude", "agendador", "profissional_ubs", "enfermeiro_ubs"] },
   { key: "/saude/vigilancia", label: "Vigilância em Saúde", grupo: "Módulo Saúde",
     perfisPadrao: ["administrador", "gestor_saude", "vigilancia_sanitaria"] },
+
+  // Demais secretarias (Cidade Presente) — apenas administrador por enquanto
+  { key: "/educacao", label: "Educação", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/assistencia-social", label: "Assistência Social", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/obras", label: "Obras e Infraestrutura", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/fazenda", label: "Fazenda e Tributação", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/meio-ambiente", label: "Meio Ambiente", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/agricultura", label: "Agricultura", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/cultura-esporte-turismo", label: "Cultura, Esporte e Turismo", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/seguranca", label: "Segurança e Defesa Civil", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/administracao", label: "Administração e Gestão", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
+  { key: "/ouvidoria", label: "Ouvidoria", grupo: "Cidade Presente", perfisPadrao: ["administrador"] },
 ];
 
 export function temAcessoPadrao(tela: TelaDef, perfil: PerfilUsuario): boolean {
