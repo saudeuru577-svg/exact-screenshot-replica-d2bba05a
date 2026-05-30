@@ -47,6 +47,15 @@ export const TELAS: TelaDef[] = [
     perfisPadrao: ["administrador"] },
   { key: `${BASE}/admin/logs`, label: "Logs de auditoria", grupo: "Administração",
     perfisPadrao: ["administrador"] },
+
+  { key: "/saude/atencao-basica", label: "Atenção Básica", grupo: "Módulo Saúde",
+    perfisPadrao: ["administrador", "gestor_saude", "enfermeiro_ubs", "agente_saude", "profissional_ubs"] },
+  { key: "/saude/farmacia", label: "Farmácia", grupo: "Módulo Saúde",
+    perfisPadrao: ["administrador", "gestor_saude", "farmaceutico"] },
+  { key: "/saude/agendamento", label: "Agendamento", grupo: "Módulo Saúde",
+    perfisPadrao: ["administrador", "gestor_saude", "agendador", "profissional_ubs", "enfermeiro_ubs"] },
+  { key: "/saude/vigilancia", label: "Vigilância em Saúde", grupo: "Módulo Saúde",
+    perfisPadrao: ["administrador", "gestor_saude", "vigilancia_sanitaria"] },
 ];
 
 export function temAcessoPadrao(tela: TelaDef, perfil: PerfilUsuario): boolean {
