@@ -903,6 +903,12 @@ export type Database = {
         | "financeiro"
         | "regulador"
         | "profissional_ubs"
+        | "agente_saude"
+        | "enfermeiro_ubs"
+        | "farmaceutico"
+        | "agendador"
+        | "vigilancia_sanitaria"
+        | "gestor_saude"
       sexo_tipo: "masculino" | "feminino"
       status_acrescimo: "pendente" | "aprovado" | "rejeitado"
       status_autorizacao:
@@ -1058,6 +1064,12 @@ export const Constants = {
         "financeiro",
         "regulador",
         "profissional_ubs",
+        "agente_saude",
+        "enfermeiro_ubs",
+        "farmaceutico",
+        "agendador",
+        "vigilancia_sanitaria",
+        "gestor_saude",
       ],
       sexo_tipo: ["masculino", "feminino"],
       status_acrescimo: ["pendente", "aprovado", "rejeitado"],
