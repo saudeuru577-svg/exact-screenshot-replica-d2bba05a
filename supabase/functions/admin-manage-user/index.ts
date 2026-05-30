@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PERFIS = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs"];
+const PERFIS = ["administrador", "secretaria", "atendente", "financeiro", "regulador", "profissional_ubs", "agente_saude", "enfermeiro_ubs", "farmaceutico", "agendador", "vigilancia_sanitaria", "gestor_saude"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
