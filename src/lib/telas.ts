@@ -10,6 +10,7 @@ export type TelaDef = {
 /** Perfis com acesso ao submódulo Autorização de Exames (Cidade Presente · Saúde). */
 export const PERFIS_SUBMODULO: PerfilUsuario[] = [
   "administrador",
+  "gestor_saude",
   "regulador",
   "profissional_ubs",
 ];
