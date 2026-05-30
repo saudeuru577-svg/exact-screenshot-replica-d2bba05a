@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSaudeIndexRouteImport } from './routes/_authenticated/saude/index'
 import { Route as AuthenticatedSaudeFarmaciaRouteImport } from './routes/_authenticated/saude/farmacia'
 import { Route as AuthenticatedSaudeAtencaoBasicaRouteImport } from './routes/_authenticated/saude/atencao-basica'
+import { Route as AuthenticatedSaudeAgendamentoRouteImport } from './routes/_authenticated/saude/agendamento'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/relatorios/index'
@@ -65,6 +66,12 @@ const AuthenticatedSaudeAtencaoBasicaRoute =
   AuthenticatedSaudeAtencaoBasicaRouteImport.update({
     id: '/saude/atencao-basica',
     path: '/saude/atencao-basica',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSaudeAgendamentoRoute =
+  AuthenticatedSaudeAgendamentoRouteImport.update({
+    id: '/saude/agendamento',
+    path: '/saude/agendamento',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute =
@@ -212,6 +219,7 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude/': typeof AuthenticatedSaudeIndexRoute
@@ -239,6 +247,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude': typeof AuthenticatedSaudeIndexRoute
@@ -268,6 +277,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/saude/agendamento': typeof AuthenticatedSaudeAgendamentoRoute
   '/_authenticated/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
   '/_authenticated/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/_authenticated/saude/': typeof AuthenticatedSaudeIndexRoute
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/saude/agendamento'
     | '/saude/atencao-basica'
     | '/saude/farmacia'
     | '/saude/'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/saude/agendamento'
     | '/saude/atencao-basica'
     | '/saude/farmacia'
     | '/saude'
@@ -352,6 +364,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/saude/agendamento'
     | '/_authenticated/saude/atencao-basica'
     | '/_authenticated/saude/farmacia'
     | '/_authenticated/saude/'
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       path: '/saude/atencao-basica'
       fullPath: '/saude/atencao-basica'
       preLoaderRoute: typeof AuthenticatedSaudeAtencaoBasicaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/saude/agendamento': {
+      id: '/_authenticated/saude/agendamento'
+      path: '/saude/agendamento'
+      fullPath: '/saude/agendamento'
+      preLoaderRoute: typeof AuthenticatedSaudeAgendamentoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames': {
@@ -652,6 +672,7 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedSaudeAgendamentoRoute: typeof AuthenticatedSaudeAgendamentoRoute
   AuthenticatedSaudeAtencaoBasicaRoute: typeof AuthenticatedSaudeAtencaoBasicaRoute
   AuthenticatedSaudeFarmaciaRoute: typeof AuthenticatedSaudeFarmaciaRoute
   AuthenticatedSaudeIndexRoute: typeof AuthenticatedSaudeIndexRoute
@@ -659,6 +680,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSaudeAgendamentoRoute: AuthenticatedSaudeAgendamentoRoute,
   AuthenticatedSaudeAtencaoBasicaRoute: AuthenticatedSaudeAtencaoBasicaRoute,
   AuthenticatedSaudeFarmaciaRoute: AuthenticatedSaudeFarmaciaRoute,
   AuthenticatedSaudeIndexRoute: AuthenticatedSaudeIndexRoute,
