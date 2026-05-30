@@ -13,6 +13,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSaudeIndexRouteImport } from './routes/_authenticated/saude/index'
+import { Route as AuthenticatedSaudeFarmaciaRouteImport } from './routes/_authenticated/saude/farmacia'
+import { Route as AuthenticatedSaudeAtencaoBasicaRouteImport } from './routes/_authenticated/saude/atencao-basica'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/relatorios/index'
@@ -53,6 +55,18 @@ const AuthenticatedSaudeIndexRoute = AuthenticatedSaudeIndexRouteImport.update({
   path: '/saude/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSaudeFarmaciaRoute =
+  AuthenticatedSaudeFarmaciaRouteImport.update({
+    id: '/saude/farmacia',
+    path: '/saude/farmacia',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSaudeAtencaoBasicaRoute =
+  AuthenticatedSaudeAtencaoBasicaRouteImport.update({
+    id: '/saude/atencao-basica',
+    path: '/saude/atencao-basica',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport.update({
     id: '/saude/regulacao/autorizacao-exames',
@@ -198,6 +212,8 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
+  '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude/': typeof AuthenticatedSaudeIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
@@ -223,6 +239,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
+  '/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/saude': typeof AuthenticatedSaudeIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
@@ -250,6 +268,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/saude/atencao-basica': typeof AuthenticatedSaudeAtencaoBasicaRoute
+  '/_authenticated/saude/farmacia': typeof AuthenticatedSaudeFarmaciaRoute
   '/_authenticated/saude/': typeof AuthenticatedSaudeIndexRoute
   '/_authenticated/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/_authenticated/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
@@ -277,6 +297,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/saude/atencao-basica'
+    | '/saude/farmacia'
     | '/saude/'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
@@ -302,6 +324,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/saude/atencao-basica'
+    | '/saude/farmacia'
     | '/saude'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
@@ -328,6 +352,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/saude/atencao-basica'
+    | '/_authenticated/saude/farmacia'
     | '/_authenticated/saude/'
     | '/_authenticated/saude/regulacao/autorizacao-exames'
     | '/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
@@ -385,6 +411,20 @@ declare module '@tanstack/react-router' {
       path: '/saude'
       fullPath: '/saude/'
       preLoaderRoute: typeof AuthenticatedSaudeIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/saude/farmacia': {
+      id: '/_authenticated/saude/farmacia'
+      path: '/saude/farmacia'
+      fullPath: '/saude/farmacia'
+      preLoaderRoute: typeof AuthenticatedSaudeFarmaciaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/saude/atencao-basica': {
+      id: '/_authenticated/saude/atencao-basica'
+      path: '/saude/atencao-basica'
+      fullPath: '/saude/atencao-basica'
+      preLoaderRoute: typeof AuthenticatedSaudeAtencaoBasicaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames': {
@@ -612,11 +652,15 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedSaudeAtencaoBasicaRoute: typeof AuthenticatedSaudeAtencaoBasicaRoute
+  AuthenticatedSaudeFarmaciaRoute: typeof AuthenticatedSaudeFarmaciaRoute
   AuthenticatedSaudeIndexRoute: typeof AuthenticatedSaudeIndexRoute
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSaudeAtencaoBasicaRoute: AuthenticatedSaudeAtencaoBasicaRoute,
+  AuthenticatedSaudeFarmaciaRoute: AuthenticatedSaudeFarmaciaRoute,
   AuthenticatedSaudeIndexRoute: AuthenticatedSaudeIndexRoute,
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute:
     AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren,
@@ -634,3 +678,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
