@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSaudeIndexRouteImport } from './routes/_authenticated/saude/index'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
 import { Route as AuthenticatedSaudeRegulacaoAutorizacaoExamesRelatoriosIndexRouteImport } from './routes/_authenticated/saude/regulacao/autorizacao-exames/relatorios/index'
@@ -46,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSaudeIndexRoute = AuthenticatedSaudeIndexRouteImport.update({
+  id: '/saude/',
+  path: '/saude/',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute =
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteImport.update({
@@ -192,6 +198,7 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesAutorizacoesIdEditarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude/': typeof AuthenticatedSaudeIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/saude': typeof AuthenticatedSaudeIndexRoute
   '/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/saude/': typeof AuthenticatedSaudeIndexRoute
   '/_authenticated/saude/regulacao/autorizacao-exames': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
   '/_authenticated/saude/regulacao/autorizacao-exames/dashboard': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesDashboardRoute
   '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo': typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesAcrescimosNovoRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/saude/'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/saude'
     | '/saude/regulacao/autorizacao-exames'
     | '/saude/regulacao/autorizacao-exames/dashboard'
     | '/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/saude/'
     | '/_authenticated/saude/regulacao/autorizacao-exames'
     | '/_authenticated/saude/regulacao/autorizacao-exames/dashboard'
     | '/_authenticated/saude/regulacao/autorizacao-exames/acrescimos/novo'
@@ -367,6 +379,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/saude/': {
+      id: '/_authenticated/saude/'
+      path: '/saude'
+      fullPath: '/saude/'
+      preLoaderRoute: typeof AuthenticatedSaudeIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/saude/regulacao/autorizacao-exames': {
       id: '/_authenticated/saude/regulacao/autorizacao-exames'
@@ -593,10 +612,12 @@ const AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedSaudeIndexRoute: typeof AuthenticatedSaudeIndexRoute
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute: typeof AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSaudeIndexRoute: AuthenticatedSaudeIndexRoute,
   AuthenticatedSaudeRegulacaoAutorizacaoExamesRoute:
     AuthenticatedSaudeRegulacaoAutorizacaoExamesRouteWithChildren,
 }
