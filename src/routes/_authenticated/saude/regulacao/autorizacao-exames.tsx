@@ -142,6 +142,15 @@ function SubmoduloLayout() {
           </div>
         </div>
 
+        <div className="px-3 pt-3">
+          <Link
+            to="/saude"
+            className="flex items-center gap-2 px-2.5 py-2 rounded-md text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          >
+            <ArrowLeft className="size-3.5" /> Outros módulos de Saúde
+          </Link>
+        </div>
+
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
           {sections.map((sec, i) => (
             <div key={i}>
