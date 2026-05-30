@@ -87,6 +87,12 @@ const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   financeiro: "Financeiro",
   regulador: "Regulador",
   profissional_ubs: "Profissional de UBS",
+  agente_saude: "Agente de Saúde",
+  enfermeiro_ubs: "Enfermeiro(a) UBS",
+  farmaceutico: "Farmacêutico(a)",
+  agendador: "Agendador(a)",
+  vigilancia_sanitaria: "Vigilância Sanitária",
+  gestor_saude: "Gestor(a) de Saúde",
 };
 
 function SubmoduloLayout() {
