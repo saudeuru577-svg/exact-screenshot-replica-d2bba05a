@@ -37,6 +37,7 @@ type AuthState = {
 };
 
 let unsub: (() => void) | null = null;
+let lastLoadedUserId: string | null = null;
 
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
@@ -49,14 +50,17 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (get().initialized) return;
     set({ initialized: true });
 
-    // Listener primeiro
+    // Listener: só recarrega o usuário quando o id mudar de fato.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null });
-      if (session?.user) {
-        // Defer to avoid deadlock
-        setTimeout(() => get().refreshUsuario(), 0);
-      } else {
+      const nextUser = session?.user ?? null;
+      set({ session, user: nextUser });
+      if (!nextUser) {
+        lastLoadedUserId = null;
         set({ usuario: null });
+        return;
+      }
+      if (nextUser.id !== lastLoadedUserId) {
+        setTimeout(() => get().refreshUsuario(), 0);
       }
     });
     unsub = () => sub.subscription.unsubscribe();
@@ -71,12 +75,16 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   refreshUsuario: async () => {
     const u = get().user;
-    if (!u) return set({ usuario: null });
+    if (!u) {
+      lastLoadedUserId = null;
+      return set({ usuario: null });
+    }
     const { data } = await supabase
       .from("usuarios")
       .select("id, nome, email, perfil, ativo")
       .eq("id", u.id)
       .maybeSingle();
+    lastLoadedUserId = u.id;
     set({ usuario: data as Usuario | null });
   },
 
