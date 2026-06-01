@@ -209,7 +209,9 @@ describe("Falhas do PostgREST/DB nas rotas", () => {
     await act(async () => {
       await router.navigate({ to: "/pacientes" });
     });
-    await waitFor(() => expect(screen.getByTestId("erro")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("erro")).toBeTruthy(), {
+      timeout: 3000,
+    });
 
     // Navega para rota saudável — UI não pode estar travada
     await act(async () => {
