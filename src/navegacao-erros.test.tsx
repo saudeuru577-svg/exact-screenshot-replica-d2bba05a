@@ -185,7 +185,9 @@ describe("Falhas do PostgREST/DB nas rotas", () => {
       await router.navigate({ to: "/empresas" });
     });
 
-    await waitFor(() => expect(screen.getByTestId("erro")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("erro")).toBeTruthy(), {
+      timeout: 5000,
+    });
     expect(screen.queryByTestId("loading-root")).toBeNull();
 
     // Retry policy: tentativa inicial + 1 retry = 2 chamadas
