@@ -142,6 +142,8 @@ function makeRouter() {
 }
 
 describe("Falhas do PostgREST/DB nas rotas", () => {
+  afterEach(() => cleanup());
+
   it("erro Postgres (code 5 chars) exibe feedback e NÃO fica carregando infinito; sem retry", async () => {
     loadPacientesQuebrado.mockClear();
     const { router, queryClient } = makeRouter();
