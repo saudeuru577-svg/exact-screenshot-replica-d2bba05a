@@ -138,7 +138,7 @@ describe("Navegação entre módulos e submódulos", () => {
       await router.navigate({ to: "/saude" });
     });
     await waitFor(() =>
-      expect(screen.getByTestId("tela-saude")).toHaveTextContent("Hub Saúde"),
+      expect(screen.getByTestId("tela-saude").textContent).toBe("Hub Saúde"),
     );
     expect(screen.queryByTestId("loading-root")).toBeNull();
 
@@ -147,7 +147,7 @@ describe("Navegação entre módulos e submódulos", () => {
       await router.navigate({ to: "/saude/regulacao" });
     });
     await waitFor(() =>
-      expect(screen.getByTestId("tela-regulacao")).toHaveTextContent("Regulação"),
+      expect(screen.getByTestId("tela-regulacao").textContent).toBe("Regulação"),
     );
 
     // Outro módulo: Fazenda
@@ -155,26 +155,26 @@ describe("Navegação entre módulos e submódulos", () => {
       await router.navigate({ to: "/fazenda" });
     });
     await waitFor(() =>
-      expect(screen.getByTestId("tela-fazenda")).toHaveTextContent("Hub Fazenda"),
+      expect(screen.getByTestId("tela-fazenda").textContent).toBe("Hub Fazenda"),
     );
 
     // Volta para Saúde -> Regulação -> Fazenda novamente
     await act(async () => {
       await router.navigate({ to: "/saude" });
     });
-    await waitFor(() => expect(screen.getByTestId("tela-saude")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("tela-saude")).toBeTruthy());
 
     await act(async () => {
       await router.navigate({ to: "/saude/regulacao" });
     });
     await waitFor(() =>
-      expect(screen.getByTestId("tela-regulacao")).toBeInTheDocument(),
+      expect(screen.getByTestId("tela-regulacao")).toBeTruthy(),
     );
 
     await act(async () => {
       await router.navigate({ to: "/fazenda" });
     });
-    await waitFor(() => expect(screen.getByTestId("tela-fazenda")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("tela-fazenda")).toBeTruthy());
 
     // Nenhum fallback de loading deve estar pendurado
     expect(screen.queryByTestId("loading-root")).toBeNull();
