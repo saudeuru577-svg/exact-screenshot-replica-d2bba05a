@@ -10,8 +10,8 @@
  *  3. Após a falha, navegar para uma rota saudável volta a renderizar
  *     normalmente (a UI não trava).
  */
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import { QueryClientProvider, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
