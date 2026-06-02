@@ -30,13 +30,14 @@ describe("QueryClient — expiração do staleTime", () => {
     const opts = { queryKey: ["relatorio", "mensal"] as const, queryFn: fn };
 
     // 1ª "navegação": popula o cache.
-    await qc.ensureQueryData(opts);
+    await qc.fetchQuery(opts);
     expect(fn).toHaveBeenCalledTimes(1);
     expect(qc.getQueryData(opts.queryKey)).toEqual({ versao: 1 });
 
-    // 2ª "navegação" dentro do staleTime: NÃO deve refazer fetch.
+    // 2ª "navegação" dentro do staleTime: NÃO deve refazer fetch
+    // (fetchQuery respeita staleTime e devolve o cache).
     await vi.advanceTimersByTimeAsync(STALE_TIME - 1);
-    await qc.ensureQueryData(opts);
+    await qc.fetchQuery(opts);
     expect(fn).toHaveBeenCalledTimes(1);
     expect(qc.getQueryData(opts.queryKey)).toEqual({ versao: 1 });
 
@@ -44,7 +45,7 @@ describe("QueryClient — expiração do staleTime", () => {
     await vi.advanceTimersByTimeAsync(2);
 
     // 3ª "navegação" após expiração: deve refazer fetch e ATUALIZAR os dados.
-    await qc.ensureQueryData(opts);
+    await qc.fetchQuery(opts);
     expect(fn).toHaveBeenCalledTimes(2);
     expect(qc.getQueryData(opts.queryKey)).toEqual({ versao: 2 });
 
