@@ -11,7 +11,7 @@ const STALE_TIME = QUERY_CLIENT_OPTIONS.defaultOptions.queries.staleTime;
 
 describe("QueryClient — expiração do staleTime", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
   });
 
   afterEach(() => {
