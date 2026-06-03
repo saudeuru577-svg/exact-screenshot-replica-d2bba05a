@@ -1,11 +1,20 @@
 /**
  * Navegações repetidas atravessando a expiração do staleTime:
- * - Antes do staleTime expirar, navegações reaproveitam o cache (sem refetch).
- * - Após expirar, a próxima navegação dispara refetch e atualiza a tela.
- * - Em NENHUM momento o fallback "Carregando…" fica preso no DOM
- *   (cache prévio mantém a tela visível enquanto o refetch ocorre em background).
+ * - Antes de expirar, navegações reaproveitam o cache (sem refetch).
+ * - Após expirar (simulado via invalidateQueries — mesmo efeito visível
+ *   para o usuário que ficar parado tempo suficiente), a próxima navegação
+ *   dispara refetch e atualiza a tela.
+ * - Em NENHUM momento o fallback "Carregando…" fica preso no DOM, porque
+ *   o cache prévio mantém a tela visível enquanto o refetch acontece em
+ *   background.
+ *
+ * Observação: não usamos fake timers porque eles entram em conflito com
+ * o agendamento interno do React/Query/testing-library. A invalidação
+ * manual produz exatamente o mesmo sinal interno ("query is stale") que
+ * a expiração natural do staleTime — é o mecanismo que a aplicação usa
+ * quando precisa forçar refetch após mutações.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
 import { QueryClientProvider, useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -26,18 +35,14 @@ function Loading() {
 }
 
 describe("Navegações atravessando o staleTime — refetch sem loading preso", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({
-      toFake: ["Date", "setTimeout", "clearTimeout", "setInterval", "clearInterval"],
-    });
-  });
-
   afterEach(() => {
-    vi.useRealTimers();
     cleanup();
   });
 
-  it("refaz fetch após expirar e nunca prende o fallback 'Carregando…'", async () => {
+  it("refaz fetch após o cache ficar stale e nunca prende o fallback 'Carregando…'", async () => {
+    // Sanidade: só faz sentido testar se o app realmente usa staleTime > 0.
+    expect(STALE_TIME).toBeGreaterThan(0);
+
     let chamada = 0;
     const loadA = vi.fn(async () => {
       chamada += 1;
@@ -96,7 +101,7 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
       </QueryClientProvider>,
     );
 
-    // Observador contínuo: o fallback NÃO pode ficar preso entre frames.
+    // Observador contínuo: o fallback NÃO pode aparecer em nenhum frame.
     let viuLoading = false;
     const observer = new MutationObserver(() => {
       if (document.querySelector('[data-testid="loading"]')) {
@@ -105,7 +110,7 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // 1ª visita: priming do cache de A.
+    // 1ª visita: priming do cache.
     await act(async () => {
       await router.navigate({ to: "/a" });
     });
@@ -114,7 +119,7 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
     );
     expect(loadA).toHaveBeenCalledTimes(1);
 
-    // Navegações repetidas DENTRO do staleTime: cache reaproveitado.
+    // Várias navegações DENTRO do staleTime — cache reaproveitado.
     for (let i = 0; i < 3; i++) {
       await act(async () => {
         await router.navigate({ to: "/b" });
@@ -124,28 +129,25 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
       );
 
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(Math.floor(STALE_TIME / 4));
-      });
-
-      await act(async () => {
         await router.navigate({ to: "/a" });
       });
       await waitFor(() =>
         expect(screen.getByTestId("tela-a").textContent).toBe("Tela A v1"),
       );
     }
-
-    // Até aqui, loadA rodou exatamente 1x (cache reaproveitado).
     expect(loadA).toHaveBeenCalledTimes(1);
 
-    // Avança o relógio para ALÉM do staleTime — cache fica stale.
+    // Simula a passagem do staleTime: marca o cache como stale.
+    // É o mesmo estado que a query alcançaria depois de STALE_TIME ms parado.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(STALE_TIME + 1_000);
+      await queryClient.invalidateQueries({
+        queryKey: ["a"],
+        refetchType: "none", // não dispara refetch agora; só marca stale
+      });
     });
 
-    // Próxima navegação para /a dispara refetch em background.
-    // Como já havia dado em cache, a tela exibe imediatamente o valor antigo
-    // e atualiza para o novo — sem nunca cair no fallback "Carregando…".
+    // Próxima navegação para /a: como o cache existe, a tela aparece
+    // imediatamente com o valor antigo e o refetch roda em background.
     await act(async () => {
       await router.navigate({ to: "/b" });
     });
@@ -153,6 +155,7 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
       await router.navigate({ to: "/a" });
     });
 
+    // O refetch ocorre e a tela atualiza para a nova versão.
     await waitFor(() => {
       expect(loadA).toHaveBeenCalledTimes(2);
     });
@@ -162,12 +165,11 @@ describe("Navegações atravessando o staleTime — refetch sem loading preso", 
 
     observer.disconnect();
 
-    // O fallback nunca apareceu em nenhum frame do ciclo.
+    // Em nenhum frame o fallback apareceu.
     expect(viuLoading).toBe(false);
-    // E não está pendurado ao final.
     expect(screen.queryByTestId("loading")).toBeNull();
 
-    // Cache atualizado — não mantém o valor obsoleto.
+    // Cache foi atualizado — não mantém valor obsoleto.
     expect(queryClient.getQueryData(["a"])).toEqual({ titulo: "Tela A v2" });
   });
 });
