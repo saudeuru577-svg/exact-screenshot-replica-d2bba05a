@@ -50,28 +50,37 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (get().initialized) return;
     set({ initialized: true });
 
-    // Listener: só recarrega o usuário quando o id mudar de fato.
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextUser = session?.user ?? null;
-      set({ session, user: nextUser });
-      if (!nextUser) {
-        lastLoadedUserId = null;
-        set({ usuario: null });
-        return;
-      }
-      if (nextUser.id !== lastLoadedUserId) {
-        setTimeout(() => get().refreshUsuario(), 0);
-      }
-    });
-    unsub = () => sub.subscription.unsubscribe();
+    try {
+      // Listener: só recarrega o usuário quando o id mudar de fato.
+      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+        const nextUser = session?.user ?? null;
+        set({ session, user: nextUser });
+        if (!nextUser) {
+          lastLoadedUserId = null;
+          set({ usuario: null });
+          return;
+        }
+        if (nextUser.id !== lastLoadedUserId) {
+          setTimeout(() => {
+            get().refreshUsuario().catch((e) => console.error("[auth] refreshUsuario", e));
+          }, 0);
+        }
+      });
+      unsub = () => sub.subscription.unsubscribe();
 
-    const { data } = await supabase.auth.getSession();
-    set({ session: data.session, user: data.session?.user ?? null });
-    if (data.session?.user) {
-      await get().refreshUsuario();
+      const { data } = await supabase.auth.getSession();
+      set({ session: data.session, user: data.session?.user ?? null });
+      if (data.session?.user) {
+        await get().refreshUsuario();
+      }
+    } catch (e) {
+      console.error("[auth] init falhou", e);
+    } finally {
+      // Garante que o gate nunca fique preso em "Carregando…".
+      set({ loading: false });
     }
-    set({ loading: false });
   },
+
 
   refreshUsuario: async () => {
     const u = get().user;
