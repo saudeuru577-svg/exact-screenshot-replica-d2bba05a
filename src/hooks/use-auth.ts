@@ -116,9 +116,6 @@ export const useAuth = create<AuthState>((set, get) => ({
     return initPromise;
   },
 
-    return initPromise;
-  },
-
 
   refreshUsuario: async () => {
     const u = get().user;
