@@ -30,7 +30,9 @@ type AuthState = {
   usuario: Usuario | null;
   loading: boolean;
   initialized: boolean;
+  initError: string | null;
   init: () => Promise<void>;
+  retry: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshUsuario: () => Promise<void>;
