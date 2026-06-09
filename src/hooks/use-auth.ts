@@ -60,13 +60,20 @@ export const useAuth = create<AuthState>((set, get) => ({
   usuario: null,
   loading: true,
   initialized: false,
+  initError: null,
+
+  retry: async () => {
+    initPromise = null;
+    set({ initialized: false, initError: null, loading: true });
+    await get().init();
+  },
 
   init: async () => {
     if (initPromise) return initPromise;
-    if (get().initialized && !get().loading) return;
+    if (get().initialized && !get().loading && !get().initError) return;
 
     initPromise = (async () => {
-    set({ initialized: true, loading: true });
+    set({ initialized: true, loading: true, initError: null });
 
     try {
       if (unsub) {
