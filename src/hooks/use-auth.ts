@@ -104,12 +104,17 @@ export const useAuth = create<AuthState>((set, get) => ({
       }
     } catch (e) {
       console.error("[auth] init falhou", e);
+      const msg = e instanceof Error ? e.message : "Falha ao iniciar a sessão.";
+      set({ initError: msg });
     } finally {
       // Garante que o gate nunca fique preso em "Carregando…".
       set({ loading: false });
       initPromise = null;
     }
     })();
+
+    return initPromise;
+  },
 
     return initPromise;
   },
