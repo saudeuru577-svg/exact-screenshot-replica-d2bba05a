@@ -30,7 +30,9 @@ type AuthState = {
   usuario: Usuario | null;
   loading: boolean;
   initialized: boolean;
+  initError: string | null;
   init: () => Promise<void>;
+  retry: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshUsuario: () => Promise<void>;
@@ -58,13 +60,20 @@ export const useAuth = create<AuthState>((set, get) => ({
   usuario: null,
   loading: true,
   initialized: false,
+  initError: null,
+
+  retry: async () => {
+    initPromise = null;
+    set({ initialized: false, initError: null, loading: true });
+    await get().init();
+  },
 
   init: async () => {
     if (initPromise) return initPromise;
-    if (get().initialized && !get().loading) return;
+    if (get().initialized && !get().loading && !get().initError) return;
 
     initPromise = (async () => {
-    set({ initialized: true, loading: true });
+    set({ initialized: true, loading: true, initError: null });
 
     try {
       if (unsub) {
@@ -95,6 +104,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       }
     } catch (e) {
       console.error("[auth] init falhou", e);
+      const msg = e instanceof Error ? e.message : "Falha ao iniciar a sessão.";
+      set({ initError: msg });
     } finally {
       // Garante que o gate nunca fique preso em "Carregando…".
       set({ loading: false });
