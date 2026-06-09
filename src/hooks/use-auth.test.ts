@@ -117,4 +117,18 @@ describe("useAuth — dedupe de consulta ao usuário", () => {
 
     expect(usuariosQueryCalls).toEqual(["usuarios:user-1"]);
   });
+
+  it("não deixa loading preso se getSession nunca resolver", async () => {
+    vi.useFakeTimers();
+    const originalGetSession = (await import("@/integrations/supabase/client")).supabase.auth.getSession;
+    (await import("@/integrations/supabase/client")).supabase.auth.getSession = () => new Promise(() => {}) as never;
+
+    const initPromise = useAuth.getState().init();
+    await vi.advanceTimersByTimeAsync(8_000);
+    await initPromise;
+
+    expect(useAuth.getState().loading).toBe(false);
+    (await import("@/integrations/supabase/client")).supabase.auth.getSession = originalGetSession;
+    vi.useRealTimers();
+  });
 });
