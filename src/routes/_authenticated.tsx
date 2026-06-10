@@ -3,7 +3,7 @@
 // src/routes/_authenticated/saude/regulacao/autorizacao-exames.tsx (layout do submódulo).
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ShieldAlert, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { ShieldAlert, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
@@ -13,48 +13,13 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedGate() {
   const navigate = useNavigate();
-  const { user, usuario, loading, initError, retry, signOut } = useAuth();
+  const { user, usuario, loading, signOut } = useAuth();
 
   useEffect(() => {
-    if (!loading && !initError && !user) navigate({ to: "/login" });
-  }, [loading, user, initError, navigate]);
+    if (!loading && !user) navigate({ to: "/login" });
+  }, [loading, user, navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (initError) {
-    return (
-      <div className="min-h-screen grid place-items-center p-6">
-        <div className="max-w-md text-center space-y-4">
-          <AlertTriangle className="size-10 mx-auto text-destructive" />
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Não conseguimos carregar sua sessão</h2>
-            <p className="text-sm text-muted-foreground">
-              {initError}. Verifique sua conexão e tente novamente.
-            </p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <Button onClick={() => retry()}>
-              <RefreshCw className="size-4" /> Tentar novamente
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => signOut().then(() => navigate({ to: "/login" }))}
-            >
-              Ir para login
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen grid place-items-center">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
