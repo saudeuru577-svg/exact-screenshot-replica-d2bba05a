@@ -6,9 +6,13 @@ export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
+        // staleTime padrão moderado: evita refetch a cada navegação.
+        staleTime: 60_000,
+        gcTime: 5 * 60_000,
         // Evita refetch ao reganhar foco — sensação de "recarregando" ao trocar de aba.
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
+        refetchOnMount: false,
         // Não insistir em erros estruturais (Postgres/PostgREST: code 5 chars).
         retry: (failureCount, error: unknown) => {
           const code = (error as { code?: string } | null)?.code;
