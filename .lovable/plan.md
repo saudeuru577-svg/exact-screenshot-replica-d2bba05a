@@ -1,25 +1,27 @@
-# Corrigir tela de carregamento infinito
+# Eliminar de vez o travamento do Supabase (lock entre abas)
 
-## Diagnóstico (confirmado no preview)
+## O que confirmei agora no preview
 
-Reproduzi o problema: o app fica preso no spinner do gate de autenticação. A causa não é cache — é o bootstrap de autenticação em `src/hooks/use-auth.ts`:
+Reproduzi: ao abrir o app, **nenhuma requisição ao Supabase é feita** durante o spinner — a biblioteca fica presa antes mesmo de chamar a rede. Depois do timeout de 4s que adicionamos, o app destrava e segue (no meu teste, redirecionou ao login corretamente).
 
-1. **`supabase.auth.getSession()` pode travar indefinidamente** — a biblioteca do Supabase usa um "lock" do navegador compartilhado entre abas/iframes. Com o preview do Lovable aberto em mais de um contexto (editor + aba), o lock fica ocupado e a chamada nunca resolve. Como `loading` só vira `false` depois dela, o spinner nunca sai.
-2. **`init()` ainda espera o carregamento do perfil (`refreshUsuario`)** antes de liberar a tela, somando mais um ponto de travamento.
-3. **Bug no `signOut()`**: ele remove o listener de auth e marca `initialized: false`, mas o `init()` nunca roda de novo — após sair e logar novamente sem recarregar a página, o estado de auth para de atualizar.
-4. O gate (`_authenticated.tsx`) não tem limite de espera — qualquer travamento vira spinner eterno.
+A causa raiz é o **Web Lock do navegador** (`navigator.locks`) que o Supabase usa para sincronizar a sessão entre abas. Com o preview do Lovable aberto no editor + em outra aba/janela, o lock fica ocupado e:
 
-## Mudanças
+1. `getSession()` trava (já mitigado com o timeout de 4s — por isso ainda há 4s de spinner em todo carregamento);
+2. **Todas as queries ao banco também travam**, porque cada query pede o token de sessão através do mesmo lock. É por isso que o perfil (`usuario`) às vezes nunca chega e o spinner persiste mesmo com o fallback.
 
-### `src/hooks/use-auth.ts`
-- Adicionar timeout de ~4s no `getSession()` (Promise.race). Se estourar, ler a sessão diretamente do `localStorage` como fallback e seguir.
-- Garantir `loading: false` assim que a sessão for conhecida — o perfil (`usuario`) carrega em paralelo, sem bloquear a tela.
-- Corrigir `signOut()`: manter o listener ativo e não resetar `initialized` (apenas limpar user/session/usuario).
+## Mudança
 
-### `src/routes/_authenticated.tsx`
-- Adicionar tempo máximo de espera no spinner (~8s). Se estourar, mostrar tela com botões "Tentar novamente" (recarrega) e "Ir para login", em vez de spinner infinito.
-- Enquanto `usuario` ainda está carregando (user existe mas perfil não chegou), mostrar spinner curto em vez de "Conta não vinculada" prematuro.
+### `src/integrations/supabase/client.ts`
+Configurar o cliente com um **lock "no-op"** (sem Web Locks API):
 
-## Detalhes técnicos
-- O fallback de sessão lê a chave `sb-<ref>-auth-token` do localStorage e valida expiração, evitando depender do lock do Supabase.
-- Nenhuma mudança de backend, rotas ou UI além do estado de erro do gate.
+- Passar `auth.lock: async (_name, _timeout, fn) => fn()` na criação do cliente.
+- Isso remove a dependência do `navigator.locks` — sem lock compartilhado, nada trava: `getSession()`, refresh de token e queries respondem imediatamente.
+- Trade-off: sem o lock, duas abas podem tentar renovar o token ao mesmo tempo (raro e inofensivo aqui — o Supabase tolera; no pior caso uma aba refaz o login silenciosamente).
+
+### `src/hooks/use-auth.ts` (ajuste pequeno)
+- Manter o timeout/fallback como rede de segurança, mas reduzir o timeout de 4s para ~1,5s — com o lock desativado, `getSession()` resolve em milissegundos e o fallback praticamente nunca será usado. O carregamento inicial fica imediato.
+
+## Resultado esperado
+- Sem mais spinner de 4s a cada carregamento.
+- Queries (perfil, dashboard, etc.) deixam de travar quando o preview está aberto em mais de um contexto.
+- A tela de escape de 8s do gate permanece como última defesa.

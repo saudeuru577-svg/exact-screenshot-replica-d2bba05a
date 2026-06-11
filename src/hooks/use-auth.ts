@@ -97,7 +97,7 @@ export const useAuth = create<AuthState>((set, get) => ({
 
       // getSession pode travar (Web Lock compartilhado entre abas/iframes).
       // Usa timeout + fallback ao localStorage para nunca prender a UI.
-      const result = await withTimeout(supabase.auth.getSession(), 4000);
+      const result = await withTimeout(supabase.auth.getSession(), 1500);
       const session = result?.data?.session ?? readSessionFromStorage();
       set({ session: session ?? null, user: session?.user ?? null, loading: false });
 
