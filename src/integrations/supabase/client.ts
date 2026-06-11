@@ -23,6 +23,10 @@ function createSupabaseClient() {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
+      // Desativa o Web Lock (navigator.locks). O lock compartilhado entre
+      // abas/iframes trava getSession() e queries quando o preview do
+      // Lovable está aberto em mais de um contexto. No-op é seguro aqui.
+      lock: <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => fn(),
     }
   });
 }
