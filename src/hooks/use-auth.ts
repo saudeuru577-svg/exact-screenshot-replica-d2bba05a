@@ -36,10 +36,38 @@ type AuthState = {
   refreshUsuario: () => Promise<void>;
 };
 
-let unsub: (() => void) | null = null;
 let lastLoadedUserId: string | null = null;
 let inflightRefresh: Promise<void> | null = null;
 let inflightUserId: string | null = null;
+
+// Lê a sessão diretamente do localStorage como fallback caso
+// supabase.auth.getSession() trave por causa do Web Lock compartilhado.
+function readSessionFromStorage(): Session | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    if (!url) return null;
+    const ref = url.match(/https?:\/\/([^.]+)\./)?.[1];
+    if (!ref) return null;
+    const raw = window.localStorage.getItem(`sb-${ref}-auth-token`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const session: Session | null = parsed?.currentSession ?? parsed ?? null;
+    if (!session || !session.access_token) return null;
+    // valida expiração (expires_at em segundos epoch)
+    if (session.expires_at && session.expires_at * 1000 < Date.now()) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return new Promise((resolve) => {
+    const t = setTimeout(() => resolve(null), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }).catch(() => { clearTimeout(t); resolve(null); });
+  });
+}
 
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
@@ -54,29 +82,31 @@ export const useAuth = create<AuthState>((set, get) => ({
 
     try {
       // Listener: só recarrega o usuário quando o id mudar de fato.
-      const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         const nextUser = session?.user ?? null;
-        set({ session, user: nextUser });
+        set({ session, user: nextUser, loading: false });
         if (!nextUser) {
           lastLoadedUserId = null;
           set({ usuario: null });
           return;
         }
         if (nextUser.id !== lastLoadedUserId) {
-          // fire-and-forget; refreshUsuario é dedupado por id
           setTimeout(() => { void get().refreshUsuario(); }, 0);
         }
       });
-      unsub = () => sub.subscription.unsubscribe();
 
-      const { data } = await supabase.auth.getSession();
-      set({ session: data.session, user: data.session?.user ?? null });
-      if (data.session?.user) {
-        await get().refreshUsuario();
+      // getSession pode travar (Web Lock compartilhado entre abas/iframes).
+      // Usa timeout + fallback ao localStorage para nunca prender a UI.
+      const result = await withTimeout(supabase.auth.getSession(), 4000);
+      const session = result?.data?.session ?? readSessionFromStorage();
+      set({ session: session ?? null, user: session?.user ?? null, loading: false });
+
+      // perfil carrega em paralelo (não bloqueia a tela)
+      if (session?.user) {
+        void get().refreshUsuario();
       }
     } catch (err) {
       console.error("[auth] init falhou", err);
-    } finally {
       set({ loading: false });
     }
   },
@@ -87,7 +117,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       lastLoadedUserId = null;
       return set({ usuario: null });
     }
-    // Dedupe: se já existe uma busca em andamento para o mesmo user, reusa.
     if (inflightRefresh && inflightUserId === u.id) {
       return inflightRefresh;
     }
@@ -101,7 +130,6 @@ export const useAuth = create<AuthState>((set, get) => ({
           .maybeSingle();
         if (error) {
           console.error("[auth] refreshUsuario erro", error);
-          // não limpa usuario para não derrubar sessão por erro transitório
           return;
         }
         lastLoadedUserId = u.id;
@@ -125,11 +153,8 @@ export const useAuth = create<AuthState>((set, get) => ({
     lastLoadedUserId = null;
     inflightRefresh = null;
     inflightUserId = null;
+    // mantém listener ativo e initialized=true; o onAuthStateChange
+    // já vai limpar user/session quando o SIGNED_OUT chegar.
     set({ user: null, session: null, usuario: null });
-    if (unsub) {
-      unsub();
-      unsub = null;
-    }
-    set({ initialized: false });
   },
 }));

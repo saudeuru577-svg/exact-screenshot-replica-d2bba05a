@@ -1,39 +1,25 @@
-## Diagnóstico curto
+# Corrigir tela de carregamento infinito
 
-- Na preview atual, a sessão do navegador foi redirecionada para `/login`, então não há consulta contínua ao banco antes do login.
-- A causa mais provável do “carrega sem parar” dentro das rotas autenticadas é uma combinação de:
-  1. inicialização de autenticação sem `try/finally`, podendo deixar `loading=true` se a consulta de perfil falhar ou demorar;
-  2. chamadas duplicadas para `refreshUsuario()` entre `getSession()` e `onAuthStateChange`;
-  3. várias queries sem `staleTime/enabled` consistente, fazendo refetch a cada remount/navegação;
-  4. muitos arquivos de rotas “em breve” carregados no dev preview, o que aumenta o carregamento inicial e parece “histórico/cache longo”, embora não seja loop de banco.
+## Diagnóstico (confirmado no preview)
 
-## Plano de correção
+Reproduzi o problema: o app fica preso no spinner do gate de autenticação. A causa não é cache — é o bootstrap de autenticação em `src/hooks/use-auth.ts`:
 
-1. **Blindar o boot de autenticação**
-   - Ajustar `src/hooks/use-auth.ts` para usar `try/finally` no `init()`.
-   - Garantir que `loading` sempre vire `false`, mesmo se Supabase/perfil retornar erro.
-   - Deduplicar `refreshUsuario()` com uma promise em andamento por `user.id`, evitando duas consultas simultâneas para `usuarios`.
-   - Guardar e expor erro de perfil quando necessário, em vez de deixar spinner infinito.
+1. **`supabase.auth.getSession()` pode travar indefinidamente** — a biblioteca do Supabase usa um "lock" do navegador compartilhado entre abas/iframes. Com o preview do Lovable aberto em mais de um contexto (editor + aba), o lock fica ocupado e a chamada nunca resolve. Como `loading` só vira `false` depois dela, o spinner nunca sai.
+2. **`init()` ainda espera o carregamento do perfil (`refreshUsuario`)** antes de liberar a tela, somando mais um ponto de travamento.
+3. **Bug no `signOut()`**: ele remove o listener de auth e marca `initialized: false`, mas o `init()` nunca roda de novo — após sair e logar novamente sem recarregar a página, o estado de auth para de atualizar.
+4. O gate (`_authenticated.tsx`) não tem limite de espera — qualquer travamento vira spinner eterno.
 
-2. **Evitar consultas antes da sessão estar pronta**
-   - Revisar hooks críticos que consultam Supabase e adicionar `enabled` baseado em usuário/perfil quando necessário.
-   - Garantir que telas internas só iniciem queries depois que o gate autenticado já tiver `usuario` carregado.
+## Mudanças
 
-3. **Ajustar cache global do React Query**
-   - Em `src/router.tsx`, manter `refetchOnWindowFocus: false` e `refetchOnReconnect: false`.
-   - Adicionar um `staleTime` padrão moderado para dados administrativos, reduzindo refetch ao trocar de página.
-   - Manter retry bloqueado para erros estruturais do Postgres/PostgREST.
+### `src/hooks/use-auth.ts`
+- Adicionar timeout de ~4s no `getSession()` (Promise.race). Se estourar, ler a sessão diretamente do `localStorage` como fallback e seguir.
+- Garantir `loading: false` assim que a sessão for conhecida — o perfil (`usuario`) carrega em paralelo, sem bloquear a tela.
+- Corrigir `signOut()`: manter o listener ativo e não resetar `initialized` (apenas limpar user/session/usuario).
 
-4. **Reduzir sensação de reload na navegação**
-   - Remover navegação com `<a href>` em áreas internas onde existir, substituindo por `<Link>`/`navigate` para manter navegação client-side.
-   - Revisar links dinâmicos dos shells para evitar caminhos montados como string quando houver alternativa tipada.
+### `src/routes/_authenticated.tsx`
+- Adicionar tempo máximo de espera no spinner (~8s). Se estourar, mostrar tela com botões "Tentar novamente" (recarrega) e "Ir para login", em vez de spinner infinito.
+- Enquanto `usuario` ainda está carregando (user existe mas perfil não chegou), mostrar spinner curto em vez de "Conta não vinculada" prematuro.
 
-5. **Tratar o excesso de rotas placeholder**
-   - Avaliar consolidar submódulos “em breve” em rotas dinâmicas por secretaria, reduzindo dezenas de arquivos e o carregamento inicial do preview.
-   - Não mexer nas rotas reais de Saúde/Autorização de Exames.
-
-6. **Validação**
-   - Abrir `/inicio` após login.
-   - Navegar entre secretaria, módulo e submódulo.
-   - Confirmar no network que não há chamadas repetidas indefinidamente para `usuarios`, `pacientes` ou `permissoes_usuario`.
-   - Confirmar que, se o banco falhar, a tela mostra erro/estado vazio em vez de spinner eterno.
+## Detalhes técnicos
+- O fallback de sessão lê a chave `sb-<ref>-auth-token` do localStorage e valida expiração, evitando depender do lock do Supabase.
+- Nenhuma mudança de backend, rotas ou UI além do estado de erro do gate.
